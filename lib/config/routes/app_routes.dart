@@ -8,6 +8,8 @@ import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/billing/presentation/pages/scanner_page.dart';
 import '../../features/billing/presentation/pages/checkout_page.dart';
 import '../../features/product/domain/entities/product.dart';
+import '../../features/sales/presentation/pages/sales_history_page.dart';
+import '../../features/measurement_unit/presentation/pages/measurement_units_page.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -24,11 +26,21 @@ final router = GoRouter(
           path: 'checkout',
           builder: (context, state) => const CheckoutPage(),
         ),
+        GoRoute(
+          path: 'sales',
+          builder: (context, state) => const SalesHistoryPage(),
+        ),
       ],
     ),
     GoRoute(
       path: '/settings',
       builder: (context, state) => const SettingsPage(),
+      routes: [
+        GoRoute(
+          path: 'units',
+          builder: (context, state) => const MeasurementUnitsPage(),
+        ),
+      ],
     ),
     GoRoute(
       path: '/products',
@@ -43,7 +55,6 @@ final router = GoRouter(
           builder: (context, state) {
             final product = state.extra as Product?;
             if (product == null) {
-              // If we land here without extra (e.g. deep link), go back to products for now.
               return const ProductListPage();
             }
             return EditProductPage(product: product);

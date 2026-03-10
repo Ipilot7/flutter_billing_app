@@ -3,11 +3,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:app_settings/app_settings.dart';
 
+import 'package:billing_app/l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../bloc/printer_bloc.dart';
 import '../bloc/printer_event.dart';
 import '../bloc/printer_state.dart';
+import '../bloc/locale_cubit.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -28,8 +30,8 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Settings',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(AppLocalizations.of(context)!.settings,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -98,20 +100,19 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 24),
 
             // Management Section
-            _buildSectionHeader('Management'),
+            _buildSectionHeader(AppLocalizations.of(context)!.management),
             _buildListGroup(
               children: [
                 _buildListItem(
                   icon: Icons.qr_code_scanner,
-                  title: 'Products',
-                  subtitle: 'Manage stock and barcodes',
+                  title: AppLocalizations.of(context)!.products,
                   onTap: () => context.push('/products'),
                 ),
                 _buildDivider(),
                 _buildListItem(
                   icon: Icons.storefront,
-                  title: 'Shop Details',
-                  subtitle: 'Edit business info & address',
+                  title: AppLocalizations.of(context)!.shopDetails,
+                  subtitle: AppLocalizations.of(context)!.shopDetailsSubtitle,
                   onTap: () => context.push('/shop'),
                 ),
               ],
@@ -119,8 +120,27 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 24),
 
+            // Language Section
+            _buildSectionHeader('${AppLocalizations.of(context)!.language}'),
+            BlocBuilder<LocaleCubit, Locale>(
+              builder: (context, locale) {
+                return _buildListGroup(
+                  children: [
+                    _buildListItem(
+                      icon: Icons.language,
+                      title: AppLocalizations.of(context)!.language,
+                      subtitle: _getLanguageName(locale.languageCode),
+                      onTap: () => _showLanguageDialog(context),
+                    ),
+                  ],
+                );
+              },
+            ),
+
+            const SizedBox(height: 24),
+
             // Hardware Section
-            _buildSectionHeader('Hardware'),
+            _buildSectionHeader(AppLocalizations.of(context)!.hardware),
             BlocConsumer<PrinterBloc, PrinterState>(
               listener: (context, state) {
                 if (state.errorMessage != null) {
@@ -128,8 +148,9 @@ class _SettingsPageState extends State<SettingsPage> {
                       content: Text(state.errorMessage!),
                       backgroundColor: Colors.red));
                 } else if (state.status == PrinterStatus.connected) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Connected to printer'),
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content:
+                          Text(AppLocalizations.of(context)!.printerConnected),
                       backgroundColor: Colors.green));
                 }
               },
@@ -138,13 +159,16 @@ class _SettingsPageState extends State<SettingsPage> {
                   children: [
                     _buildListItem(
                       icon: Icons.print,
-                      title: 'Print Device',
+                      title: AppLocalizations.of(context)!.printDevice,
                       subtitleWidget: Row(
                         children: [
                           Text(
                             state.connectedMac != null
-                                ? (state.connectedName ?? 'Printer connected')
-                                : 'No printer connected',
+                                ? (state.connectedName ??
+                                    AppLocalizations.of(context)!
+                                        .printerConnected)
+                                : AppLocalizations.of(context)!
+                                    .noPrinterConnected,
                             style: TextStyle(
                                 fontSize: 12, color: Colors.grey[500]),
                           ),
@@ -158,7 +182,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                   borderRadius: BorderRadius.circular(10),
                                   border: Border.all(color: Colors.teal[200]!)),
                               child: Text(
-                                'CONNECTED',
+                                AppLocalizations.of(context)!.connected,
                                 style: TextStyle(
                                     fontSize: 9,
                                     fontWeight: FontWeight.bold,
@@ -205,7 +229,7 @@ class _SettingsPageState extends State<SettingsPage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
               child: Text(
-                "To connect a new device, tap on the Settings gear to pair in phone's Bluetooth settings, then return and hit Refresh.",
+                AppLocalizations.of(context)!.printerRefreshHint,
                 style: TextStyle(
                     fontSize: 11,
                     fontStyle: FontStyle.italic,
@@ -306,6 +330,46 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
+    );
+  }
+
+  String _getLanguageName(String code) {
+    switch (code) {
+      case 'ru':
+        return 'Русский';
+      case 'uz':
+        return 'O\'zbekcha';
+      case 'en':
+        return 'English';
+      default:
+        return 'Русский';
+    }
+  }
+
+  void _showLanguageDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.selectLanguage),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildLanguageOption(context, 'ru', 'Русский'),
+            _buildLanguageOption(context, 'uz', 'O\'zbekcha'),
+            _buildLanguageOption(context, 'en', 'English'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLanguageOption(BuildContext context, String code, String name) {
+    return ListTile(
+      title: Text(name),
+      onTap: () {
+        context.read<LocaleCubit>().setLocale(Locale(code));
+        Navigator.pop(context);
+      },
     );
   }
 }

@@ -13,6 +13,9 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
     on<ConnectPrinterEvent>(_onConnect);
     on<DisconnectPrinterEvent>(_onDisconnect);
     on<TestPrintEvent>(_onTestPrint);
+
+    // Auto-init
+    add(InitPrinterEvent());
   }
 
   void _onInit(InitPrinterEvent event, Emitter<PrinterState> emit) {

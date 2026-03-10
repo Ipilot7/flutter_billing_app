@@ -3,23 +3,30 @@ import 'package:equatable/equatable.dart';
 import '../../domain/entities/cart_item.dart';
 import 'package:billing_app/features/product/domain/entities/product.dart';
 import 'package:billing_app/features/product/domain/usecases/product_usecases.dart';
+import 'package:billing_app/features/sales/domain/usecases/sales_usecases.dart';
+import 'package:billing_app/features/sales/domain/entities/sale.dart';
 import '../../../../core/utils/printer_helper.dart';
 import '../../../../core/data/hive_database.dart';
+import 'package:uuid/uuid.dart';
 
 part 'billing_event.dart';
 part 'billing_state.dart';
 
 class BillingBloc extends Bloc<BillingEvent, BillingState> {
   final GetProductByBarcodeUseCase getProductByBarcodeUseCase;
+  final CreateSaleUseCase createSaleUseCase;
 
-  BillingBloc({required this.getProductByBarcodeUseCase})
-      : super(const BillingState()) {
+  BillingBloc({
+    required this.getProductByBarcodeUseCase,
+    required this.createSaleUseCase,
+  }) : super(const BillingState()) {
     on<ScanBarcodeEvent>(_onScanBarcode);
     on<AddProductToCartEvent>(_onAddProductToCart);
     on<RemoveProductFromCartEvent>(_onRemoveProductFromCart);
     on<UpdateQuantityEvent>(_onUpdateQuantity);
     on<ClearCartEvent>(_onClearCart);
     on<PrintReceiptEvent>(_onPrintReceipt);
+    on<CompleteSaleEvent>(_onCompleteSale);
   }
 
   Future<void> _onScanBarcode(
@@ -134,5 +141,45 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
       // Reset error instantly avoids sticky error
       emit(state.copyWith(clearError: true));
     }
+  }
+
+  Future<void> _onCompleteSale(
+      CompleteSaleEvent event, Emitter<BillingState> emit) async {
+    if (state.cartItems.isEmpty) return;
+    emit(state.copyWith(error: null, clearError: true));
+
+    final saleItems = state.cartItems
+        .map((item) => SaleItem(
+              productId: item.product.id,
+              productName: item.product.name,
+              price: item.product.price,
+              quantity: item.quantity,
+            ))
+        .toList();
+
+    final sale = Sale(
+      id: const Uuid().v4(),
+      createdAt: DateTime.now(),
+      shiftId: event.shiftId,
+      openedBy: event.openedBy,
+      items: saleItems,
+      totalAmount: state.totalAmount,
+      paymentType: event.paymentType,
+    );
+
+    final result = await createSaleUseCase(sale);
+
+    result.fold(
+      (failure) {
+        emit(state.copyWith(
+            error: 'Failed to complete sale: ${failure.message}',
+            clearError: false));
+        emit(state.copyWith(clearError: true));
+      },
+      (successSale) {
+        // Only clear the cart if sale successfully saved.
+        add(ClearCartEvent());
+      },
+    );
   }
 }

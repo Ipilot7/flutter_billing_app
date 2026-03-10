@@ -55,3 +55,18 @@ class PrintReceiptEvent extends BillingEvent {
   @override
   List<Object> get props => [shopName, address1, address2, phone, footer];
 }
+
+class CompleteSaleEvent extends BillingEvent {
+  final String shiftId;
+  final String openedBy;
+  final int paymentType; // 0: Cash, 1: Card, 2: Terminal
+
+  const CompleteSaleEvent({
+    required this.shiftId,
+    required this.openedBy,
+    required this.paymentType,
+  });
+
+  @override
+  List<Object> get props => [shiftId, openedBy, paymentType];
+}

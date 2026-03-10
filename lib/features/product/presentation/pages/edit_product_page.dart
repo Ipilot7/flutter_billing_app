@@ -7,7 +7,10 @@ import 'package:go_router/go_router.dart';
 import '../bloc/product_bloc.dart';
 import '../../domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/utils/app_validators.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
+import '../../../measurement_unit/presentation/bloc/unit_bloc.dart';
+import '../../../measurement_unit/presentation/bloc/unit_event.dart';
+import '../../../measurement_unit/presentation/bloc/unit_state.dart';
 
 class EditProductPage extends StatefulWidget {
   final Product product;
@@ -21,12 +24,15 @@ class _EditProductPageState extends State<EditProductPage> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
   late double _price;
+  late String _unit;
 
   @override
   void initState() {
     super.initState();
     _name = widget.product.name;
     _price = widget.product.price;
+    _unit = widget.product.unit;
+    context.read<UnitBloc>().add(LoadUnitsEvent());
   }
 
   void _submit() {
@@ -38,6 +44,7 @@ class _EditProductPageState extends State<EditProductPage> {
         name: _name,
         barcode: widget.product.barcode,
         price: _price,
+        unit: _unit,
       );
 
       context.read<ProductBloc>().add(UpdateProduct(updatedProduct));
@@ -55,8 +62,9 @@ class _EditProductPageState extends State<EditProductPage> {
                 size: 32, color: Theme.of(context).primaryColor),
             onPressed: () => context.pop(),
           ),
-          title: const Text('Edit Product',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          title: Text(AppLocalizations.of(context)!.editProduct,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           centerTitle: true,
         ),
         body: SafeArea(
@@ -85,7 +93,10 @@ class _EditProductPageState extends State<EditProductPage> {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('BARCODE',
+                            Text(
+                                AppLocalizations.of(context)!
+                                    .barcode
+                                    .toUpperCase(),
                                 style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
@@ -103,31 +114,90 @@ class _EditProductPageState extends State<EditProductPage> {
                     ),
                   ),
 
-                  const InputLabel(text: 'Product Name'),
+                  InputLabel(text: AppLocalizations.of(context)!.productName),
 
                   TextFormField(
                     initialValue: _name,
                     textCapitalization: TextCapitalization.words,
-                    validator: AppValidators.required('Please enter a name'),
+                    validator: (value) => value == null || value.isEmpty
+                        ? AppLocalizations.of(context)!.pleaseEnterName
+                        : null,
                     onSaved: (value) => _name = value!,
                   ),
                   const SizedBox(height: 24),
 
-                  const InputLabel(text: 'Price'),
+                  InputLabel(text: AppLocalizations.of(context)!.price),
 
                   TextFormField(
                     initialValue: _price.toStringAsFixed(2),
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      prefixText: '₹ ',
-                      prefixStyle: TextStyle(
+                    decoration: InputDecoration(
+                      prefixText: '${AppLocalizations.of(context)!.currency} ',
+                      prefixStyle: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                           color: Colors.black),
                     ),
-                    validator: AppValidators.price,
+                    validator: (value) => value == null || value.isEmpty
+                        ? AppLocalizations.of(context)!.pleaseEnterPrice
+                        : null,
                     onSaved: (value) => _price = double.parse(value!),
+                  ),
+                  const SizedBox(height: 24),
+                  InputLabel(
+                      text: AppLocalizations.of(context)!.measurementUnit),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: BlocBuilder<UnitBloc, UnitState>(
+                          builder: (context, state) {
+                            List<String> units = [
+                              AppLocalizations.of(context)!.unitDefault
+                            ];
+                            if (state is UnitLoaded) {
+                              units =
+                                  state.units.map((u) => u.shortName).toList();
+                              if (!units.contains(
+                                  AppLocalizations.of(context)!.unitDefault)) {
+                                units.insert(0,
+                                    AppLocalizations.of(context)!.unitDefault);
+                              }
+                            }
+
+                            if (!units.contains(_unit)) {
+                              _unit = units.first;
+                            }
+
+                            return DropdownButtonFormField<String>(
+                              value: _unit,
+                              decoration: const InputDecoration(
+                                contentPadding: EdgeInsets.symmetric(
+                                    horizontal: 12, vertical: 8),
+                              ),
+                              items: units
+                                  .map((u) => DropdownMenuItem(
+                                      value: u, child: Text(u)))
+                                  .toList(),
+                              onChanged: (val) => setState(() => _unit = val!),
+                            );
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.add,
+                              color: AppTheme.primaryColor),
+                          onPressed: () => _showAddUnitDialog(context),
+                          padding: const EdgeInsets.all(14),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -137,7 +207,53 @@ class _EditProductPageState extends State<EditProductPage> {
         bottomNavigationBar: PrimaryButton(
           onPressed: _submit,
           icon: Icons.save,
-          label: 'Save Changes',
+          label: AppLocalizations.of(context)!.saveChanges,
         ));
+  }
+
+  void _showAddUnitDialog(BuildContext context) {
+    final nameController = TextEditingController();
+    final shortNameController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.addUnit),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.unitNameLabel),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: shortNameController,
+              decoration: InputDecoration(
+                  labelText: AppLocalizations.of(context)!.unitShortNameLabel),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(AppLocalizations.of(context)!.cancel)),
+          ElevatedButton(
+            onPressed: () {
+              if (nameController.text.isNotEmpty &&
+                  shortNameController.text.isNotEmpty) {
+                context.read<UnitBloc>().add(AddUnitEvent(
+                      name: nameController.text,
+                      shortName: shortNameController.text,
+                    ));
+                Navigator.pop(ctx);
+              }
+            },
+            child: Text(AppLocalizations.of(context)!.add),
+          ),
+        ],
+      ),
+    );
   }
 }

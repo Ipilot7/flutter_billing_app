@@ -1,3 +1,4 @@
+// ignore_for_file: overridden_fields
 import 'package:hive/hive.dart';
 import '../../domain/entities/product.dart';
 
@@ -20,6 +21,9 @@ class ProductModel extends Product {
   @override
   @HiveField(4)
   final int stock;
+  @override
+  @HiveField(5)
+  final String unit;
 
   const ProductModel({
     required this.id,
@@ -27,12 +31,14 @@ class ProductModel extends Product {
     required this.barcode,
     required this.price,
     required this.stock,
+    this.unit = 'шт',
   }) : super(
           id: id,
           name: name,
           barcode: barcode,
           price: price,
           stock: stock,
+          unit: unit,
         );
 
   factory ProductModel.fromEntity(Product product) {
@@ -42,6 +48,7 @@ class ProductModel extends Product {
       barcode: product.barcode,
       price: product.price,
       stock: product.stock,
+      unit: product.unit,
     );
   }
 
@@ -52,6 +59,7 @@ class ProductModel extends Product {
       barcode: barcode,
       price: price,
       stock: stock,
+      unit: unit,
     );
   }
 }

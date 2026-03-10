@@ -1,5 +1,8 @@
+import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+// import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'config/routes/app_routes.dart';
 import 'core/data/hive_database.dart';
 import 'core/service_locator.dart' as di;
@@ -8,7 +11,10 @@ import 'features/billing/presentation/bloc/billing_bloc.dart';
 import 'features/product/presentation/bloc/product_bloc.dart';
 import 'features/shop/presentation/bloc/shop_bloc.dart';
 import 'features/settings/presentation/bloc/printer_bloc.dart';
-import 'features/settings/presentation/bloc/printer_event.dart';
+import 'features/settings/presentation/bloc/locale_cubit.dart';
+import 'features/shift/presentation/bloc/shift_bloc.dart';
+import 'features/sales/presentation/bloc/sales_bloc.dart';
+import 'features/measurement_unit/presentation/bloc/unit_bloc.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,21 +30,39 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<ProductBloc>(
-            create: (context) => di.sl<ProductBloc>()..add(LoadProducts())),
-        BlocProvider<ShopBloc>(
-            create: (context) => di.sl<ShopBloc>()..add(LoadShopEvent())),
+        BlocProvider<ProductBloc>(create: (context) => di.sl<ProductBloc>()),
+        BlocProvider<ShopBloc>(create: (context) => di.sl<ShopBloc>()),
         BlocProvider<BillingBloc>(
-            create: (context) =>
-                BillingBloc(getProductByBarcodeUseCase: di.sl())),
-        BlocProvider<PrinterBloc>(
-            create: (context) => di.sl<PrinterBloc>()..add(InitPrinterEvent())),
+            create: (context) => BillingBloc(
+                getProductByBarcodeUseCase: di.sl(),
+                createSaleUseCase: di.sl())),
+        BlocProvider<PrinterBloc>(create: (context) => di.sl<PrinterBloc>()),
+        BlocProvider<LocaleCubit>(create: (context) => di.sl<LocaleCubit>()),
+        BlocProvider<ShiftBloc>(create: (context) => di.sl<ShiftBloc>()),
+        BlocProvider<SalesBloc>(create: (context) => di.sl<SalesBloc>()),
+        BlocProvider<UnitBloc>(create: (context) => di.sl<UnitBloc>()),
       ],
-      child: MaterialApp.router(
-        title: 'Billing App',
-        theme: AppTheme.lightTheme,
-        routerConfig: router,
-        debugShowCheckedModeBanner: false,
+      child: BlocBuilder<LocaleCubit, Locale>(
+        builder: (context, locale) {
+          return MaterialApp.router(
+            title: 'Billing App',
+            theme: AppTheme.lightTheme,
+            routerConfig: router,
+            debugShowCheckedModeBanner: false,
+            locale: locale,
+            supportedLocales: const [
+              Locale('ru'),
+              Locale('uz'),
+              Locale('en'),
+            ],
+            localizationsDelegates: [
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+              AppLocalizations.delegate,
+            ],
+          );
+        },
       ),
     );
   }

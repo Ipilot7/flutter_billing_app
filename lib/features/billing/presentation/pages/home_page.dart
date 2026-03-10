@@ -1,3 +1,4 @@
+import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
@@ -5,6 +6,9 @@ import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../billing/presentation/bloc/billing_bloc.dart';
+import '../../../shift/presentation/bloc/shift_bloc.dart';
+import '../../../shift/presentation/bloc/shift_state.dart';
+import '../../../shift/presentation/bloc/shift_event.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/cart_item.dart';
@@ -22,11 +26,20 @@ class _HomePageState extends State<HomePage> {
     returnImage: false,
   );
 
-  bool _isCameraOn = true;
+  bool _isCameraOn = false;
   bool _isFlashOn = false;
 
   // Cooldown mapping to prevent rapid firing of the same barcode
   final Map<String, DateTime> _lastScanTimes = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _isCameraOn = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scannerController.start();
+    });
+  }
 
   @override
   void dispose() {
@@ -69,20 +82,29 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: BlocListener<BillingBloc, BillingState>(
-        listenWhen: (previous, current) =>
-            previous.error != current.error && current.error != null,
-        listener: (context, state) {
-          if (state.error != null) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(state.error!),
-                backgroundColor: Colors.red,
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          }
-        },
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<BillingBloc, BillingState>(
+            listenWhen: (previous, current) =>
+                previous.error != current.error && current.error != null,
+            listener: (context, state) {
+              if (state.error != null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.error!),
+                    backgroundColor: Colors.red,
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              }
+            },
+          ),
+          BlocListener<ShiftBloc, ShiftState>(
+            listener: (context, state) {
+              // We no longer toggle camera based on shift status.
+            },
+          ),
+        ],
         child: Stack(
           children: [
             // SCANNER VIEW (TOP 50%)
@@ -111,12 +133,14 @@ class _HomePageState extends State<HomePage> {
           onPressed: state.cartItems.isEmpty
               ? null
               : () async {
-                  _scannerController.stop();
+                  Future.microtask(() => _scannerController.stop());
                   await context.push('/checkout');
-                  if (_isCameraOn && mounted) _scannerController.start();
+                  if (_isCameraOn && mounted) {
+                    Future.microtask(() => _scannerController.start());
+                  }
                 },
           icon: Icons.payment,
-          label: 'Review Order',
+          label: AppLocalizations.of(context)!.reviewOrder,
         );
       }),
     );
@@ -128,11 +152,13 @@ class _HomePageState extends State<HomePage> {
       child: Stack(
         fit: StackFit.expand,
         children: [
-          MobileScanner(
-            controller: _scannerController,
-            onDetect: _onDetect,
-          ),
-          if (!_isCameraOn) _buildCameraOffState(),
+          if (_isCameraOn)
+            MobileScanner(
+              controller: _scannerController,
+              onDetect: _onDetect,
+            )
+          else
+            _buildCameraOffState(),
 
           // Overlay Actions (Top Right)
           Positioned(
@@ -140,12 +166,64 @@ class _HomePageState extends State<HomePage> {
             right: 16,
             child: Column(
               children: [
+                // Shift Status Indicator
+                BlocBuilder<ShiftBloc, ShiftState>(
+                  builder: (context, state) {
+                    final isOpen = state is ShiftLoaded && state.hasOpenShift;
+                    return GestureDetector(
+                      onTap: () => _showShiftDialog(context, isOpen),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: isOpen ? Colors.green : Colors.orange,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              isOpen ? Icons.lock_open : Icons.lock,
+                              color: Colors.white,
+                              size: 16,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              isOpen
+                                  ? AppLocalizations.of(context)!.statusOpen
+                                  : AppLocalizations.of(context)!.statusClosed,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildOverlayButton(
+                  icon: Icons.history,
+                  onPressed: () async {
+                    Future.microtask(() => _scannerController.stop());
+                    await context.push('/sales');
+                    if (_isCameraOn && mounted) {
+                      Future.microtask(() => _scannerController.start());
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
                 _buildOverlayButton(
                   icon: Icons.settings,
                   onPressed: () async {
-                    _scannerController.stop();
+                    Future.microtask(() => _scannerController.stop());
                     await context.push('/settings');
-                    if (_isCameraOn && mounted) _scannerController.start();
+                    if (_isCameraOn && mounted) {
+                      Future.microtask(() => _scannerController.start());
+                    }
                   },
                 ),
                 const SizedBox(height: 16),
@@ -167,9 +245,9 @@ class _HomePageState extends State<HomePage> {
                       _isCameraOn = !_isCameraOn;
                     });
                     if (_isCameraOn) {
-                      _scannerController.start();
+                      Future.microtask(() => _scannerController.start());
                     } else {
-                      _scannerController.stop();
+                      Future.microtask(() => _scannerController.stop());
                     }
                   },
                 ),
@@ -221,18 +299,18 @@ class _HomePageState extends State<HomePage> {
                 const Icon(Icons.videocam_off, color: Colors.white, size: 32),
           ),
           const SizedBox(height: 16),
-          const Text(
-            'Camera is turned off',
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.cameraOff,
+            style: const TextStyle(
                 color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
-              'Turn on your camera to start scanning barcodes and items automatically.',
+              AppLocalizations.of(context)!.cameraOffDescription,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, fontSize: 12),
+              style: const TextStyle(color: Colors.white70, fontSize: 12),
             ),
           ),
           const SizedBox(height: 24),
@@ -245,8 +323,8 @@ class _HomePageState extends State<HomePage> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
             icon: const Icon(Icons.videocam),
-            label: const Text('Turn on Camera',
-                style: TextStyle(fontWeight: FontWeight.bold)),
+            label: Text(AppLocalizations.of(context)!.turnOnCamera,
+                style: const TextStyle(fontWeight: FontWeight.bold)),
             onPressed: () {
               setState(() => _isCameraOn = true);
               _scannerController.start();
@@ -342,10 +420,12 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('Scanned Items',
-                            style: TextStyle(
+                        Text(AppLocalizations.of(context)!.scannedItems,
+                            style: const TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.w600)),
-                        Text('$totalItems items total',
+                        Text(
+                            AppLocalizations.of(context)!
+                                .totalItems(totalItems),
                             style: const TextStyle(
                                 fontSize: 12, color: Colors.grey)),
                       ],
@@ -353,14 +433,17 @@ class _HomePageState extends State<HomePage> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        const Text('TOTAL PRICE',
-                            style: TextStyle(
+                        Text(
+                            AppLocalizations.of(context)!
+                                .totalAmount
+                                .toUpperCase(),
+                            style: const TextStyle(
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.grey,
                                 letterSpacing: 1.2)),
                         Text(
-                          '₹${state.totalAmount.toStringAsFixed(2)}',
+                          '${state.totalAmount.toStringAsFixed(2)}',
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
@@ -421,15 +504,16 @@ class _HomePageState extends State<HomePage> {
                 Icon(Icons.shopping_basket, size: 40, color: Colors.grey[300]),
           ),
           const SizedBox(height: 16),
-          const Text('List is empty',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          Text(AppLocalizations.of(context)!.listIsEmpty,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
           const SizedBox(height: 8),
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 40),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              'Scanned items will appear here as you scan them with the camera above.',
+              AppLocalizations.of(context)!.scannedItemsAppear,
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey, fontSize: 14),
+              style: const TextStyle(color: Colors.grey, fontSize: 14),
             ),
           ),
         ],
@@ -468,7 +552,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '₹${item.product.price.toStringAsFixed(2)}',
+                  '${AppLocalizations.of(context)!.currency} ${item.product.price.toStringAsFixed(2)}',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 14,
@@ -530,6 +614,100 @@ class _HomePageState extends State<HomePage> {
         child: Icon(icon, size: 20, color: Colors.grey[600]),
       ),
     );
+  }
+
+  void _showShiftDialog(BuildContext context, bool isOpen) {
+    if (isOpen) {
+      final shiftBloc = context.read<ShiftBloc>();
+      final currentShift = shiftBloc.currentShift;
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(AppLocalizations.of(context)!.closeShift),
+          content: Text(
+            '${AppLocalizations.of(context)!.startBalance}: ${AppLocalizations.of(context)!.currency} ${currentShift?.startBalance.toStringAsFixed(2) ?? "0"}',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(AppLocalizations.of(context)!.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final controller = TextEditingController();
+                showDialog(
+                  context: ctx,
+                  builder: (context) => AlertDialog(
+                    title: Text(AppLocalizations.of(context)!.endBalance),
+                    content: TextField(
+                      controller: controller,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText:
+                            AppLocalizations.of(context)!.enterEndBalance,
+                        prefixText:
+                            '${AppLocalizations.of(context)!.currency} ',
+                      ),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(AppLocalizations.of(context)!.cancel),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          final balance = double.tryParse(controller.text) ?? 0;
+                          context
+                              .read<ShiftBloc>()
+                              .add(CloseShiftEvent(endBalance: balance));
+                          Navigator.pop(context);
+                          Navigator.pop(ctx);
+                        },
+                        child: Text(AppLocalizations.of(context)!.close),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: Text(AppLocalizations.of(context)!.closeShift),
+            ),
+          ],
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(AppLocalizations.of(context)!.openShift),
+          content: TextField(
+            keyboardType: TextInputType.number,
+            decoration: InputDecoration(
+              labelText: AppLocalizations.of(context)!.startBalance,
+              prefixText: '${AppLocalizations.of(context)!.currency} ',
+            ),
+            controller: TextEditingController(text: '0'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(AppLocalizations.of(context)!.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final controller = TextEditingController(text: '0');
+                final balance = double.tryParse(controller.text) ?? 0;
+                context.read<ShiftBloc>().add(OpenShiftEvent(
+                      startBalance: balance,
+                      openedBy: AppLocalizations.of(context)!.cashier,
+                    ));
+                Navigator.pop(ctx);
+              },
+              child: Text(AppLocalizations.of(context)!.open),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   // A floating Details/Checkout Button at the very bottom

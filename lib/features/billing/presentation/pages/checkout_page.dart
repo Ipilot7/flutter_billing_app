@@ -1,10 +1,12 @@
 import 'package:billing_app/core/widgets/primary_button.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:pretty_qr_code/pretty_qr_code.dart';
 
 import '../../../shop/presentation/bloc/shop_bloc.dart';
+import '../../../shift/presentation/bloc/shift_bloc.dart';
 import '../bloc/billing_bloc.dart';
 
 class CheckoutPage extends StatefulWidget {
@@ -15,6 +17,13 @@ class CheckoutPage extends StatefulWidget {
 }
 
 class _CheckoutPageState extends State<CheckoutPage> {
+  @override
+  void initState() {
+    super.initState();
+    // Ensure shop details are loaded for printing
+    context.read<ShopBloc>().add(LoadShopEvent());
+  }
+
   @override
   Widget build(BuildContext context) {
     const borderColor = Color(0xFFE5E5EA);
@@ -28,8 +37,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
         },
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Checkout',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+            title: Text(AppLocalizations.of(context)!.checkout,
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
             centerTitle: true,
             backgroundColor: Colors.transparent,
             elevation: 0,
@@ -45,11 +55,20 @@ class _CheckoutPageState extends State<CheckoutPage> {
           body: BlocConsumer<BillingBloc, BillingState>(
             listener: (context, state) {
               if (state.printSuccess) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Printed successfully'),
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(AppLocalizations.of(context)!.printSuccess),
                     backgroundColor: Colors.green));
-                // context.read<BillingBloc>().add(ClearCartEvent());
-                // context.go('/');
+              }
+              if (state.cartItems.isEmpty && state.error == null) {
+                // Return to home completely if sale is completed successfully
+                if (GoRouter.of(context).canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/');
+                }
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text(AppLocalizations.of(context)!.saleCompleted),
+                    backgroundColor: Colors.green));
               }
             },
             builder: (context, billingState) {
@@ -104,11 +123,15 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       ),
                                       children: [
                                         _buildHeaderCell(
-                                            'Product Name', TextAlign.left),
+                                            AppLocalizations.of(context)!
+                                                .productName,
+                                            TextAlign.left),
                                         _buildHeaderCell(
-                                            'Price', TextAlign.right),
+                                            AppLocalizations.of(context)!.price,
+                                            TextAlign.right),
                                         _buildHeaderCell(
-                                            'Total', TextAlign.right),
+                                            AppLocalizations.of(context)!.total,
+                                            TextAlign.right),
                                       ],
                                     ),
                                     // Items rows
@@ -120,11 +143,11 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                             TextAlign.left,
                                           ),
                                           _buildDataCell(
-                                              '₹${item.product.price.toStringAsFixed(2)}',
+                                              '${AppLocalizations.of(context)!.currency} ${item.product.price.toStringAsFixed(2)}',
                                               TextAlign.right,
                                               isSubtitle: true),
                                           _buildDataCell(
-                                              '₹${item.total.toStringAsFixed(2)}',
+                                              '${AppLocalizations.of(context)!.currency} ${item.total.toStringAsFixed(2)}',
                                               TextAlign.right,
                                               isBold: true),
                                         ],
@@ -173,8 +196,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                 upiId.isNotEmpty
                                     ? Column(
                                         children: [
-                                          const Text(
-                                            'Scan to Pay',
+                                          Text(
+                                            AppLocalizations.of(context)!
+                                                .scanToPay,
                                             style: TextStyle(
                                               fontSize: 16,
                                               fontWeight: FontWeight.bold,
@@ -200,7 +224,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       MainAxisAlignment.spaceBetween,
                                   children: [
                                     Text(
-                                      'GRAND TOTAL',
+                                      AppLocalizations.of(context)!.grandTotal,
                                       style: TextStyle(
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
@@ -209,7 +233,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                       ),
                                     ),
                                     Text(
-                                      '₹${billingState.totalAmount.toStringAsFixed(2)}',
+                                      '${AppLocalizations.of(context)!.currency} ${billingState.totalAmount.toStringAsFixed(2)}',
                                       style: const TextStyle(
                                         fontSize: 24,
                                         fontWeight: FontWeight.bold,
@@ -223,6 +247,16 @@ class _CheckoutPageState extends State<CheckoutPage> {
                             ),
                           ),
                           PrimaryButton(
+                            onPressed: billingState.cartItems.isEmpty
+                                ? null
+                                : () {
+                                    _showPaymentDialog(
+                                        context, billingState, shopState);
+                                  },
+                            label: AppLocalizations.of(context)!.completeSale,
+                            icon: Icons.check_circle,
+                          ),
+                          TextButton.icon(
                             onPressed: () {
                               if (shopState is ShopLoaded) {
                                 context.read<BillingBloc>().add(
@@ -234,16 +268,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                                         footer: shopState.shop.footerText));
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                        content:
-                                            Text('Shop details not loaded'),
+                                    SnackBar(
+                                        content: Text(
+                                            AppLocalizations.of(context)!
+                                                .shopDetailsNotLoaded),
                                         backgroundColor: Colors.red));
                               }
                             },
-                            label: 'Print Receipt',
-                            icon: Icons.print,
-                            isLoading: billingState.isPrinting,
+                            icon: const Icon(Icons.print),
+                            label: Text(
+                                AppLocalizations.of(context)!.printReceiptOnly,
+                                style: const TextStyle(color: Colors.grey)),
                           ),
+                          const SizedBox(height: 12),
                         ],
                       ),
                     ),
@@ -284,6 +321,90 @@ class _CheckoutPageState extends State<CheckoutPage> {
           color: isSubtitle ? Colors.grey[500] : Colors.black87,
         ),
       ),
+    );
+  }
+
+  void _showPaymentDialog(
+      BuildContext context, BillingState billingState, ShopState shopState) {
+    int paymentType = 0; // 0 cash, 1 card, 2 term
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (stCtx, setState) {
+            return AlertDialog(
+              title: Text(AppLocalizations.of(context)!.paymentMethod),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  RadioListTile<int>(
+                    title: Text(AppLocalizations.of(context)!.cash),
+                    value: 0,
+                    groupValue: paymentType,
+                    onChanged: (val) => setState(() => paymentType = val!),
+                  ),
+                  RadioListTile<int>(
+                    title: Text(AppLocalizations.of(context)!.card),
+                    value: 1,
+                    groupValue: paymentType,
+                    onChanged: (val) => setState(() => paymentType = val!),
+                  ),
+                  RadioListTile<int>(
+                    title: Text(AppLocalizations.of(context)!.terminal),
+                    value: 2,
+                    groupValue: paymentType,
+                    onChanged: (val) => setState(() => paymentType = val!),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    final shiftBloc = context.read<ShiftBloc>();
+                    final currentShift = shiftBloc.currentShift;
+                    if (currentShift == null) {
+                      Navigator.pop(ctx);
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text(
+                              AppLocalizations.of(context)!.pleaseOpenShift),
+                          backgroundColor: Colors.red));
+                      return;
+                    }
+
+                    // Dispatch Sale
+                    context.read<BillingBloc>().add(
+                          CompleteSaleEvent(
+                            shiftId: currentShift.id,
+                            openedBy: currentShift.openedBy,
+                            paymentType: paymentType,
+                          ),
+                        );
+
+                    // Also print receipt? Auto print?
+                    if (shopState is ShopLoaded) {
+                      context.read<BillingBloc>().add(
+                            PrintReceiptEvent(
+                                shopName: shopState.shop.name,
+                                address1: shopState.shop.addressLine1,
+                                address2: shopState.shop.addressLine2,
+                                phone: shopState.shop.phoneNumber,
+                                footer: shopState.shop.footerText),
+                          );
+                    }
+                    Navigator.pop(ctx);
+                  },
+                  child: Text(AppLocalizations.of(context)!.checkout),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 }
