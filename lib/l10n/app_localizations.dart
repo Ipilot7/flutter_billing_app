@@ -448,6 +448,12 @@ abstract class AppLocalizations {
   /// **'Проверить заказ'**
   String get reviewOrder;
 
+  /// No description provided for @search.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поиск'**
+  String get search;
+
   /// No description provided for @searchProducts.
   ///
   /// In ru, this message translates to:
@@ -519,6 +525,12 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'История'**
   String get history;
+
+  /// No description provided for @salesHistoryShort.
+  ///
+  /// In ru, this message translates to:
+  /// **'История'**
+  String get salesHistoryShort;
 
   /// No description provided for @totalSales.
   ///

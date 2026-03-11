@@ -116,6 +116,18 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 _buildDivider(),
                 _buildListItem(
+                  icon: Icons.history,
+                  title: AppLocalizations.of(context)!.salesHistory,
+                  onTap: () => context.push('/sales'),
+                ),
+                _buildDivider(),
+                _buildListItem(
+                  icon: Icons.bar_chart,
+                  title: AppLocalizations.of(context)!.analytics,
+                  onTap: () => context.push('/analytics'),
+                ),
+                _buildDivider(),
+                _buildListItem(
                   icon: Icons.storefront,
                   title: AppLocalizations.of(context)!.shopDetails,
                   subtitle: AppLocalizations.of(context)!.shopDetailsSubtitle,

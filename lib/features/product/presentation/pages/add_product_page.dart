@@ -180,7 +180,7 @@ class _AddProductPageState extends State<AddProductPage> {
                     validator: (value) => value == null || value.isEmpty
                         ? AppLocalizations.of(context)!.pleaseEnterPrice
                         : null,
-                    onSaved: (value) => _price = double.parse(value!),
+                    onSaved: (value) => _price = double.tryParse(value ?? '0') ?? 0.0,
                   ),
                   const SizedBox(height: 24),
                   InputLabel(text: AppLocalizations.of(context)!.costPrice),
@@ -195,7 +195,8 @@ class _AddProductPageState extends State<AddProductPage> {
                           fontWeight: FontWeight.w500,
                           color: Colors.black),
                     ),
-                    onSaved: (value) => _costPrice = double.parse(value ?? '0'),
+                    onSaved: (value) =>
+                        _costPrice = double.tryParse(value ?? '0') ?? 0.0,
                   ),
                   const SizedBox(height: 24),
                   InputLabel(text: AppLocalizations.of(context)!.stock),
@@ -205,7 +206,7 @@ class _AddProductPageState extends State<AddProductPage> {
                     decoration: const InputDecoration(
                       hintText: '0',
                     ),
-                    onSaved: (value) => _stock = double.parse(value ?? '0'),
+                    onSaved: (value) => _stock = double.tryParse(value ?? '0') ?? 0.0,
                   ),
                   const SizedBox(height: 24),
                   const SizedBox(height: 24),

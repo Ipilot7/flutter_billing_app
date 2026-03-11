@@ -187,6 +187,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get reviewOrder => 'Проверить заказ';
 
   @override
+  String get search => 'Поиск';
+
+  @override
   String get searchProducts => 'Поиск товаров';
 
   @override
@@ -224,6 +227,9 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get history => 'История';
+
+  @override
+  String get salesHistoryShort => 'История';
 
   @override
   String get totalSales => 'Всего продаж';

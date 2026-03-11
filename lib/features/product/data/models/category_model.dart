@@ -4,7 +4,7 @@ import '../../domain/entities/category.dart';
 
 part 'category_model.g.dart';
 
-@HiveType(typeId: 1)
+@HiveType(typeId: 6)
 class CategoryModel extends Category {
   @override
   @HiveField(0)

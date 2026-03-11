@@ -188,6 +188,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get reviewOrder => 'Buyurtmani tekshirish';
 
   @override
+  String get search => 'Qidirish';
+
+  @override
   String get searchProducts => 'Mahsulotlarni qidirish';
 
   @override
@@ -225,6 +228,9 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get history => 'Tarix';
+
+  @override
+  String get salesHistoryShort => 'Tarix';
 
   @override
   String get totalSales => 'Jami sotuvlar';

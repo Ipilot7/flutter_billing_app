@@ -177,106 +177,61 @@ class _HomePageState extends State<HomePage> {
           else
             _buildCameraOffState(),
 
-          // Overlay Actions (Top Right)
+          // Shift Status (Top Left)
           Positioned(
             top: MediaQuery.of(context).padding.top + 16,
-            right: 16,
-            child: Column(
-              children: [
-                // Shift Status Indicator
-                BlocBuilder<ShiftBloc, ShiftState>(
-                  builder: (context, state) {
-                    final isOpen = state is ShiftLoaded && state.hasOpenShift;
-                    return GestureDetector(
-                      onTap: () => _showShiftDialog(context, isOpen),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: isOpen ? Colors.green : Colors.orange,
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              isOpen ? Icons.lock_open : Icons.lock,
+            left: 16,
+            child: BlocBuilder<ShiftBloc, ShiftState>(
+              builder: (context, state) {
+                final isOpen = state is ShiftLoaded && state.hasOpenShift;
+                return GestureDetector(
+                  onTap: () => _showShiftDialog(context, isOpen),
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isOpen ? Colors.green : Colors.orange,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: (isOpen ? Colors.green : Colors.orange)
+                              .withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        )
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(isOpen ? Icons.lock_open : Icons.lock,
+                            color: Colors.white, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          isOpen
+                              ? AppLocalizations.of(context)!.statusOpen
+                              : AppLocalizations.of(context)!.statusClosed,
+                          style: const TextStyle(
                               color: Colors.white,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              isOpen
-                                  ? AppLocalizations.of(context)!.statusOpen
-                                  : AppLocalizations.of(context)!.statusClosed,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildOverlayButton(
-                  icon: Icons.search,
-                  onPressed: () async {
-                    Future.microtask(() => _scannerController.stop());
-                    await context.push('/products/search');
-                    if (_isCameraOn && mounted) {
-                      Future.microtask(() => _scannerController.start());
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildOverlayButton(
-                  icon: Icons.history,
-                  onPressed: () async {
-                    Future.microtask(() => _scannerController.stop());
-                    await context.push('/sales');
-                    if (_isCameraOn && mounted) {
-                      Future.microtask(() => _scannerController.start());
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildOverlayButton(
-                  icon: Icons.bar_chart,
-                  onPressed: () async {
-                    Future.microtask(() => _scannerController.stop());
-                    await context.push('/analytics');
-                    if (_isCameraOn && mounted) {
-                      Future.microtask(() => _scannerController.start());
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildOverlayButton(
-                  icon: Icons.inventory_2_outlined,
-                  onPressed: () async {
-                    Future.microtask(() => _scannerController.stop());
-                    await context.push('/products/inventory');
-                    if (_isCameraOn && mounted) {
-                      Future.microtask(() => _scannerController.start());
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
-                _buildOverlayButton(
-                  icon: Icons.settings,
-                  onPressed: () async {
-                    Future.microtask(() => _scannerController.stop());
-                    await context.push('/settings');
-                    if (_isCameraOn && mounted) {
-                      Future.microtask(() => _scannerController.start());
-                    }
-                  },
-                ),
-                const SizedBox(height: 16),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          // Controls & Actions Sidebar (Right Side)
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 2,
+            right: 10,
+            bottom: 50, // Allow it to stretch or align towards bottom
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // CAMERA CONTROLS
                 if (_isCameraOn)
                   _buildOverlayButton(
                     icon:
@@ -286,18 +241,38 @@ class _HomePageState extends State<HomePage> {
                       _scannerController.toggleTorch();
                     },
                   ),
-                if (_isCameraOn) const SizedBox(height: 16),
                 _buildOverlayButton(
                   icon: _isCameraOn ? Icons.videocam : Icons.videocam_off,
-                  // color:  Colors.white24 ,
                   onPressed: () {
-                    setState(() {
-                      _isCameraOn = !_isCameraOn;
-                    });
+                    setState(() => _isCameraOn = !_isCameraOn);
                     if (_isCameraOn) {
                       Future.microtask(() => _scannerController.start());
                     } else {
                       Future.microtask(() => _scannerController.stop());
+                    }
+                  },
+                ),
+                _buildOverlayButton(
+                  icon: Icons.search,
+                  label: AppLocalizations.of(context)!.search,
+                  color: Colors.blue,
+                  onPressed: () async {
+                    Future.microtask(() => _scannerController.stop());
+                    await context.push('/products/search');
+                    if (_isCameraOn && mounted) {
+                      Future.microtask(() => _scannerController.start());
+                    }
+                  },
+                ),
+                _buildOverlayButton(
+                  icon: Icons.settings,
+                  label: AppLocalizations.of(context)!.settings,
+                  color: const Color(0xFF64748B),
+                  onPressed: () async {
+                    Future.microtask(() => _scannerController.stop());
+                    await context.push('/settings');
+                    if (_isCameraOn && mounted) {
+                      Future.microtask(() => _scannerController.start());
                     }
                   },
                 ),
@@ -386,20 +361,50 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildOverlayButton(
-      {required IconData icon, required VoidCallback onPressed, Color? color}) {
-    return Container(
-      width: 44,
-      height: 44,
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: color ?? Colors.black45,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white24),
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: Colors.white),
-        onPressed: onPressed,
-      ),
+      {required IconData icon,
+      required VoidCallback onPressed,
+      Color? color,
+      String? label}) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: color?.withValues(alpha: 0.9) ?? Colors.black45,
+            shape: BoxShape.circle,
+            boxShadow: [
+              if (color != null)
+                BoxShadow(
+                  color: color.withValues(alpha: 0.3),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                )
+            ],
+            border: Border.all(color: Colors.white24),
+          ),
+          child: IconButton(
+            icon: Icon(icon, color: Colors.white, size: 22),
+            onPressed: onPressed,
+          ),
+        ),
+        if (label != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w500,
+              shadows: [
+                Shadow(
+                    color: Colors.black54, blurRadius: 4, offset: Offset(0, 1))
+              ],
+            ),
+          ),
+        ],
+      ],
     );
   }
 
