@@ -264,42 +264,43 @@ class _HomePageState extends State<HomePage> {
                     }
                   },
                 ),
-                _buildOverlayButton(
-                  icon: Icons.inventory_2_outlined,
-                  label: AppLocalizations.of(context)!.stockManagement,
-                  color: Colors.orange,
-                  onPressed: () async {
-                    Future.microtask(() => _scannerController.stop());
-                    await context.push('/products/inventory');
-                    if (_isCameraOn && mounted) {
-                      Future.microtask(() => _scannerController.start());
-                    }
-                  },
-                ),
-                _buildOverlayButton(
-                  icon: Icons.history,
-                  label: AppLocalizations.of(context)!.salesHistory,
-                  color: Colors.purple,
-                  onPressed: () async {
-                    Future.microtask(() => _scannerController.stop());
-                    await context.push('/sales');
-                    if (_isCameraOn && mounted) {
-                      Future.microtask(() => _scannerController.start());
-                    }
-                  },
-                ),
-                _buildOverlayButton(
-                  icon: Icons.bar_chart,
-                  label: AppLocalizations.of(context)!.analytics,
-                  color: Colors.teal,
-                  onPressed: () async {
-                    Future.microtask(() => _scannerController.stop());
-                    await context.push('/analytics');
-                    if (_isCameraOn && mounted) {
-                      Future.microtask(() => _scannerController.start());
-                    }
-                  },
-                ),
+                // _buildOverlayButton(
+                //   icon: Icons.inventory_2_outlined,
+                //   label: AppLocalizations.of(context)!.stockManagement,
+                //   color: Colors.orange,
+                //   onPressed: () async {
+                //     Future.microtask(() => _scannerController.stop());
+                //     await context.push('/products/inventory');
+                //     if (_isCameraOn && mounted) {
+                //       Future.microtask(() => _scannerController.start());
+                //     }
+                //   },
+                // ),
+                // _buildOverlayButton(
+                //   icon: Icons.history,
+                //   label: AppLocalizations.of(context)!.salesHistory,
+                //   color: Colors.purple,
+                //   onPressed: () async {
+                //     Future.microtask(() => _scannerController.stop());
+                //     await context.push('/sales');
+                //     if (_isCameraOn && mounted) {
+                //       Future.microtask(() => _scannerController.start());
+                //     }
+                //   },
+                // ),
+                // _buildOverlayButton(
+                //   icon: Icons.bar_chart,
+                //   label: AppLocalizations.of(context)!.analytics,
+                //   color: Colors.teal,
+                //   onPressed: () async {
+                //     Future.microtask(() => _scannerController.stop());
+                //     await context.push('/analytics');
+                //     if (_isCameraOn && mounted) {
+                //       Future.microtask(() => _scannerController.start());
+                //     }
+                //   },
+                // ),
+
                 _buildOverlayButton(
                   icon: Icons.settings,
                   label: AppLocalizations.of(context)!.settings,
@@ -667,8 +668,8 @@ class _HomePageState extends State<HomePage> {
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
-              child:
-                  Icon(Icons.shopping_basket, size: 40, color: Colors.grey[300]),
+              child: Icon(Icons.shopping_basket,
+                  size: 40, color: Colors.grey[300]),
             ),
             const SizedBox(height: 16),
             Text(AppLocalizations.of(context)!.listIsEmpty,

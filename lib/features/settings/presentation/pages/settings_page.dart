@@ -128,6 +128,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 _buildDivider(),
                 _buildListItem(
+                  icon: Icons.scale_outlined,
+                  title: AppLocalizations.of(context)!.measurementUnits,
+                  onTap: () => context.push('/settings/units'),
+                ),
+                _buildDivider(),
+                _buildListItem(
                   icon: Icons.storefront,
                   title: AppLocalizations.of(context)!.shopDetails,
                   subtitle: AppLocalizations.of(context)!.shopDetailsSubtitle,

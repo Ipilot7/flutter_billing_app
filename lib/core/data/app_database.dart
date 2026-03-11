@@ -121,6 +121,31 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 1;
 
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) async {
+          await m.createAll();
+
+          // Seed default units
+          final defaultUnits = [
+            {'id': '1', 'name': 'Штука', 'shortName': 'шт'},
+            {'id': '2', 'name': 'Килограмм', 'shortName': 'кг'},
+            {'id': '3', 'name': 'Литр', 'shortName': 'л'},
+            {'id': '4', 'name': 'Метр', 'shortName': 'м'},
+            {'id': '5', 'name': 'Грамм', 'shortName': 'г'},
+            {'id': '6', 'name': 'Упаковка', 'shortName': 'уп'},
+          ];
+
+          for (var unit in defaultUnits) {
+            await into(units).insert(UnitTable(
+              id: unit['id']!,
+              name: unit['name']!,
+              shortName: unit['shortName']!,
+            ));
+          }
+        },
+      );
+
   // You can add data access methods (DAOs) here later
   
   // Example: Products
