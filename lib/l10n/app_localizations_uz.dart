@@ -383,4 +383,127 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get unknown => 'Noma\'lum';
+
+  @override
+  String get categories => 'Kategoriyalar';
+
+  @override
+  String get addCategory => 'Kategoriya qo\'shish';
+
+  @override
+  String get editCategory => 'Kategoriyani tahrirlash';
+
+  @override
+  String get categoryName => 'Kategoriya nomi';
+
+  @override
+  String get noCategories => 'Kategoriyalar topilmadi';
+
+  @override
+  String get selectCategory => 'Kategoriyani tanlang';
+
+  @override
+  String deleteCategoryConfirm(String name) {
+    return '$name ni o\'chirishni xohlaysizmi?';
+  }
+
+  @override
+  String get subtotal => 'Oraliq jami';
+
+  @override
+  String get discount => 'Chegirma';
+
+  @override
+  String get apply => 'Qo\'llash';
+
+  @override
+  String get payment => 'To\'lov';
+
+  @override
+  String get all => 'Barchasi';
+
+  @override
+  String get analytics => 'Tahlil';
+
+  @override
+  String get revenue => 'Tushum';
+
+  @override
+  String get profit => 'Foyda';
+
+  @override
+  String get today => 'Bugun';
+
+  @override
+  String get thisWeek => 'Shu hafta';
+
+  @override
+  String get thisMonth => 'Shu oy';
+
+  @override
+  String get topProducts => 'Top mahsulotlar';
+
+  @override
+  String get salesByPayment => 'To\'lov turlari bo\'yicha';
+
+  @override
+  String get costPrice => 'Tannarx';
+
+  @override
+  String get stock => 'Invertar';
+
+  @override
+  String get filterByDate => 'Sana bo\'yicha filtrlash';
+
+  @override
+  String get dailyRevenue => 'Kunlik tushum';
+
+  @override
+  String get change => 'Qaytim';
+
+  @override
+  String get received => 'Qabul qilindi';
+
+  @override
+  String get transactions => 'Tranzaksiyalar';
+
+  @override
+  String salesCount(int count) {
+    return '$count sotuv';
+  }
+
+  @override
+  String productAddedToCart(String name) {
+    return '$name savatga qo\'shildi';
+  }
+
+  @override
+  String get stockManagement => 'Invertarni boshqarish';
+
+  @override
+  String get updateStock => 'Zaxirani yangilash';
+
+  @override
+  String get currentStock => 'Joriy zaxira';
+
+  @override
+  String get newStock => 'Yangi zaxira';
+
+  @override
+  String get lowStock => 'Kam qoldi';
+
+  @override
+  String get stockUpdated => 'Zaxira muvaffaqiyatli yangilandi!';
+
+  @override
+  String get exportCSV => 'CSV eksport';
+
+  @override
+  String get share => 'Ulashish';
+
+  @override
+  String get salesReport => 'Sotuv hisoboti';
+
+  @override
+  String get amountReceived => 'Qabul qilindi';
 }

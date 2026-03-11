@@ -141,5 +141,67 @@
   "grandTotal": "ОБЩИЙ ИТОГ",
   "shopDetailsNotLoaded": "Данные магазина не загружены",
   "pleaseOpenShift": "Пожалуйста, сначала откройте смену!",
-  "unknown": "Неизвестно"
+  "unknown": "Неизвестно",
+  "categories": "Категории",
+  "addCategory": "Добавить категорию",
+  "editCategory": "Редактировать категорию",
+  "categoryName": "Название категории",
+  "noCategories": "Категории не найдены",
+  "selectCategory": "Выберите категорию",
+  "deleteCategoryConfirm": "Вы уверены, что хотите удалить {name}?",
+  "@deleteCategoryConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+    },
+  
+  "subtotal": "Промежуточный итог",
+  "discount": "Скидка",
+  "apply": "Применить",
+  "payment": "Оплата",
+  "all": "Все",
+  "analytics": "Аналитика",
+  "revenue": "Выручка",
+  "profit": "Прибыль",
+  "today": "Сегодня",
+  "thisWeek": "Эта неделя",
+  "thisMonth": "Этот месяц",
+  "topProducts": "Популярные товары",
+  "salesByPayment": "Продажи по способам оплаты",
+  "costPrice": "Себестоимость",
+  "stock": "Запас",
+  "filterByDate": "Фильтр по дате",
+  "dailyRevenue": "Выручка по дням",
+  "change": "Сдача",
+  "received": "Получено",
+  "transactions": "Транзакции",
+  "salesCount": "{count} продаж",
+  "@salesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productAddedToCart": "{name} добавлен в корзину",
+  "@productAddedToCart": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stockManagement": "Управление запасами",
+  "updateStock": "Обновить запас",
+  "currentStock": "Текущий запас",
+  "newStock": "Новый запас",
+  "lowStock": "Мало товара",
+  "stockUpdated": "Запас успешно обновлен!",
+  "exportCSV": "Экспорт CSV",
+  "share": "Поделиться",
+  "salesReport": "Отчет о продажах",
+  "amountReceived": "Получено",
+  "change": "Сдача"
 }

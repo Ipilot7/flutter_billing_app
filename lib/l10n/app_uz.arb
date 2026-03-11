@@ -134,5 +134,67 @@
   "grandTotal": "BARCHASI",
   "shopDetailsNotLoaded": "Do'kon ma'lumotlari yuklanmadi",
   "pleaseOpenShift": "Iltimos, avval smenani oching!",
-  "unknown": "Noma'lum"
+  "unknown": "Noma'lum",
+  "categories": "Kategoriyalar",
+  "addCategory": "Kategoriya qo'shish",
+  "editCategory": "Kategoriyani tahrirlash",
+  "categoryName": "Kategoriya nomi",
+  "noCategories": "Kategoriyalar topilmadi",
+  "selectCategory": "Kategoriyani tanlang",
+  "deleteCategoryConfirm": "{name} ni o'chirishni xohlaysizmi?",
+  "@deleteCategoryConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+    }
+  ,
+  "subtotal": "Oraliq jami",
+  "discount": "Chegirma",
+  "apply": "Qo'llash",
+  "payment": "To'lov",
+  "all": "Barchasi",
+  "analytics": "Tahlil",
+  "revenue": "Tushum",
+  "profit": "Foyda",
+  "today": "Bugun",
+  "thisWeek": "Shu hafta",
+  "thisMonth": "Shu oy",
+  "topProducts": "Top mahsulotlar",
+  "salesByPayment": "To'lov turlari bo'yicha",
+  "costPrice": "Tannarx",
+  "stock": "Invertar",
+  "filterByDate": "Sana bo'yicha filtrlash",
+  "dailyRevenue": "Kunlik tushum",
+  "change": "Qaytim",
+  "received": "Qabul qilindi",
+  "transactions": "Tranzaksiyalar",
+  "salesCount": "{count} sotuv",
+  "@salesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productAddedToCart": "{name} savatga qo'shildi",
+  "@productAddedToCart": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stockManagement": "Invertarni boshqarish",
+  "updateStock": "Zaxirani yangilash",
+  "currentStock": "Joriy zaxira",
+  "newStock": "Yangi zaxira",
+  "lowStock": "Kam qoldi",
+  "stockUpdated": "Zaxira muvaffaqiyatli yangilandi!",
+  "exportCSV": "CSV eksport",
+  "share": "Ulashish",
+  "salesReport": "Sotuv hisoboti",
+  "amountReceived": "Qabul qilindi",
+  "change": "Qaytim"
 }

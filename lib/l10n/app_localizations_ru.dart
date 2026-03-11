@@ -382,4 +382,127 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get unknown => 'Неизвестно';
+
+  @override
+  String get categories => 'Категории';
+
+  @override
+  String get addCategory => 'Добавить категорию';
+
+  @override
+  String get editCategory => 'Редактировать категорию';
+
+  @override
+  String get categoryName => 'Название категории';
+
+  @override
+  String get noCategories => 'Категории не найдены';
+
+  @override
+  String get selectCategory => 'Выберите категорию';
+
+  @override
+  String deleteCategoryConfirm(String name) {
+    return 'Вы уверены, что хотите удалить $name?';
+  }
+
+  @override
+  String get subtotal => 'Промежуточный итог';
+
+  @override
+  String get discount => 'Скидка';
+
+  @override
+  String get apply => 'Применить';
+
+  @override
+  String get payment => 'Оплата';
+
+  @override
+  String get all => 'Все';
+
+  @override
+  String get analytics => 'Аналитика';
+
+  @override
+  String get revenue => 'Выручка';
+
+  @override
+  String get profit => 'Прибыль';
+
+  @override
+  String get today => 'Сегодня';
+
+  @override
+  String get thisWeek => 'Эта неделя';
+
+  @override
+  String get thisMonth => 'Этот месяц';
+
+  @override
+  String get topProducts => 'Популярные товары';
+
+  @override
+  String get salesByPayment => 'Продажи по способам оплаты';
+
+  @override
+  String get costPrice => 'Себестоимость';
+
+  @override
+  String get stock => 'Запас';
+
+  @override
+  String get filterByDate => 'Фильтр по дате';
+
+  @override
+  String get dailyRevenue => 'Выручка по дням';
+
+  @override
+  String get change => 'Сдача';
+
+  @override
+  String get received => 'Получено';
+
+  @override
+  String get transactions => 'Транзакции';
+
+  @override
+  String salesCount(int count) {
+    return '$count продаж';
+  }
+
+  @override
+  String productAddedToCart(String name) {
+    return '$name добавлен в корзину';
+  }
+
+  @override
+  String get stockManagement => 'Управление запасами';
+
+  @override
+  String get updateStock => 'Обновить запас';
+
+  @override
+  String get currentStock => 'Текущий запас';
+
+  @override
+  String get newStock => 'Новый запас';
+
+  @override
+  String get lowStock => 'Мало товара';
+
+  @override
+  String get stockUpdated => 'Запас успешно обновлен!';
+
+  @override
+  String get exportCSV => 'Экспорт CSV';
+
+  @override
+  String get share => 'Поделиться';
+
+  @override
+  String get salesReport => 'Отчет о продажах';
+
+  @override
+  String get amountReceived => 'Получено';
 }

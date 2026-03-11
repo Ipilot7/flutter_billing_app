@@ -19,7 +19,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
       final currentShift = await getCurrentShift();
       if (currentShift.isRight() &&
           currentShift.fold((l) => null, (s) => s) != null) {
-        return Left(CacheFailure('A shift is already open'));
+        return const Left(CacheFailure('A shift is already open'));
       }
 
       final shift = ShiftModel(
@@ -45,7 +45,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
     try {
       final existingShift = _box.get(shiftId);
       if (existingShift == null) {
-        return Left(CacheFailure('Shift not found'));
+        return const Left(CacheFailure('Shift not found'));
       }
 
       final updatedShift = ShiftModel(

@@ -110,6 +110,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 _buildDivider(),
                 _buildListItem(
+                  icon: Icons.inventory_2_outlined,
+                  title: AppLocalizations.of(context)!.stockManagement,
+                  onTap: () => context.push('/products/inventory'),
+                ),
+                _buildDivider(),
+                _buildListItem(
                   icon: Icons.storefront,
                   title: AppLocalizations.of(context)!.shopDetails,
                   subtitle: AppLocalizations.of(context)!.shopDetailsSubtitle,
@@ -121,7 +127,7 @@ class _SettingsPageState extends State<SettingsPage> {
             const SizedBox(height: 24),
 
             // Language Section
-            _buildSectionHeader('${AppLocalizations.of(context)!.language}'),
+            _buildSectionHeader(AppLocalizations.of(context)!.language),
             BlocBuilder<LocaleCubit, Locale>(
               builder: (context, locale) {
                 return _buildListGroup(

@@ -26,13 +26,14 @@ class SaleModelAdapter extends TypeAdapter<SaleModel> {
       paymentType: fields[6] as int,
       isReturned: fields[7] as bool,
       returnedSaleId: fields[8] as String?,
+      globalDiscount: fields[9] as double,
     );
   }
 
   @override
   void write(BinaryWriter writer, SaleModel obj) {
     writer
-      ..writeByte(9)
+      ..writeByte(10)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -50,7 +51,9 @@ class SaleModelAdapter extends TypeAdapter<SaleModel> {
       ..writeByte(7)
       ..write(obj.isReturned)
       ..writeByte(8)
-      ..write(obj.returnedSaleId);
+      ..write(obj.returnedSaleId)
+      ..writeByte(9)
+      ..write(obj.globalDiscount);
   }
 
   @override
@@ -78,14 +81,16 @@ class SaleItemModelAdapter extends TypeAdapter<SaleItemModel> {
       productId: fields[0] as String,
       productName: fields[1] as String,
       price: fields[2] as double,
-      quantity: fields[3] as int,
+      quantity: fields[3] as double,
+      discount: fields[4] as double,
+      costPrice: fields[5] as double,
     );
   }
 
   @override
   void write(BinaryWriter writer, SaleItemModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(6)
       ..writeByte(0)
       ..write(obj.productId)
       ..writeByte(1)
@@ -93,7 +98,11 @@ class SaleItemModelAdapter extends TypeAdapter<SaleItemModel> {
       ..writeByte(2)
       ..write(obj.price)
       ..writeByte(3)
-      ..write(obj.quantity);
+      ..write(obj.quantity)
+      ..writeByte(4)
+      ..write(obj.discount)
+      ..writeByte(5)
+      ..write(obj.costPrice);
   }
 
   @override

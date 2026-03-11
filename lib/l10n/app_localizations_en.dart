@@ -381,4 +381,127 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get unknown => 'Unknown';
+
+  @override
+  String get categories => 'Categories';
+
+  @override
+  String get addCategory => 'Add Category';
+
+  @override
+  String get editCategory => 'Edit Category';
+
+  @override
+  String get categoryName => 'Category Name';
+
+  @override
+  String get noCategories => 'No categories found';
+
+  @override
+  String get selectCategory => 'Select Category';
+
+  @override
+  String deleteCategoryConfirm(String name) {
+    return 'Are you sure you want to delete $name?';
+  }
+
+  @override
+  String get subtotal => 'Subtotal';
+
+  @override
+  String get discount => 'Discount';
+
+  @override
+  String get apply => 'Apply';
+
+  @override
+  String get payment => 'Payment';
+
+  @override
+  String get all => 'All';
+
+  @override
+  String get analytics => 'Analytics';
+
+  @override
+  String get revenue => 'Revenue';
+
+  @override
+  String get profit => 'Profit';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get thisWeek => 'This Week';
+
+  @override
+  String get thisMonth => 'This Month';
+
+  @override
+  String get topProducts => 'Top Products';
+
+  @override
+  String get salesByPayment => 'Sales by Payment Method';
+
+  @override
+  String get costPrice => 'Cost Price';
+
+  @override
+  String get stock => 'Stock';
+
+  @override
+  String get filterByDate => 'Filter by Date';
+
+  @override
+  String get dailyRevenue => 'Daily Revenue';
+
+  @override
+  String get change => 'Change';
+
+  @override
+  String get received => 'Received';
+
+  @override
+  String get transactions => 'Transactions';
+
+  @override
+  String salesCount(int count) {
+    return '$count sales';
+  }
+
+  @override
+  String productAddedToCart(String name) {
+    return '$name added to cart';
+  }
+
+  @override
+  String get stockManagement => 'Stock Management';
+
+  @override
+  String get updateStock => 'Update Stock';
+
+  @override
+  String get currentStock => 'Current Stock';
+
+  @override
+  String get newStock => 'New Stock';
+
+  @override
+  String get lowStock => 'Low Stock';
+
+  @override
+  String get stockUpdated => 'Stock updated successfully!';
+
+  @override
+  String get exportCSV => 'Export CSV';
+
+  @override
+  String get share => 'Share';
+
+  @override
+  String get salesReport => 'Sales Report';
+
+  @override
+  String get amountReceived => 'Amount Received';
 }

@@ -3,6 +3,10 @@ import 'package:billing_app/features/product/data/repositories/product_repositor
 import 'package:billing_app/features/product/domain/repositories/product_repository.dart';
 import 'package:billing_app/features/product/domain/usecases/product_usecases.dart';
 import 'package:billing_app/features/product/presentation/bloc/product_bloc.dart';
+import 'package:billing_app/features/product/presentation/bloc/category_bloc.dart';
+import 'package:billing_app/features/product/data/repositories/category_repository_impl.dart';
+import 'package:billing_app/features/product/domain/repositories/category_repository.dart';
+import 'package:billing_app/features/product/domain/usecases/category_usecases.dart';
 import 'package:billing_app/features/shop/data/repositories/shop_repository_impl.dart';
 import 'package:billing_app/features/shop/domain/repositories/shop_repository.dart';
 import 'package:billing_app/features/shop/domain/usecases/shop_usecases.dart';
@@ -18,9 +22,11 @@ import 'package:billing_app/features/shift/presentation/bloc/shift_bloc.dart';
 import 'package:billing_app/features/sales/data/repositories/sales_repository_impl.dart';
 import 'package:billing_app/features/sales/domain/usecases/sales_usecases.dart';
 import 'package:billing_app/features/sales/presentation/bloc/sales_bloc.dart';
+import 'package:billing_app/features/sales/presentation/bloc/analytics_bloc.dart';
 import 'package:billing_app/features/measurement_unit/data/repositories/unit_repository_impl.dart';
 import 'package:billing_app/features/measurement_unit/domain/usecases/unit_usecases.dart';
 import 'package:billing_app/features/measurement_unit/presentation/bloc/unit_bloc.dart';
+import 'package:billing_app/features/billing/presentation/bloc/billing_bloc.dart';
 
 final sl = GetIt.instance;
 
@@ -37,6 +43,15 @@ Future<void> init() async {
   );
 
   sl.registerFactory(
+    () => CategoryBloc(
+      getCategoriesUseCase: sl(),
+      addCategoryUseCase: sl(),
+      updateCategoryUseCase: sl(),
+      deleteCategoryUseCase: sl(),
+    ),
+  );
+
+  sl.registerFactory(
     () => ShopBloc(
       getShopUseCase: sl(),
       updateShopUseCase: sl(),
@@ -46,6 +61,14 @@ Future<void> init() async {
   sl.registerFactory(
     () => PrinterBloc(
       repository: sl(),
+    ),
+  );
+
+  sl.registerFactory(
+    () => BillingBloc(
+      getProductByBarcodeUseCase: sl(),
+      createSaleUseCase: sl(),
+      updateProductUseCase: sl(),
     ),
   );
 
@@ -63,6 +86,11 @@ Future<void> init() async {
     () => SalesBloc(
       getSalesHistoryUseCase: sl(),
       returnSaleUseCase: sl(),
+    ),
+  );
+  sl.registerFactory(
+    () => AnalyticsBloc(
+      getSalesHistoryUseCase: sl(),
     ),
   );
 
@@ -90,6 +118,15 @@ Future<void> init() async {
   sl.registerLazySingleton<ProductRepository>(
     () => ProductRepositoryImpl(),
   );
+
+  sl.registerLazySingleton<CategoryRepository>(
+    () => CategoryRepositoryImpl(),
+  );
+
+  sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
+  sl.registerLazySingleton(() => AddCategoryUseCase(sl()));
+  sl.registerLazySingleton(() => UpdateCategoryUseCase(sl()));
+  sl.registerLazySingleton(() => DeleteCategoryUseCase(sl()));
 
   // Features - Shop
   // Use cases

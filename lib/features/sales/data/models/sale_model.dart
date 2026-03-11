@@ -42,6 +42,10 @@ class SaleModel extends Sale {
   @HiveField(8)
   final String? returnedSaleId;
 
+  @override
+  @HiveField(9)
+  final double globalDiscount;
+
   const SaleModel({
     required this.id,
     required this.createdAt,
@@ -52,6 +56,7 @@ class SaleModel extends Sale {
     required this.paymentType,
     this.isReturned = false,
     this.returnedSaleId,
+    this.globalDiscount = 0.0,
   }) : super(
           id: id,
           createdAt: createdAt,
@@ -62,6 +67,7 @@ class SaleModel extends Sale {
           paymentType: paymentType,
           isReturned: isReturned,
           returnedSaleId: returnedSaleId,
+          globalDiscount: globalDiscount,
         );
 
   factory SaleModel.fromEntity(Sale sale) {
@@ -75,6 +81,7 @@ class SaleModel extends Sale {
       paymentType: sale.paymentType,
       isReturned: sale.isReturned,
       returnedSaleId: sale.returnedSaleId,
+      globalDiscount: sale.globalDiscount,
     );
   }
 
@@ -89,6 +96,7 @@ class SaleModel extends Sale {
       paymentType: paymentType,
       isReturned: isReturned,
       returnedSaleId: returnedSaleId,
+      globalDiscount: globalDiscount,
     );
   }
 }
@@ -109,18 +117,30 @@ class SaleItemModel extends SaleItem {
 
   @override
   @HiveField(3)
-  final int quantity;
+  final double quantity;
+
+  @override
+  @HiveField(4)
+  final double discount;
+
+  @override
+  @HiveField(5)
+  final double costPrice;
 
   const SaleItemModel({
     required this.productId,
     required this.productName,
     required this.price,
     required this.quantity,
+    this.discount = 0.0,
+    this.costPrice = 0.0,
   }) : super(
           productId: productId,
           productName: productName,
           price: price,
           quantity: quantity,
+          discount: discount,
+          costPrice: costPrice,
         );
 
   factory SaleItemModel.fromEntity(SaleItem item) {
@@ -129,6 +149,8 @@ class SaleItemModel extends SaleItem {
       productName: item.productName,
       price: item.price,
       quantity: item.quantity,
+      discount: item.discount,
+      costPrice: item.costPrice,
     );
   }
 
@@ -138,6 +160,8 @@ class SaleItemModel extends SaleItem {
       productName: productName,
       price: price,
       quantity: quantity,
+      discount: discount,
+      costPrice: costPrice,
     );
   }
 }

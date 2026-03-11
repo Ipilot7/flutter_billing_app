@@ -11,6 +11,8 @@ import 'package:billing_app/l10n/app_localizations.dart';
 import '../../../measurement_unit/presentation/bloc/unit_bloc.dart';
 import '../../../measurement_unit/presentation/bloc/unit_event.dart';
 import '../../../measurement_unit/presentation/bloc/unit_state.dart';
+import '../bloc/category_bloc.dart';
+import '../bloc/category_state.dart';
 
 class EditProductPage extends StatefulWidget {
   final Product product;
@@ -24,14 +26,20 @@ class _EditProductPageState extends State<EditProductPage> {
   final _formKey = GlobalKey<FormState>();
   late String _name;
   late double _price;
+  late double _costPrice;
+  late double _stock;
   late String _unit;
+  String? _categoryId;
 
   @override
   void initState() {
     super.initState();
     _name = widget.product.name;
     _price = widget.product.price;
+    _costPrice = widget.product.costPrice;
+    _stock = widget.product.stock;
     _unit = widget.product.unit;
+    _categoryId = widget.product.categoryId;
     context.read<UnitBloc>().add(LoadUnitsEvent());
   }
 
@@ -44,7 +52,10 @@ class _EditProductPageState extends State<EditProductPage> {
         name: _name,
         barcode: widget.product.barcode,
         price: _price,
+        costPrice: _costPrice,
         unit: _unit,
+        stock: _stock,
+        categoryId: _categoryId,
       );
 
       context.read<ProductBloc>().add(UpdateProduct(updatedProduct));
@@ -145,6 +156,35 @@ class _EditProductPageState extends State<EditProductPage> {
                     onSaved: (value) => _price = double.parse(value!),
                   ),
                   const SizedBox(height: 24),
+
+                  InputLabel(text: AppLocalizations.of(context)!.costPrice),
+
+                  TextFormField(
+                    initialValue: _costPrice.toStringAsFixed(2),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      prefixText: '${AppLocalizations.of(context)!.currency} ',
+                      prefixStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black),
+                    ),
+                    onSaved: (value) => _costPrice = double.parse(value ?? '0'),
+                  ),
+                  const SizedBox(height: 24),
+
+                  InputLabel(text: AppLocalizations.of(context)!.stock),
+
+                  TextFormField(
+                    initialValue: _stock % 1 == 0
+                        ? _stock.toInt().toString()
+                        : _stock.toStringAsFixed(2),
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    onSaved: (value) => _stock = double.parse(value ?? '0'),
+                  ),
+                  const SizedBox(height: 24),
                   InputLabel(
                       text: AppLocalizations.of(context)!.measurementUnit),
                   Row(
@@ -170,7 +210,7 @@ class _EditProductPageState extends State<EditProductPage> {
                             }
 
                             return DropdownButtonFormField<String>(
-                              value: _unit,
+                              initialValue: _unit,
                               decoration: const InputDecoration(
                                 contentPadding: EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
@@ -198,6 +238,29 @@ class _EditProductPageState extends State<EditProductPage> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 24),
+                  InputLabel(
+                      text: AppLocalizations.of(context)!.selectCategory),
+                  BlocBuilder<CategoryBloc, CategoryState>(
+                    builder: (context, state) {
+                      return DropdownButtonFormField<String>(
+                        initialValue: _categoryId,
+                        decoration: const InputDecoration(
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        hint:
+                            Text(AppLocalizations.of(context)!.selectCategory),
+                        items: state.categories
+                            .map((c) => DropdownMenuItem(
+                                  value: c.id,
+                                  child: Text(c.name),
+                                ))
+                            .toList(),
+                        onChanged: (val) => setState(() => _categoryId = val),
+                      );
+                    },
                   ),
                 ],
               ),

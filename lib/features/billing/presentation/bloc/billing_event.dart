@@ -3,7 +3,7 @@ part of 'billing_bloc.dart';
 abstract class BillingEvent extends Equatable {
   const BillingEvent();
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
 class ScanBarcodeEvent extends BillingEvent {
@@ -29,10 +29,33 @@ class RemoveProductFromCartEvent extends BillingEvent {
 
 class UpdateQuantityEvent extends BillingEvent {
   final String productId;
-  final int quantity;
+  final double quantity;
   const UpdateQuantityEvent(this.productId, this.quantity);
   @override
   List<Object> get props => [productId, quantity];
+}
+
+class UpdatePriceOverrideEvent extends BillingEvent {
+  final String productId;
+  final double? price;
+  const UpdatePriceOverrideEvent(this.productId, this.price);
+  @override
+  List<Object?> get props => [productId, price];
+}
+
+class UpdateItemDiscountEvent extends BillingEvent {
+  final String productId;
+  final double discount;
+  const UpdateItemDiscountEvent(this.productId, this.discount);
+  @override
+  List<Object> get props => [productId, discount];
+}
+
+class UpdateGlobalDiscountEvent extends BillingEvent {
+  final double discount;
+  const UpdateGlobalDiscountEvent(this.discount);
+  @override
+  List<Object> get props => [discount];
 }
 
 class ClearCartEvent extends BillingEvent {}

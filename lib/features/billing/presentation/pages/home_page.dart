@@ -9,6 +9,7 @@ import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../../../shift/presentation/bloc/shift_bloc.dart';
 import '../../../shift/presentation/bloc/shift_state.dart';
 import '../../../shift/presentation/bloc/shift_event.dart';
+import '../../../sales/presentation/bloc/analytics_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/cart_item.dart';
@@ -36,9 +37,17 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _isCameraOn = true;
+    _refreshAnalytics(); // Initial load for today's stats
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scannerController.start();
     });
+  }
+
+  void _refreshAnalytics() {
+    final now = DateTime.now();
+    final from = DateTime(now.year, now.month, now.day);
+    final to = DateTime(now.year, now.month, now.day, 23, 59, 59);
+    context.read<AnalyticsBloc>().add(LoadAnalyticsEvent(from: from, to: to));
   }
 
   @override
@@ -84,6 +93,14 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       body: MultiBlocListener(
         listeners: [
+          BlocListener<BillingBloc, BillingState>(
+            listenWhen: (previous, current) =>
+                previous.cartItems.isNotEmpty && current.cartItems.isEmpty,
+            listener: (context, state) {
+              // Cart cleared usually means sale completed or manually cleared
+              _refreshAnalytics();
+            },
+          ),
           BlocListener<BillingBloc, BillingState>(
             listenWhen: (previous, current) =>
                 previous.error != current.error && current.error != null,
@@ -206,10 +223,43 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 16),
                 _buildOverlayButton(
+                  icon: Icons.search,
+                  onPressed: () async {
+                    Future.microtask(() => _scannerController.stop());
+                    await context.push('/products/search');
+                    if (_isCameraOn && mounted) {
+                      Future.microtask(() => _scannerController.start());
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildOverlayButton(
                   icon: Icons.history,
                   onPressed: () async {
                     Future.microtask(() => _scannerController.stop());
                     await context.push('/sales');
+                    if (_isCameraOn && mounted) {
+                      Future.microtask(() => _scannerController.start());
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildOverlayButton(
+                  icon: Icons.bar_chart,
+                  onPressed: () async {
+                    Future.microtask(() => _scannerController.stop());
+                    await context.push('/analytics');
+                    if (_isCameraOn && mounted) {
+                      Future.microtask(() => _scannerController.start());
+                    }
+                  },
+                ),
+                const SizedBox(height: 16),
+                _buildOverlayButton(
+                  icon: Icons.inventory_2_outlined,
+                  onPressed: () async {
+                    Future.microtask(() => _scannerController.stop());
+                    await context.push('/products/inventory');
                     if (_isCameraOn && mounted) {
                       Future.microtask(() => _scannerController.start());
                     }
@@ -406,11 +456,12 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
 
-          // Header
+          // Today's quick stats bar
+          _buildTodayStats(),
           BlocBuilder<BillingBloc, BillingState>(
             builder: (context, state) {
               final totalItems =
-                  state.cartItems.fold<int>(0, (sum, i) => sum + i.quantity);
+                  state.cartItems.fold<double>(0, (sum, i) => sum + i.quantity);
               return Padding(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
@@ -425,7 +476,7 @@ class _HomePageState extends State<HomePage> {
                                 fontSize: 18, fontWeight: FontWeight.w600)),
                         Text(
                             AppLocalizations.of(context)!
-                                .totalItems(totalItems),
+                                .totalItems(totalItems.toInt()),
                             style: const TextStyle(
                                 fontSize: 12, color: Colors.grey)),
                       ],
@@ -443,7 +494,7 @@ class _HomePageState extends State<HomePage> {
                                 color: Colors.grey,
                                 letterSpacing: 1.2)),
                         Text(
-                          '${state.totalAmount.toStringAsFixed(2)}',
+                          state.totalAmount.toStringAsFixed(2),
                           style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.w900,
@@ -481,6 +532,80 @@ class _HomePageState extends State<HomePage> {
                 },
               ),
             ]),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTodayStats() {
+    return BlocBuilder<AnalyticsBloc, AnalyticsState>(
+      builder: (context, state) {
+        if (state is! AnalyticsLoaded) {
+          return const SizedBox(height: 10);
+        }
+
+        final l = AppLocalizations.of(context)!;
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: AppTheme.primaryColor.withValues(alpha: 0.04),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+                color: AppTheme.primaryColor.withValues(alpha: 0.08)),
+          ),
+          child: Row(
+            children: [
+              _todayStatItem(
+                context,
+                icon: Icons.receipt_long,
+                label: l.transactions,
+                value: state.sales.length.toString(),
+              ),
+              Container(width: 1, height: 24, color: Colors.grey[200]),
+              _todayStatItem(
+                context,
+                icon: Icons.payments,
+                label: l.revenue,
+                value: '${l.currency} ${state.totalRevenue.toInt()}',
+                isBold: true,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _todayStatItem(BuildContext context,
+      {required IconData icon,
+      required String label,
+      required String value,
+      bool isBold = false}) {
+    return Expanded(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 16, color: AppTheme.primaryColor),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                label,
+                style: TextStyle(fontSize: 10, color: Colors.grey[600]),
+              ),
+              Text(
+                value,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: isBold ? FontWeight.w900 : FontWeight.bold,
+                  color: isBold ? AppTheme.primaryColor : Colors.black87,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -575,7 +700,7 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () {
                       if (item.quantity > 1) {
                         context.read<BillingBloc>().add(UpdateQuantityEvent(
-                            item.product.id, item.quantity - 1));
+                            item.product.id, item.quantity - 1.0));
                       } else {
                         context
                             .read<BillingBloc>()
@@ -585,7 +710,9 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(
                   width: 32,
                   child: Text(
-                    '${item.quantity}',
+                    item.quantity % 1 == 0
+                        ? item.quantity.toInt().toString()
+                        : item.quantity.toStringAsFixed(2),
                     textAlign: TextAlign.center,
                     style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
@@ -594,7 +721,7 @@ class _HomePageState extends State<HomePage> {
                     icon: Icons.add,
                     onPressed: () {
                       context.read<BillingBloc>().add(UpdateQuantityEvent(
-                          item.product.id, item.quantity + 1));
+                          item.product.id, item.quantity + 1.0));
                     }),
               ],
             ),

@@ -81,6 +81,7 @@ class SalesRepositoryImpl implements SalesRepository {
         paymentType: existingSale.paymentType,
         isReturned: true,
         returnedSaleId: saleId,
+        globalDiscount: existingSale.globalDiscount,
       );
 
       await _box.put(returnedSale.id, returnedSale);

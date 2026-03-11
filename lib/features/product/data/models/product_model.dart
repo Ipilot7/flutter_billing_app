@@ -20,10 +20,18 @@ class ProductModel extends Product {
   final double price;
   @override
   @HiveField(4)
-  final int stock;
+  final double stock;
   @override
   @HiveField(5)
   final String unit;
+
+  @override
+  @HiveField(6)
+  final String? categoryId;
+
+  @override
+  @HiveField(7)
+  final double costPrice;
 
   const ProductModel({
     required this.id,
@@ -31,14 +39,18 @@ class ProductModel extends Product {
     required this.barcode,
     required this.price,
     required this.stock,
+    this.costPrice = 0.0,
     this.unit = 'шт',
+    this.categoryId,
   }) : super(
           id: id,
           name: name,
           barcode: barcode,
           price: price,
+          costPrice: costPrice,
           stock: stock,
           unit: unit,
+          categoryId: categoryId,
         );
 
   factory ProductModel.fromEntity(Product product) {
@@ -47,8 +59,10 @@ class ProductModel extends Product {
       name: product.name,
       barcode: product.barcode,
       price: product.price,
+      costPrice: product.costPrice,
       stock: product.stock,
       unit: product.unit,
+      categoryId: product.categoryId,
     );
   }
 
@@ -58,8 +72,10 @@ class ProductModel extends Product {
       name: name,
       barcode: barcode,
       price: price,
+      costPrice: costPrice,
       stock: stock,
       unit: unit,
+      categoryId: categoryId,
     );
   }
 }

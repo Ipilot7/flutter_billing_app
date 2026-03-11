@@ -4,6 +4,7 @@ import '../../features/shop/data/models/shop_model.dart';
 import '../../features/shift/data/models/shift_model.dart';
 import '../../features/sales/data/models/sale_model.dart';
 import '../../features/measurement_unit/data/models/unit_model.dart';
+import '../../features/product/data/models/category_model.dart';
 
 class HiveDatabase {
   static const String productBoxName = 'products';
@@ -12,6 +13,7 @@ class HiveDatabase {
   static const String shiftsBoxName = 'shifts';
   static const String salesBoxName = 'sales';
   static const String unitsBoxName = 'units';
+  static const String categoriesBoxName = 'categories';
 
   static Future<void> init() async {
     await Hive.initFlutter();
@@ -23,6 +25,7 @@ class HiveDatabase {
     Hive.registerAdapter(SaleModelAdapter());
     Hive.registerAdapter(SaleItemModelAdapter());
     Hive.registerAdapter(UnitModelAdapter());
+    Hive.registerAdapter(CategoryModelAdapter());
 
     // Open Boxes
     await Hive.openBox<ProductModel>(productBoxName);
@@ -31,6 +34,7 @@ class HiveDatabase {
     await Hive.openBox<ShiftModel>(shiftsBoxName);
     await Hive.openBox<SaleModel>(salesBoxName);
     await Hive.openBox<UnitModel>(unitsBoxName);
+    await Hive.openBox<CategoryModel>(categoriesBoxName);
   }
 
   static Box<ProductModel> get productBox =>
@@ -40,4 +44,6 @@ class HiveDatabase {
   static Box<ShiftModel> get shiftsBox => Hive.box<ShiftModel>(shiftsBoxName);
   static Box<SaleModel> get salesBox => Hive.box<SaleModel>(salesBoxName);
   static Box<UnitModel> get unitsBox => Hive.box<UnitModel>(unitsBoxName);
+  static Box<CategoryModel> get categoriesBox =>
+      Hive.box<CategoryModel>(categoriesBoxName);
 }

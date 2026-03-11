@@ -134,5 +134,66 @@
   "grandTotal": "GRAND TOTAL",
   "shopDetailsNotLoaded": "Shop details not loaded",
   "pleaseOpenShift": "Please open a shift first!",
-  "unknown": "Unknown"
+  "unknown": "Unknown",
+  "categories": "Categories",
+  "addCategory": "Add Category",
+  "editCategory": "Edit Category",
+  "categoryName": "Category Name",
+  "noCategories": "No categories found",
+  "selectCategory": "Select Category",
+  "deleteCategoryConfirm": "Are you sure you want to delete {name}?",
+  "@deleteCategoryConfirm": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "subtotal": "Subtotal",
+  "discount": "Discount",
+  "apply": "Apply",
+  "payment": "Payment",
+  "all": "All",
+  "analytics": "Analytics",
+  "revenue": "Revenue",
+  "profit": "Profit",
+  "today": "Today",
+  "thisWeek": "This Week",
+  "thisMonth": "This Month",
+  "topProducts": "Top Products",
+  "salesByPayment": "Sales by Payment Method",
+  "costPrice": "Cost Price",
+  "stock": "Stock",
+  "filterByDate": "Filter by Date",
+  "dailyRevenue": "Daily Revenue",
+  "change": "Change",
+  "received": "Received",
+  "transactions": "Transactions",
+  "salesCount": "{count} sales",
+  "@salesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "productAddedToCart": "{name} added to cart",
+  "@productAddedToCart": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "stockManagement": "Stock Management",
+  "updateStock": "Update Stock",
+  "currentStock": "Current Stock",
+  "newStock": "New Stock",
+  "lowStock": "Low Stock",
+  "stockUpdated": "Stock updated successfully!",
+  "exportCSV": "Export CSV",
+  "share": "Share",
+  "salesReport": "Sales Report",
+  "amountReceived": "Amount Received",
+  "change": "Change"
 }

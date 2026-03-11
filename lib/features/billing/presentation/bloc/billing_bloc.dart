@@ -15,10 +15,12 @@ part 'billing_state.dart';
 class BillingBloc extends Bloc<BillingEvent, BillingState> {
   final GetProductByBarcodeUseCase getProductByBarcodeUseCase;
   final CreateSaleUseCase createSaleUseCase;
+  final UpdateProductUseCase updateProductUseCase;
 
   BillingBloc({
     required this.getProductByBarcodeUseCase,
     required this.createSaleUseCase,
+    required this.updateProductUseCase,
   }) : super(const BillingState()) {
     on<ScanBarcodeEvent>(_onScanBarcode);
     on<AddProductToCartEvent>(_onAddProductToCart);
@@ -27,6 +29,9 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     on<ClearCartEvent>(_onClearCart);
     on<PrintReceiptEvent>(_onPrintReceipt);
     on<CompleteSaleEvent>(_onCompleteSale);
+    on<UpdatePriceOverrideEvent>(_onUpdatePriceOverride);
+    on<UpdateItemDiscountEvent>(_onUpdateItemDiscount);
+    on<UpdateGlobalDiscountEvent>(_onUpdateGlobalDiscount);
   }
 
   Future<void> _onScanBarcode(
@@ -83,6 +88,33 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
       items[index] = items[index].copyWith(quantity: event.quantity);
       emit(state.copyWith(cartItems: items));
     }
+  }
+
+  void _onUpdatePriceOverride(
+      UpdatePriceOverrideEvent event, Emitter<BillingState> emit) {
+    final index = state.cartItems
+        .indexWhere((item) => item.product.id == event.productId);
+    if (index >= 0) {
+      final items = List<CartItem>.from(state.cartItems);
+      items[index] = items[index].copyWith(priceOverride: event.price);
+      emit(state.copyWith(cartItems: items));
+    }
+  }
+
+  void _onUpdateItemDiscount(
+      UpdateItemDiscountEvent event, Emitter<BillingState> emit) {
+    final index = state.cartItems
+        .indexWhere((item) => item.product.id == event.productId);
+    if (index >= 0) {
+      final items = List<CartItem>.from(state.cartItems);
+      items[index] = items[index].copyWith(discount: event.discount);
+      emit(state.copyWith(cartItems: items));
+    }
+  }
+
+  void _onUpdateGlobalDiscount(
+      UpdateGlobalDiscountEvent event, Emitter<BillingState> emit) {
+    emit(state.copyWith(globalDiscount: event.discount));
   }
 
   void _onClearCart(ClearCartEvent event, Emitter<BillingState> emit) {
@@ -152,8 +184,10 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
         .map((item) => SaleItem(
               productId: item.product.id,
               productName: item.product.name,
-              price: item.product.price,
+              price: item.price,
+              costPrice: item.product.costPrice,
               quantity: item.quantity,
+              discount: item.discount,
             ))
         .toList();
 
@@ -176,8 +210,13 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
             clearError: false));
         emit(state.copyWith(clearError: true));
       },
-      (successSale) {
-        // Only clear the cart if sale successfully saved.
+      (successSale) async {
+        // Subtract stock for each item
+        for (final item in state.cartItems) {
+          final updatedProduct =
+              item.product.copyWith(stock: item.product.stock - item.quantity);
+          await updateProductUseCase(updatedProduct);
+        }
         add(ClearCartEvent());
       },
     );

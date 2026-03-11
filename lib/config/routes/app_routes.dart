@@ -10,6 +10,10 @@ import '../../features/billing/presentation/pages/checkout_page.dart';
 import '../../features/product/domain/entities/product.dart';
 import '../../features/sales/presentation/pages/sales_history_page.dart';
 import '../../features/measurement_unit/presentation/pages/measurement_units_page.dart';
+import '../../features/product/presentation/pages/categories_page.dart';
+import '../../features/product/presentation/pages/product_search_page.dart';
+import '../../features/sales/presentation/pages/analytics_page.dart';
+import '../../features/product/presentation/pages/stock_management_page.dart';
 
 final router = GoRouter(
   initialLocation: '/',
@@ -29,6 +33,10 @@ final router = GoRouter(
         GoRoute(
           path: 'sales',
           builder: (context, state) => const SalesHistoryPage(),
+        ),
+        GoRoute(
+          path: 'analytics',
+          builder: (context, state) => const AnalyticsPage(),
         ),
       ],
     ),
@@ -59,6 +67,18 @@ final router = GoRouter(
             }
             return EditProductPage(product: product);
           },
+        ),
+        GoRoute(
+          path: 'categories',
+          builder: (context, state) => const CategoriesPage(),
+        ),
+        GoRoute(
+          path: 'search',
+          builder: (context, state) => const ProductSearchPage(),
+        ),
+        GoRoute(
+          path: 'inventory',
+          builder: (context, state) => const StockManagementPage(),
         ),
       ],
     ),

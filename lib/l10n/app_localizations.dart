@@ -825,6 +825,240 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Неизвестно'**
   String get unknown;
+
+  /// No description provided for @categories.
+  ///
+  /// In ru, this message translates to:
+  /// **'Категории'**
+  String get categories;
+
+  /// No description provided for @addCategory.
+  ///
+  /// In ru, this message translates to:
+  /// **'Добавить категорию'**
+  String get addCategory;
+
+  /// No description provided for @editCategory.
+  ///
+  /// In ru, this message translates to:
+  /// **'Редактировать категорию'**
+  String get editCategory;
+
+  /// No description provided for @categoryName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Название категории'**
+  String get categoryName;
+
+  /// No description provided for @noCategories.
+  ///
+  /// In ru, this message translates to:
+  /// **'Категории не найдены'**
+  String get noCategories;
+
+  /// No description provided for @selectCategory.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выберите категорию'**
+  String get selectCategory;
+
+  /// No description provided for @deleteCategoryConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы уверены, что хотите удалить {name}?'**
+  String deleteCategoryConfirm(String name);
+
+  /// No description provided for @subtotal.
+  ///
+  /// In ru, this message translates to:
+  /// **'Промежуточный итог'**
+  String get subtotal;
+
+  /// No description provided for @discount.
+  ///
+  /// In ru, this message translates to:
+  /// **'Скидка'**
+  String get discount;
+
+  /// No description provided for @apply.
+  ///
+  /// In ru, this message translates to:
+  /// **'Применить'**
+  String get apply;
+
+  /// No description provided for @payment.
+  ///
+  /// In ru, this message translates to:
+  /// **'Оплата'**
+  String get payment;
+
+  /// No description provided for @all.
+  ///
+  /// In ru, this message translates to:
+  /// **'Все'**
+  String get all;
+
+  /// No description provided for @analytics.
+  ///
+  /// In ru, this message translates to:
+  /// **'Аналитика'**
+  String get analytics;
+
+  /// No description provided for @revenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выручка'**
+  String get revenue;
+
+  /// No description provided for @profit.
+  ///
+  /// In ru, this message translates to:
+  /// **'Прибыль'**
+  String get profit;
+
+  /// No description provided for @today.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сегодня'**
+  String get today;
+
+  /// No description provided for @thisWeek.
+  ///
+  /// In ru, this message translates to:
+  /// **'Эта неделя'**
+  String get thisWeek;
+
+  /// No description provided for @thisMonth.
+  ///
+  /// In ru, this message translates to:
+  /// **'Этот месяц'**
+  String get thisMonth;
+
+  /// No description provided for @topProducts.
+  ///
+  /// In ru, this message translates to:
+  /// **'Популярные товары'**
+  String get topProducts;
+
+  /// No description provided for @salesByPayment.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продажи по способам оплаты'**
+  String get salesByPayment;
+
+  /// No description provided for @costPrice.
+  ///
+  /// In ru, this message translates to:
+  /// **'Себестоимость'**
+  String get costPrice;
+
+  /// No description provided for @stock.
+  ///
+  /// In ru, this message translates to:
+  /// **'Запас'**
+  String get stock;
+
+  /// No description provided for @filterByDate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Фильтр по дате'**
+  String get filterByDate;
+
+  /// No description provided for @dailyRevenue.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выручка по дням'**
+  String get dailyRevenue;
+
+  /// No description provided for @change.
+  ///
+  /// In ru, this message translates to:
+  /// **'Сдача'**
+  String get change;
+
+  /// No description provided for @received.
+  ///
+  /// In ru, this message translates to:
+  /// **'Получено'**
+  String get received;
+
+  /// No description provided for @transactions.
+  ///
+  /// In ru, this message translates to:
+  /// **'Транзакции'**
+  String get transactions;
+
+  /// No description provided for @salesCount.
+  ///
+  /// In ru, this message translates to:
+  /// **'{count} продаж'**
+  String salesCount(int count);
+
+  /// No description provided for @productAddedToCart.
+  ///
+  /// In ru, this message translates to:
+  /// **'{name} добавлен в корзину'**
+  String productAddedToCart(String name);
+
+  /// No description provided for @stockManagement.
+  ///
+  /// In ru, this message translates to:
+  /// **'Управление запасами'**
+  String get stockManagement;
+
+  /// No description provided for @updateStock.
+  ///
+  /// In ru, this message translates to:
+  /// **'Обновить запас'**
+  String get updateStock;
+
+  /// No description provided for @currentStock.
+  ///
+  /// In ru, this message translates to:
+  /// **'Текущий запас'**
+  String get currentStock;
+
+  /// No description provided for @newStock.
+  ///
+  /// In ru, this message translates to:
+  /// **'Новый запас'**
+  String get newStock;
+
+  /// No description provided for @lowStock.
+  ///
+  /// In ru, this message translates to:
+  /// **'Мало товара'**
+  String get lowStock;
+
+  /// No description provided for @stockUpdated.
+  ///
+  /// In ru, this message translates to:
+  /// **'Запас успешно обновлен!'**
+  String get stockUpdated;
+
+  /// No description provided for @exportCSV.
+  ///
+  /// In ru, this message translates to:
+  /// **'Экспорт CSV'**
+  String get exportCSV;
+
+  /// No description provided for @share.
+  ///
+  /// In ru, this message translates to:
+  /// **'Поделиться'**
+  String get share;
+
+  /// No description provided for @salesReport.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отчет о продажах'**
+  String get salesReport;
+
+  /// No description provided for @amountReceived.
+  ///
+  /// In ru, this message translates to:
+  /// **'Получено'**
+  String get amountReceived;
 }
 
 class _AppLocalizationsDelegate

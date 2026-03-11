@@ -14,7 +14,10 @@ import 'features/settings/presentation/bloc/printer_bloc.dart';
 import 'features/settings/presentation/bloc/locale_cubit.dart';
 import 'features/shift/presentation/bloc/shift_bloc.dart';
 import 'features/sales/presentation/bloc/sales_bloc.dart';
+import 'features/sales/presentation/bloc/analytics_bloc.dart';
 import 'features/measurement_unit/presentation/bloc/unit_bloc.dart';
+import 'features/product/presentation/bloc/category_bloc.dart';
+import 'features/product/presentation/bloc/category_event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,15 +35,17 @@ class MyApp extends StatelessWidget {
       providers: [
         BlocProvider<ProductBloc>(create: (context) => di.sl<ProductBloc>()),
         BlocProvider<ShopBloc>(create: (context) => di.sl<ShopBloc>()),
-        BlocProvider<BillingBloc>(
-            create: (context) => BillingBloc(
-                getProductByBarcodeUseCase: di.sl(),
-                createSaleUseCase: di.sl())),
+        BlocProvider<BillingBloc>(create: (context) => di.sl<BillingBloc>()),
         BlocProvider<PrinterBloc>(create: (context) => di.sl<PrinterBloc>()),
         BlocProvider<LocaleCubit>(create: (context) => di.sl<LocaleCubit>()),
         BlocProvider<ShiftBloc>(create: (context) => di.sl<ShiftBloc>()),
         BlocProvider<SalesBloc>(create: (context) => di.sl<SalesBloc>()),
+        BlocProvider<AnalyticsBloc>(
+            create: (context) => di.sl<AnalyticsBloc>()),
         BlocProvider<UnitBloc>(create: (context) => di.sl<UnitBloc>()),
+        BlocProvider<CategoryBloc>(
+          create: (context) => di.sl<CategoryBloc>()..add(GetCategoriesEvent()),
+        ),
       ],
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) {
@@ -55,7 +60,7 @@ class MyApp extends StatelessWidget {
               Locale('uz'),
               Locale('en'),
             ],
-            localizationsDelegates: [
+            localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,

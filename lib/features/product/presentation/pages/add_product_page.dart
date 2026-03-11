@@ -12,6 +12,8 @@ import 'package:billing_app/l10n/app_localizations.dart';
 import '../../../measurement_unit/presentation/bloc/unit_bloc.dart';
 import '../../../measurement_unit/presentation/bloc/unit_event.dart';
 import '../../../measurement_unit/presentation/bloc/unit_state.dart';
+import '../bloc/category_bloc.dart';
+import '../bloc/category_state.dart';
 
 class AddProductPage extends StatefulWidget {
   const AddProductPage({super.key});
@@ -25,7 +27,10 @@ class _AddProductPageState extends State<AddProductPage> {
   String _name = '';
   String _barcode = '';
   double _price = 0.0;
+  double _costPrice = 0.0;
+  double _stock = 0.0;
   String _unit = '';
+  String? _categoryId;
 
   @override
   void didChangeDependencies() {
@@ -74,7 +79,10 @@ class _AddProductPageState extends State<AddProductPage> {
         name: _name,
         barcode: _barcode,
         price: _price,
+        costPrice: _costPrice,
+        stock: _stock,
         unit: _unit,
+        categoryId: _categoryId,
       );
 
       context.read<ProductBloc>().add(AddProduct(product));
@@ -175,6 +183,31 @@ class _AddProductPageState extends State<AddProductPage> {
                     onSaved: (value) => _price = double.parse(value!),
                   ),
                   const SizedBox(height: 24),
+                  InputLabel(text: AppLocalizations.of(context)!.costPrice),
+                  TextFormField(
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)!.pricePlaceholder,
+                      prefixText: '${AppLocalizations.of(context)!.currency} ',
+                      prefixStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black),
+                    ),
+                    onSaved: (value) => _costPrice = double.parse(value ?? '0'),
+                  ),
+                  const SizedBox(height: 24),
+                  InputLabel(text: AppLocalizations.of(context)!.stock),
+                  TextFormField(
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      hintText: '0',
+                    ),
+                    onSaved: (value) => _stock = double.parse(value ?? '0'),
+                  ),
+                  const SizedBox(height: 24),
                   const SizedBox(height: 24),
                   InputLabel(
                       text: AppLocalizations.of(context)!.measurementUnit),
@@ -201,7 +234,7 @@ class _AddProductPageState extends State<AddProductPage> {
                             }
 
                             return DropdownButtonFormField<String>(
-                              value: _unit,
+                              initialValue: _unit,
                               decoration: const InputDecoration(
                                 contentPadding: EdgeInsets.symmetric(
                                     horizontal: 12, vertical: 8),
@@ -229,6 +262,29 @@ class _AddProductPageState extends State<AddProductPage> {
                         ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 24),
+                  InputLabel(
+                      text: AppLocalizations.of(context)!.selectCategory),
+                  BlocBuilder<CategoryBloc, CategoryState>(
+                    builder: (context, state) {
+                      return DropdownButtonFormField<String>(
+                        initialValue: _categoryId,
+                        decoration: const InputDecoration(
+                          contentPadding:
+                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        ),
+                        hint:
+                            Text(AppLocalizations.of(context)!.selectCategory),
+                        items: state.categories
+                            .map((c) => DropdownMenuItem(
+                                  value: c.id,
+                                  child: Text(c.name),
+                                ))
+                            .toList(),
+                        onChanged: (val) => setState(() => _categoryId = val),
+                      );
+                    },
                   ),
                 ],
               ),

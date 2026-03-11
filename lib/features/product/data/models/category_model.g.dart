@@ -1,53 +1,41 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'product_model.dart';
+part of 'category_model.dart';
 
 // **************************************************************************
 // TypeAdapterGenerator
 // **************************************************************************
 
-class ProductModelAdapter extends TypeAdapter<ProductModel> {
+class CategoryModelAdapter extends TypeAdapter<CategoryModel> {
   @override
-  final int typeId = 0;
+  final int typeId = 1;
 
   @override
-  ProductModel read(BinaryReader reader) {
+  CategoryModel read(BinaryReader reader) {
     final numOfFields = reader.readByte();
     final fields = <int, dynamic>{
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
-    return ProductModel(
+    return CategoryModel(
       id: fields[0] as String,
       name: fields[1] as String,
-      barcode: fields[2] as String,
-      price: fields[3] as double,
-      stock: fields[4] as double,
-      costPrice: fields[7] as double,
-      unit: fields[5] as String,
-      categoryId: fields[6] as String?,
+      icon: fields[2] as String?,
+      colorCode: fields[3] as int?,
     );
   }
 
   @override
-  void write(BinaryWriter writer, ProductModel obj) {
+  void write(BinaryWriter writer, CategoryModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(4)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
       ..write(obj.name)
       ..writeByte(2)
-      ..write(obj.barcode)
+      ..write(obj.icon)
       ..writeByte(3)
-      ..write(obj.price)
-      ..writeByte(4)
-      ..write(obj.stock)
-      ..writeByte(5)
-      ..write(obj.unit)
-      ..writeByte(6)
-      ..write(obj.categoryId)
-      ..writeByte(7)
-      ..write(obj.costPrice);
+      ..write(obj.colorCode);
   }
 
   @override
@@ -56,7 +44,7 @@ class ProductModelAdapter extends TypeAdapter<ProductModel> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is ProductModelAdapter &&
+      other is CategoryModelAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

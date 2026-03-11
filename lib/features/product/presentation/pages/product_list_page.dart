@@ -63,6 +63,13 @@ class _ProductListPageState extends State<ProductListPage> {
         title: Text(AppLocalizations.of(context)!.products,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.category_outlined),
+            onPressed: () => context.push('/products/categories'),
+          ),
+          const SizedBox(width: 8),
+        ],
       ),
       body: Column(
         children: [
@@ -213,6 +220,28 @@ class _ProductListPageState extends State<ProductListPage> {
                                       style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey[500]),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${AppLocalizations.of(context)!.stock}: ',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey[500]),
+                                    ),
+                                    Text(
+                                      product.stock % 1 == 0
+                                          ? product.stock.toInt().toString()
+                                          : product.stock.toStringAsFixed(2),
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: product.stock < 5
+                                              ? Colors.red
+                                              : Colors.green),
                                     ),
                                   ],
                                 ),

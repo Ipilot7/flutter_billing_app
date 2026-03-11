@@ -15,7 +15,7 @@ class SalesBloc extends Bloc<SalesEvent, SalesState> {
     on<ReturnSaleEvent>(_onReturnSale);
 
     // Auto-load sales history
-    add(LoadSalesHistoryEvent());
+    add(const LoadSalesHistoryEvent());
   }
 
   Future<void> _onLoadSalesHistory(

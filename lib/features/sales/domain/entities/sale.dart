@@ -10,6 +10,7 @@ class Sale extends Equatable {
   final int paymentType; // 0 = cash, 1 = card, 2 = terminal
   final bool isReturned;
   final String? returnedSaleId;
+  final double globalDiscount;
 
   const Sale({
     required this.id,
@@ -21,6 +22,7 @@ class Sale extends Equatable {
     required this.paymentType,
     this.isReturned = false,
     this.returnedSaleId,
+    this.globalDiscount = 0.0,
   });
 
   Sale copyWith({
@@ -33,6 +35,7 @@ class Sale extends Equatable {
     int? paymentType,
     bool? isReturned,
     String? returnedSaleId,
+    double? globalDiscount,
   }) {
     return Sale(
       id: id ?? this.id,
@@ -44,6 +47,7 @@ class Sale extends Equatable {
       paymentType: paymentType ?? this.paymentType,
       isReturned: isReturned ?? this.isReturned,
       returnedSaleId: returnedSaleId ?? this.returnedSaleId,
+      globalDiscount: globalDiscount ?? this.globalDiscount,
     );
   }
 
@@ -57,7 +61,8 @@ class Sale extends Equatable {
         totalAmount,
         paymentType,
         isReturned,
-        returnedSaleId
+        returnedSaleId,
+        globalDiscount,
       ];
 }
 
@@ -65,17 +70,23 @@ class SaleItem extends Equatable {
   final String productId;
   final String productName;
   final double price;
-  final int quantity;
+  final double costPrice;
+  final double quantity;
+  final double discount;
 
   const SaleItem({
     required this.productId,
     required this.productName,
     required this.price,
+    this.costPrice = 0.0,
     required this.quantity,
+    this.discount = 0.0,
   });
 
-  double get total => price * quantity;
+  double get total => (price * quantity) - discount;
+  double get profit => total - (costPrice * quantity);
 
   @override
-  List<Object?> get props => [productId, productName, price, quantity];
+  List<Object?> get props =>
+      [productId, productName, price, costPrice, quantity, discount];
 }
