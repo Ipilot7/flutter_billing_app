@@ -1,9 +1,8 @@
 import 'package:fpdart/fpdart.dart';
-import 'package:hive/hive.dart';
+import 'package:drift/drift.dart';
 import 'package:billing_app/core/error/failure.dart';
 import 'package:billing_app/features/sales/domain/entities/sale.dart';
-import '../models/sale_model.dart';
-import 'package:billing_app/core/data/hive_database.dart';
+import 'package:billing_app/core/data/app_database.dart';
 
 abstract class SalesRepository {
   Future<Either<Failure, Sale>> createSale(Sale sale);
@@ -14,13 +13,19 @@ abstract class SalesRepository {
 }
 
 class SalesRepositoryImpl implements SalesRepository {
-  Box<SaleModel> get _box => HiveDatabase.salesBox;
+  final AppDatabase _db;
+
+  SalesRepositoryImpl(this._db);
 
   @override
   Future<Either<Failure, Sale>> createSale(Sale sale) async {
     try {
-      final model = SaleModel.fromEntity(sale);
-      await _box.put(sale.id, model);
+      await _db.transaction(() async {
+        await _db.into(_db.sales).insert(_mapToTable(sale));
+        for (var item in sale.items) {
+          await _db.into(_db.saleItems).insert(_mapItemToCompanion(sale.id, item));
+        }
+      });
       return Right(sale);
     } catch (e) {
       return Left(CacheFailure('Failed to create sale: $e'));
@@ -31,16 +36,25 @@ class SalesRepositoryImpl implements SalesRepository {
   Future<Either<Failure, List<Sale>>> getSalesHistory(
       {DateTime? from, DateTime? to, String? shiftId}) async {
     try {
-      var sales = _box.values.map((s) => s.toEntity()).toList();
+      final query = _db.select(_db.sales);
+      
+      if (shiftId != null) {
+        query.where((t) => t.shiftId.equals(shiftId));
+      }
+
+      final saleRows = await query.get();
+      List<Sale> sales = [];
+
+      for (var row in saleRows) {
+        final itemRows = await (_db.select(_db.saleItems)..where((t) => t.saleId.equals(row.id))).get();
+        sales.add(_mapToEntity(row, itemRows));
+      }
 
       if (from != null) {
         sales = sales.where((s) => s.createdAt.isAfter(from)).toList();
       }
       if (to != null) {
         sales = sales.where((s) => s.createdAt.isBefore(to)).toList();
-      }
-      if (shiftId != null) {
-        sales = sales.where((s) => s.shiftId == shiftId).toList();
       }
 
       sales.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -53,11 +67,12 @@ class SalesRepositoryImpl implements SalesRepository {
   @override
   Future<Either<Failure, Sale>> getSaleById(String id) async {
     try {
-      final sale = _box.get(id);
-      if (sale == null) {
+      final row = await (_db.select(_db.sales)..where((t) => t.id.equals(id))).getSingleOrNull();
+      if (row == null) {
         return const Left(CacheFailure('Sale not found'));
       }
-      return Right(sale.toEntity());
+      final itemRows = await (_db.select(_db.saleItems)..where((t) => t.saleId.equals(id))).get();
+      return Right(_mapToEntity(row, itemRows));
     } catch (e) {
       return Left(CacheFailure('Failed to get sale: $e'));
     }
@@ -66,12 +81,10 @@ class SalesRepositoryImpl implements SalesRepository {
   @override
   Future<Either<Failure, Sale>> returnSale(String saleId) async {
     try {
-      final existingSale = _box.get(saleId);
-      if (existingSale == null) {
-        return const Left(CacheFailure('Sale not found'));
-      }
+      final existingSaleResult = await getSaleById(saleId);
+      final existingSale = existingSaleResult.fold((l) => throw Exception(l.toString()), (s) => s);
 
-      final returnedSale = SaleModel(
+      final returnedSale = Sale(
         id: '${saleId}_return',
         createdAt: DateTime.now(),
         shiftId: existingSale.shiftId,
@@ -84,10 +97,62 @@ class SalesRepositoryImpl implements SalesRepository {
         globalDiscount: existingSale.globalDiscount,
       );
 
-      await _box.put(returnedSale.id, returnedSale);
-      return Right(returnedSale.toEntity());
+      await createSale(returnedSale);
+      return Right(returnedSale);
     } catch (e) {
       return Left(CacheFailure('Failed to return sale: $e'));
     }
   }
+
+  Sale _mapToEntity(SaleTable table, List<SaleItemTable> items) {
+    return Sale(
+      id: table.id,
+      createdAt: table.createdAt,
+      shiftId: table.shiftId,
+      openedBy: table.openedBy,
+      items: items.map((i) => _mapItemToEntity(i)).toList(),
+      totalAmount: table.totalAmount,
+      paymentType: table.paymentType,
+      isReturned: table.isReturned,
+      returnedSaleId: table.returnedSaleId,
+      globalDiscount: table.globalDiscount,
+    );
+  }
+
+  SaleTable _mapToTable(Sale sale) {
+    return SaleTable(
+      id: sale.id,
+      createdAt: sale.createdAt,
+      shiftId: sale.shiftId,
+      openedBy: sale.openedBy,
+      totalAmount: sale.totalAmount,
+      paymentType: sale.paymentType,
+      isReturned: sale.isReturned,
+      returnedSaleId: sale.returnedSaleId,
+      globalDiscount: sale.globalDiscount,
+    );
+  }
+
+  SaleItem _mapItemToEntity(SaleItemTable table) {
+    return SaleItem(
+      productId: table.productId,
+      productName: table.productName,
+      price: table.price,
+      quantity: table.quantity,
+      discount: table.discount,
+      costPrice: table.costPrice,
+    );
+  }
+
+  SaleItemsCompanion _mapItemToCompanion(String saleId, SaleItem item) {
+    return SaleItemsCompanion.insert(
+      saleId: saleId,
+      productId: item.productId,
+      productName: item.productName,
+      price: item.price,
+      quantity: item.quantity,
+      discount: Value(item.discount),
+      costPrice: Value(item.costPrice),
+    );
+    }
 }

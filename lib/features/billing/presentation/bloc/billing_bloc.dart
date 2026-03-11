@@ -5,8 +5,8 @@ import 'package:billing_app/features/product/domain/entities/product.dart';
 import 'package:billing_app/features/product/domain/usecases/product_usecases.dart';
 import 'package:billing_app/features/sales/domain/usecases/sales_usecases.dart';
 import 'package:billing_app/features/sales/domain/entities/sale.dart';
+import 'package:billing_app/features/settings/domain/repositories/printer_repository.dart';
 import '../../../../core/utils/printer_helper.dart';
-import '../../../../core/data/hive_database.dart';
 import 'package:uuid/uuid.dart';
 
 part 'billing_event.dart';
@@ -16,11 +16,13 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
   final GetProductByBarcodeUseCase getProductByBarcodeUseCase;
   final CreateSaleUseCase createSaleUseCase;
   final UpdateProductUseCase updateProductUseCase;
+  final PrinterRepository printerRepository;
 
   BillingBloc({
     required this.getProductByBarcodeUseCase,
     required this.createSaleUseCase,
     required this.updateProductUseCase,
+    required this.printerRepository,
   }) : super(const BillingState()) {
     on<ScanBarcodeEvent>(_onScanBarcode);
     on<AddProductToCartEvent>(_onAddProductToCart);
@@ -126,7 +128,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
     final printerHelper = PrinterHelper();
 
     if (!printerHelper.isConnected) {
-      final savedMac = HiveDatabase.settingsBox.get('printer_mac');
+      final savedMac = await printerRepository.getSavedPrinterMac();
       if (savedMac != null) {
         final connected = await printerHelper.connect(savedMac);
         if (!connected) {

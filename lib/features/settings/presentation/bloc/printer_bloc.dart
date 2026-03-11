@@ -18,9 +18,9 @@ class PrinterBloc extends Bloc<PrinterEvent, PrinterState> {
     add(InitPrinterEvent());
   }
 
-  void _onInit(InitPrinterEvent event, Emitter<PrinterState> emit) {
-    final mac = repository.getSavedPrinterMac();
-    final name = repository.getSavedPrinterName();
+  Future<void> _onInit(InitPrinterEvent event, Emitter<PrinterState> emit) async {
+    final mac = await repository.getSavedPrinterMac();
+    final name = await repository.getSavedPrinterName();
     emit(state.copyWith(
       status: PrinterStatus.initial,
       connectedMac: mac,

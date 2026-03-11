@@ -1,20 +1,20 @@
 import 'package:fpdart/fpdart.dart';
-import '../../../../core/data/hive_database.dart';
+import '../../../../core/data/app_database.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/shop.dart';
 import '../../domain/repositories/shop_repository.dart';
-import '../models/shop_model.dart';
 
 class ShopRepositoryImpl implements ShopRepository {
-  static const String shopKey = 'shop_details';
+  final AppDatabase _db;
+
+  ShopRepositoryImpl(this._db);
 
   @override
   Future<Either<Failure, Shop>> getShop() async {
     try {
-      final box = HiveDatabase.shopBox;
-      final shop = box.get(shopKey);
-      if (shop != null) {
-        return Right(shop);
+      final rows = await _db.select(_db.shopDetails).get();
+      if (rows.isNotEmpty) {
+        return Right(_mapToEntity(rows.first));
       } else {
         // Return default shop if not found
         return const Right(Shop(
@@ -33,12 +33,34 @@ class ShopRepositoryImpl implements ShopRepository {
   @override
   Future<Either<Failure, void>> updateShop(Shop shop) async {
     try {
-      final box = HiveDatabase.shopBox;
-      final model = ShopModel.fromEntity(shop);
-      await box.put(shopKey, model);
+      // Clear existing and insert new (simple single row management)
+      await _db.delete(_db.shopDetails).go();
+      await _db.into(_db.shopDetails).insert(_mapToTable(shop));
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
+  }
+
+  Shop _mapToEntity(ShopTable table) {
+    return Shop(
+      name: table.name,
+      addressLine1: table.addressLine1,
+      addressLine2: table.addressLine2,
+      phoneNumber: table.phoneNumber,
+      upiId: table.upiId,
+      footerText: table.footerText,
+    );
+  }
+
+  ShopTable _mapToTable(Shop shop) {
+    return ShopTable(
+      name: shop.name,
+      addressLine1: shop.addressLine1,
+      addressLine2: shop.addressLine2,
+      phoneNumber: shop.phoneNumber,
+      upiId: shop.upiId,
+      footerText: shop.footerText,
+    );
   }
 }

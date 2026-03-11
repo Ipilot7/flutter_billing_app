@@ -1,10 +1,13 @@
 import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
-import '../../../../core/data/hive_database.dart';
+import '../../../../core/data/app_database.dart';
 import '../../../../core/utils/printer_helper.dart';
 import '../../domain/repositories/printer_repository.dart';
 
 class PrinterRepositoryImpl implements PrinterRepository {
   final PrinterHelper _printerHelper = PrinterHelper();
+  final AppDatabase _db;
+
+  PrinterRepositoryImpl(this._db);
 
   @override
   Future<List<BluetoothInfo>> scanDevices() async {
@@ -25,25 +28,25 @@ class PrinterRepositoryImpl implements PrinterRepository {
   }
 
   @override
-  String? getSavedPrinterMac() {
-    return HiveDatabase.settingsBox.get('printer_mac');
+  Future<String?> getSavedPrinterMac() async {
+    return await _db.getSetting('printer_mac');
   }
 
   @override
-  String? getSavedPrinterName() {
-    return HiveDatabase.settingsBox.get('printer_name');
+  Future<String?> getSavedPrinterName() async {
+    return await _db.getSetting('printer_name');
   }
 
   @override
   Future<void> savePrinterData(String mac, String name) async {
-    await HiveDatabase.settingsBox.put('printer_mac', mac);
-    await HiveDatabase.settingsBox.put('printer_name', name);
+    await _db.saveSetting('printer_mac', mac);
+    await _db.saveSetting('printer_name', name);
   }
 
   @override
   Future<void> clearPrinterData() async {
-    await HiveDatabase.settingsBox.delete('printer_mac');
-    await HiveDatabase.settingsBox.delete('printer_name');
+    await _db.deleteSetting('printer_mac');
+    await _db.deleteSetting('printer_name');
   }
 
   @override

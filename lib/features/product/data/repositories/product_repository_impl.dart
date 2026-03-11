@@ -1,17 +1,19 @@
 import 'package:fpdart/fpdart.dart';
-import '../../../../core/data/hive_database.dart';
+import '../../../../core/data/app_database.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
-import '../models/product_model.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
+  final AppDatabase _db;
+
+  ProductRepositoryImpl(this._db);
+
   @override
   Future<Either<Failure, List<Product>>> getProducts() async {
     try {
-      final box = HiveDatabase.productBox;
-      final products = box.values.toList();
-      return Right(products);
+      final rows = await _db.getAllProducts();
+      return Right(rows.map((row) => _mapToEntity(row)).toList());
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -20,12 +22,9 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, Product>> getProductByBarcode(String barcode) async {
     try {
-      final box = HiveDatabase.productBox;
-      final product = box.values.firstWhere(
-        (element) => element.barcode == barcode,
-        orElse: () => throw Exception('Product not found'),
-      );
-      return Right(product);
+      final query = _db.select(_db.products)..where((t) => t.barcode.equals(barcode));
+      final row = await query.getSingle();
+      return Right(_mapToEntity(row));
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -34,10 +33,7 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, void>> addProduct(Product product) async {
     try {
-      final box = HiveDatabase.productBox;
-      // You can use add() or put()
-      final model = ProductModel.fromEntity(product);
-      await box.put(model.id, model); // Using ID as key
+      await _db.addProduct(_mapToTable(product));
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -47,9 +43,7 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, void>> updateProduct(Product product) async {
     try {
-      final box = HiveDatabase.productBox;
-      final model = ProductModel.fromEntity(product);
-      await box.put(model.id, model);
+      await _db.updateProduct(_mapToTable(product));
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -59,11 +53,36 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, void>> deleteProduct(String id) async {
     try {
-      final box = HiveDatabase.productBox;
-      await box.delete(id);
+      await _db.deleteProduct(id);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
+  }
+
+  Product _mapToEntity(ProductTable table) {
+    return Product(
+      id: table.id,
+      name: table.name,
+      barcode: table.barcode,
+      price: table.price,
+      costPrice: table.costPrice,
+      stock: table.stock,
+      unit: table.unit,
+      categoryId: table.categoryId,
+    );
+  }
+
+  ProductTable _mapToTable(Product product) {
+    return ProductTable(
+      id: product.id,
+      name: product.name,
+      barcode: product.barcode,
+      price: product.price,
+      costPrice: product.costPrice,
+      stock: product.stock,
+      unit: product.unit,
+      categoryId: product.categoryId,
+    );
   }
 }

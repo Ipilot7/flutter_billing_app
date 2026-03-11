@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 // import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'config/routes/app_routes.dart';
-import 'core/data/hive_database.dart';
 import 'core/service_locator.dart' as di;
 import 'core/theme/app_theme.dart';
 import 'features/billing/presentation/bloc/billing_bloc.dart';
@@ -21,7 +20,6 @@ import 'features/product/presentation/bloc/category_event.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await HiveDatabase.init();
   await di.init();
   runApp(const MyApp());
 }

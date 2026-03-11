@@ -26,11 +26,15 @@ import 'package:billing_app/features/sales/presentation/bloc/analytics_bloc.dart
 import 'package:billing_app/features/measurement_unit/data/repositories/unit_repository_impl.dart';
 import 'package:billing_app/features/measurement_unit/domain/usecases/unit_usecases.dart';
 import 'package:billing_app/features/measurement_unit/presentation/bloc/unit_bloc.dart';
+import 'package:billing_app/core/data/app_database.dart';
 import 'package:billing_app/features/billing/presentation/bloc/billing_bloc.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
+  // Database
+  sl.registerLazySingleton<AppDatabase>(() => AppDatabase());
+
   // Features - Product
   // Bloc
   sl.registerFactory(
@@ -69,6 +73,7 @@ Future<void> init() async {
       getProductByBarcodeUseCase: sl(),
       createSaleUseCase: sl(),
       updateProductUseCase: sl(),
+      printerRepository: sl(),
     ),
   );
 
@@ -105,7 +110,7 @@ Future<void> init() async {
   );
 
   // Features - Settings
-  sl.registerFactory(() => LocaleCubit());
+  sl.registerFactory(() => LocaleCubit(sl()));
 
   // Use cases
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));
@@ -116,11 +121,11 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImpl(),
+    () => ProductRepositoryImpl(sl()),
   );
 
   sl.registerLazySingleton<CategoryRepository>(
-    () => CategoryRepositoryImpl(),
+    () => CategoryRepositoryImpl(sl()),
   );
 
   sl.registerLazySingleton(() => GetCategoriesUseCase(sl()));
@@ -135,30 +140,30 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<ShopRepository>(
-    () => ShopRepositoryImpl(),
+    () => ShopRepositoryImpl(sl()),
   );
 
   // Features - Settings / Printer
   sl.registerLazySingleton<PrinterRepository>(
-    () => PrinterRepositoryImpl(),
+    () => PrinterRepositoryImpl(sl()),
   );
 
   // Features - Shift
   sl.registerLazySingleton<ShiftRepository>(
-    () => ShiftRepositoryImpl(),
+    () => ShiftRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => OpenShiftUseCase(sl()));
   sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
   sl.registerLazySingleton(() => GetCurrentShiftUseCase(sl()));
 
   // Features - Sales
-  sl.registerLazySingleton<SalesRepository>(() => SalesRepositoryImpl());
+  sl.registerLazySingleton<SalesRepository>(() => SalesRepositoryImpl(sl()));
   sl.registerLazySingleton(() => CreateSaleUseCase(sl()));
   sl.registerLazySingleton(() => GetSalesHistoryUseCase(sl()));
   sl.registerLazySingleton(() => ReturnSaleUseCase(sl()));
 
   // Features - Unit
-  sl.registerLazySingleton<UnitRepository>(() => UnitRepositoryImpl());
+  sl.registerLazySingleton<UnitRepository>(() => UnitRepositoryImpl(sl()));
   sl.registerLazySingleton(() => AddUnitUseCase(sl()));
   sl.registerLazySingleton(() => UpdateUnitUseCase(sl()));
   sl.registerLazySingleton(() => DeleteUnitUseCase(sl()));

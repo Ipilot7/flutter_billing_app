@@ -54,7 +54,7 @@ class _OpenShiftDialogState extends State<OpenShiftDialog> {
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               context.read<ShiftBloc>().add(OpenShiftEvent(
-                    startBalance: double.parse(_balanceController.text),
+                    startBalance: double.tryParse(_balanceController.text) ?? 0.0,
                     openedBy: AppLocalizations.of(context)!.cashier,
                   ));
             }
@@ -128,7 +128,7 @@ class _CloseShiftDialogState extends State<CloseShiftDialog> {
           onPressed: () {
             if (_formKey.currentState!.validate()) {
               context.read<ShiftBloc>().add(CloseShiftEvent(
-                    endBalance: double.parse(_balanceController.text),
+                    endBalance: double.tryParse(_balanceController.text) ?? 0.0,
                   ));
             }
           },

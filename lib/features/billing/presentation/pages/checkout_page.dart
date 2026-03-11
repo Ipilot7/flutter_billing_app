@@ -175,7 +175,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 title: AppLocalizations.of(context)!.quantity,
                 initialValue: item.quantity.toString(),
                 onSave: (val) => context.read<BillingBloc>().add(
-                    UpdateQuantityEvent(item.product.id, double.parse(val))),
+                    UpdateQuantityEvent(item.product.id, double.tryParse(val) ?? 0.0)),
               ),
             ),
             const SizedBox(width: 12),
@@ -188,7 +188,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 initialValue: item.price.toString(),
                 onSave: (val) => context.read<BillingBloc>().add(
                     UpdatePriceOverrideEvent(
-                        item.product.id, double.parse(val))),
+                        item.product.id, double.tryParse(val) ?? 0.0)),
               ),
             ),
             const SizedBox(width: 12),
@@ -201,7 +201,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 initialValue: item.discount.toString(),
                 onSave: (val) => context.read<BillingBloc>().add(
                     UpdateItemDiscountEvent(
-                        item.product.id, double.parse(val))),
+                        item.product.id, double.tryParse(val) ?? 0.0)),
               ),
               color: Colors.orange[800],
             ),
@@ -285,7 +285,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         initialValue: state.globalDiscount.toString(),
                         onSave: (val) => context
                             .read<BillingBloc>()
-                            .add(UpdateGlobalDiscountEvent(double.parse(val))),
+                            .add(UpdateGlobalDiscountEvent(double.tryParse(val) ?? 0.0)),
                       ),
                     ),
                   ],
@@ -385,9 +385,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(AppLocalizations.of(context)!.paymentMethod,
-                      style: const TextStyle(
-                          fontSize: 18, fontWeight: FontWeight.bold)),
+                  Expanded(
+                    child: Text(AppLocalizations.of(context)!.paymentMethod,
+                        style: const TextStyle(
+                            fontSize: 18, fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(width: 8),
                   Text(
                     '${AppLocalizations.of(context)!.currency} ${billingState.totalAmount.toStringAsFixed(2)}',
                     style: TextStyle(

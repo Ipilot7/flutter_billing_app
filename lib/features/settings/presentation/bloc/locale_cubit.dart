@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:billing_app/core/data/hive_database.dart';
+import 'package:billing_app/core/data/app_database.dart';
 
 class LocaleCubit extends Cubit<Locale> {
-  LocaleCubit() : super(const Locale('ru')) {
+  final AppDatabase _db;
+
+  LocaleCubit(this._db) : super(const Locale('ru')) {
     _loadLocale();
   }
 
-  void _loadLocale() {
-    final savedLocale = HiveDatabase.settingsBox.get('locale');
+  void _loadLocale() async {
+    final savedLocale = await _db.getSetting('locale');
     if (savedLocale != null) {
       emit(Locale(savedLocale));
     }
   }
 
   Future<void> setLocale(Locale locale) async {
-    await HiveDatabase.settingsBox.put('locale', locale.languageCode);
+    await _db.saveSetting('locale', locale.languageCode);
     emit(locale);
   }
 }

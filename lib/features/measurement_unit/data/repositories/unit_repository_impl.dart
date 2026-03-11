@@ -1,10 +1,8 @@
 import 'package:fpdart/fpdart.dart' hide Unit;
-import 'package:hive/hive.dart';
 import 'package:uuid/uuid.dart';
 import 'package:billing_app/core/error/failure.dart';
 import 'package:billing_app/features/measurement_unit/domain/entities/unit.dart';
-import 'package:billing_app/features/measurement_unit/data/models/unit_model.dart';
-import 'package:billing_app/core/data/hive_database.dart';
+import 'package:billing_app/core/data/app_database.dart';
 
 abstract class UnitRepository {
   Future<Either<Failure, Unit>> addUnit(String name, String shortName);
@@ -14,18 +12,20 @@ abstract class UnitRepository {
 }
 
 class UnitRepositoryImpl implements UnitRepository {
-  Box<UnitModel> get _box => HiveDatabase.unitsBox;
+  final AppDatabase _db;
+
+  UnitRepositoryImpl(this._db);
 
   @override
   Future<Either<Failure, Unit>> addUnit(String name, String shortName) async {
     try {
-      final unit = UnitModel(
+      final unit = Unit(
         id: const Uuid().v4(),
         name: name,
         shortName: shortName,
       );
-      await _box.put(unit.id, unit);
-      return Right(unit.toEntity());
+      await _db.into(_db.units).insert(_mapToTable(unit));
+      return Right(unit);
     } catch (e) {
       return Left(CacheFailure('Failed to add unit: $e'));
     }
@@ -34,8 +34,7 @@ class UnitRepositoryImpl implements UnitRepository {
   @override
   Future<Either<Failure, Unit>> updateUnit(Unit unit) async {
     try {
-      final model = UnitModel.fromEntity(unit);
-      await _box.put(unit.id, model);
+      await _db.update(_db.units).replace(_mapToTable(unit));
       return Right(unit);
     } catch (e) {
       return Left(CacheFailure('Failed to update unit: $e'));
@@ -45,7 +44,7 @@ class UnitRepositoryImpl implements UnitRepository {
   @override
   Future<Either<Failure, void>> deleteUnit(String id) async {
     try {
-      await _box.delete(id);
+      await (_db.delete(_db.units)..where((t) => t.id.equals(id))).go();
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure('Failed to delete unit: $e'));
@@ -55,11 +54,28 @@ class UnitRepositoryImpl implements UnitRepository {
   @override
   Future<Either<Failure, List<Unit>>> getAllUnits() async {
     try {
-      final units = _box.values.map((e) => e.toEntity()).toList();
+      final rows = await _db.select(_db.units).get();
+      final units = rows.map((row) => _mapToEntity(row)).toList();
       units.sort((a, b) => a.name.compareTo(b.name));
       return Right(units);
     } catch (e) {
       return Left(CacheFailure('Failed to get units: $e'));
     }
+  }
+
+  Unit _mapToEntity(UnitTable table) {
+    return Unit(
+      id: table.id,
+      name: table.name,
+      shortName: table.shortName,
+    );
+  }
+
+  UnitTable _mapToTable(Unit unit) {
+    return UnitTable(
+      id: unit.id,
+      name: unit.name,
+      shortName: unit.shortName,
+    );
   }
 }

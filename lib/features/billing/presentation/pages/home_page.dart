@@ -265,6 +265,42 @@ class _HomePageState extends State<HomePage> {
                   },
                 ),
                 _buildOverlayButton(
+                  icon: Icons.inventory_2_outlined,
+                  label: AppLocalizations.of(context)!.stockManagement,
+                  color: Colors.orange,
+                  onPressed: () async {
+                    Future.microtask(() => _scannerController.stop());
+                    await context.push('/products/inventory');
+                    if (_isCameraOn && mounted) {
+                      Future.microtask(() => _scannerController.start());
+                    }
+                  },
+                ),
+                _buildOverlayButton(
+                  icon: Icons.history,
+                  label: AppLocalizations.of(context)!.salesHistory,
+                  color: Colors.purple,
+                  onPressed: () async {
+                    Future.microtask(() => _scannerController.stop());
+                    await context.push('/sales');
+                    if (_isCameraOn && mounted) {
+                      Future.microtask(() => _scannerController.start());
+                    }
+                  },
+                ),
+                _buildOverlayButton(
+                  icon: Icons.bar_chart,
+                  label: AppLocalizations.of(context)!.analytics,
+                  color: Colors.teal,
+                  onPressed: () async {
+                    Future.microtask(() => _scannerController.stop());
+                    await context.push('/analytics');
+                    if (_isCameraOn && mounted) {
+                      Future.microtask(() => _scannerController.start());
+                    }
+                  },
+                ),
+                _buildOverlayButton(
                   icon: Icons.settings,
                   label: AppLocalizations.of(context)!.settings,
                   color: const Color(0xFF64748B),
@@ -619,34 +655,36 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildEmptyCart() {
     return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 80,
-            height: 80,
-            decoration: BoxDecoration(
-              color: Colors.grey[100],
-              shape: BoxShape.circle,
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.grey[100],
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child:
+                  Icon(Icons.shopping_basket, size: 40, color: Colors.grey[300]),
             ),
-            alignment: Alignment.center,
-            child:
-                Icon(Icons.shopping_basket, size: 40, color: Colors.grey[300]),
-          ),
-          const SizedBox(height: 16),
-          Text(AppLocalizations.of(context)!.listIsEmpty,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          const SizedBox(height: 8),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              AppLocalizations.of(context)!.scannedItemsAppear,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.grey, fontSize: 14),
+            const SizedBox(height: 16),
+            Text(AppLocalizations.of(context)!.listIsEmpty,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            const SizedBox(height: 8),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                AppLocalizations.of(context)!.scannedItemsAppear,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.grey, fontSize: 14),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

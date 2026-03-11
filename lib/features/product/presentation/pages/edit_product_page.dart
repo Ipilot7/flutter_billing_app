@@ -153,7 +153,8 @@ class _EditProductPageState extends State<EditProductPage> {
                     validator: (value) => value == null || value.isEmpty
                         ? AppLocalizations.of(context)!.pleaseEnterPrice
                         : null,
-                    onSaved: (value) => _price = double.parse(value!),
+                    onSaved: (value) =>
+                        _price = double.tryParse(value ?? '0') ?? 0.0,
                   ),
                   const SizedBox(height: 24),
 
@@ -170,7 +171,8 @@ class _EditProductPageState extends State<EditProductPage> {
                           fontWeight: FontWeight.w500,
                           color: Colors.black),
                     ),
-                    onSaved: (value) => _costPrice = double.parse(value ?? '0'),
+                    onSaved: (value) =>
+                        _costPrice = double.tryParse(value ?? '0') ?? 0.0,
                   ),
                   const SizedBox(height: 24),
 
@@ -182,7 +184,8 @@ class _EditProductPageState extends State<EditProductPage> {
                         : _stock.toStringAsFixed(2),
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
-                    onSaved: (value) => _stock = double.parse(value ?? '0'),
+                    onSaved: (value) =>
+                        _stock = double.tryParse(value ?? '0') ?? 0.0,
                   ),
                   const SizedBox(height: 24),
                   InputLabel(
