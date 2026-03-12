@@ -10,6 +10,8 @@ import '../bloc/printer_bloc.dart';
 import '../bloc/printer_event.dart';
 import '../bloc/printer_state.dart';
 import '../bloc/locale_cubit.dart';
+import '../../../../core/util/backup_service.dart';
+import '../../../../core/service_locator.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -260,6 +262,30 @@ class _SettingsPageState extends State<SettingsPage> {
                     color: Colors.grey[500]),
               ),
             ),
+                                                        
+            const SizedBox(height: 24),
+
+            // Data & Backup Section
+            _buildSectionHeader(AppLocalizations.of(context)!.dataBackup),
+            _buildListGroup(
+              children: [
+                _buildListItem(
+                  icon: Icons.backup_outlined,
+                  title: AppLocalizations.of(context)!.backupDatabase,
+                  subtitle: AppLocalizations.of(context)!.backupDatabaseSubtitle,
+                  onTap: () => _handleBackup(context),
+                  trailingIcon: null,
+                ),
+                _buildDivider(),
+                _buildListItem(
+                  icon: Icons.restore_outlined,
+                  title: AppLocalizations.of(context)!.restoreDatabase,
+                  subtitle: AppLocalizations.of(context)!.restoreDatabaseSubtitle,
+                  onTap: () => _handleRestore(context),
+                  trailingIcon: null,
+                ),
+              ],
+            ),
 
             const SizedBox(height: 48),
           ],
@@ -395,5 +421,70 @@ class _SettingsPageState extends State<SettingsPage> {
         Navigator.pop(context);
       },
     );
+  }
+
+  Future<void> _handleBackup(BuildContext context) async {
+    try {
+      await sl<BackupService>().createBackup();
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.backupSuccess)),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations.of(context)!.errorOccurred)),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleRestore(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppLocalizations.of(context)!.restoreDatabase),
+        content: Text(AppLocalizations.of(context)!.restoreConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppLocalizations.of(context)!.restoreDatabase,
+                style: const TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true && context.mounted) {
+      try {
+        final success = await sl<BackupService>().restoreBackup();
+        if (success && context.mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (ctx) => AlertDialog(
+              title: Text(AppLocalizations.of(context)!.restoreSuccess),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('OK'),
+                ),
+              ],
+            ),
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(AppLocalizations.of(context)!.errorOccurred)),
+          );
+        }
+      }
+    }
   }
 }

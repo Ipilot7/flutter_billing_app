@@ -512,4 +512,30 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get amountReceived => 'Qabul qilindi';
+
+  @override
+  String get dataBackup => 'Ma\'lumotlar va bэkap';
+
+  @override
+  String get backupDatabase => 'Ma\'lumotlarni zaxiralash';
+
+  @override
+  String get backupDatabaseSubtitle => 'Ma\'lumotlarni faylga eksport qilish';
+
+  @override
+  String get restoreDatabase => 'Ma\'lumotlarni tiklash';
+
+  @override
+  String get restoreDatabaseSubtitle => 'Zaxira faylidan import qilish';
+
+  @override
+  String get backupSuccess => 'Zaxira nusxasi muvaffaqiyatli yaratildi!';
+
+  @override
+  String get restoreSuccess =>
+      'Ma\'lumotlar muvaffaqiyatli tiklandi! Iltimos, ilovani qayta ishga tushiring.';
+
+  @override
+  String get restoreConfirm =>
+      'Ma\'lumotlarni tiklashni xohlaysizmi? Joriy ma\'lumotlar o\'chib ketadi.';
 }

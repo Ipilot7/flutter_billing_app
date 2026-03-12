@@ -1071,6 +1071,54 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Получено'**
   String get amountReceived;
+
+  /// No description provided for @dataBackup.
+  ///
+  /// In ru, this message translates to:
+  /// **'Данные и бэкап'**
+  String get dataBackup;
+
+  /// No description provided for @backupDatabase.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бэкап базы данных'**
+  String get backupDatabase;
+
+  /// No description provided for @backupDatabaseSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Экспорт данных в файл'**
+  String get backupDatabaseSubtitle;
+
+  /// No description provided for @restoreDatabase.
+  ///
+  /// In ru, this message translates to:
+  /// **'Восстановление базы'**
+  String get restoreDatabase;
+
+  /// No description provided for @restoreDatabaseSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Импорт данных из файла бэкапа'**
+  String get restoreDatabaseSubtitle;
+
+  /// No description provided for @backupSuccess.
+  ///
+  /// In ru, this message translates to:
+  /// **'Бэкап успешно создан!'**
+  String get backupSuccess;
+
+  /// No description provided for @restoreSuccess.
+  ///
+  /// In ru, this message translates to:
+  /// **'База данных успешно восстановлена! Пожалуйста, перезапустите приложение.'**
+  String get restoreSuccess;
+
+  /// No description provided for @restoreConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы уверены, что хотите восстановить базу данных? Текущие данные будут перезаписаны.'**
+  String get restoreConfirm;
 }
 
 class _AppLocalizationsDelegate

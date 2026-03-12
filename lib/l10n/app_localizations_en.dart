@@ -510,4 +510,30 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get amountReceived => 'Amount Received';
+
+  @override
+  String get dataBackup => 'Data & Backup';
+
+  @override
+  String get backupDatabase => 'Backup Database';
+
+  @override
+  String get backupDatabaseSubtitle => 'Export your data to a file';
+
+  @override
+  String get restoreDatabase => 'Restore Database';
+
+  @override
+  String get restoreDatabaseSubtitle => 'Import data from a backup file';
+
+  @override
+  String get backupSuccess => 'Backup created successfully!';
+
+  @override
+  String get restoreSuccess =>
+      'Database restored successfully! Please restart the app.';
+
+  @override
+  String get restoreConfirm =>
+      'Are you sure you want to restore the database? Current data will be overwritten.';
 }

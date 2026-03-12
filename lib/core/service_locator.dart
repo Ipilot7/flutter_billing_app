@@ -28,12 +28,14 @@ import 'package:billing_app/features/measurement_unit/domain/usecases/unit_useca
 import 'package:billing_app/features/measurement_unit/presentation/bloc/unit_bloc.dart';
 import 'package:billing_app/core/data/app_database.dart';
 import 'package:billing_app/features/billing/presentation/bloc/billing_bloc.dart';
+import 'package:billing_app/core/util/backup_service.dart';
 
 final sl = GetIt.instance;
 
 Future<void> init() async {
   // Database
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase());
+  sl.registerLazySingleton<BackupService>(() => BackupService(sl()));
 
   // Features - Product
   // Bloc

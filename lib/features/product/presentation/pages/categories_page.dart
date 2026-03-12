@@ -8,8 +8,19 @@ import '../../domain/entities/category.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:billing_app/l10n/app_localizations.dart';
 
-class CategoriesPage extends StatelessWidget {
+class CategoriesPage extends StatefulWidget {
   const CategoriesPage({super.key});
+
+  @override
+  State<CategoriesPage> createState() => _CategoriesPageState();
+}
+
+class _CategoriesPageState extends State<CategoriesPage> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<CategoryBloc>().add(GetCategoriesEvent());
+  }
 
   @override
   Widget build(BuildContext context) {

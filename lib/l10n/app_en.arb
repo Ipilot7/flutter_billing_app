@@ -197,5 +197,13 @@
   "share": "Share",
   "salesReport": "Sales Report",
   "amountReceived": "Amount Received",
+  "dataBackup": "Data & Backup",
+  "backupDatabase": "Backup Database",
+  "backupDatabaseSubtitle": "Export your data to a file",
+  "restoreDatabase": "Restore Database",
+  "restoreDatabaseSubtitle": "Import data from a backup file",
+  "backupSuccess": "Backup created successfully!",
+  "restoreSuccess": "Database restored successfully! Please restart the app.",
+  "restoreConfirm": "Are you sure you want to restore the database? Current data will be overwritten.",
   "change": "Change"
 }

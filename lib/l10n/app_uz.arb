@@ -198,5 +198,12 @@
   "share": "Ulashish",
   "salesReport": "Sotuv hisoboti",
   "amountReceived": "Qabul qilindi",
-  "change": "Qaytim"
+  "dataBackup": "Ma'lumotlar va bэkap",
+  "backupDatabase": "Ma'lumotlarni zaxiralash",
+  "backupDatabaseSubtitle": "Ma'lumotlarni faylga eksport qilish",
+  "restoreDatabase": "Ma'lumotlarni tiklash",
+  "restoreDatabaseSubtitle": "Zaxira faylidan import qilish",
+  "backupSuccess": "Zaxira nusxasi muvaffaqiyatli yaratildi!",
+  "restoreSuccess": "Ma'lumotlar muvaffaqiyatli tiklandi! Iltimos, ilovani qayta ishga tushiring.",
+  "restoreConfirm": "Ma'lumotlarni tiklashni xohlaysizmi? Joriy ma'lumotlar o'chib ketadi."
 }

@@ -511,4 +511,30 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get amountReceived => 'Получено';
+
+  @override
+  String get dataBackup => 'Данные и бэкап';
+
+  @override
+  String get backupDatabase => 'Бэкап базы данных';
+
+  @override
+  String get backupDatabaseSubtitle => 'Экспорт данных в файл';
+
+  @override
+  String get restoreDatabase => 'Восстановление базы';
+
+  @override
+  String get restoreDatabaseSubtitle => 'Импорт данных из файла бэкапа';
+
+  @override
+  String get backupSuccess => 'Бэкап успешно создан!';
+
+  @override
+  String get restoreSuccess =>
+      'База данных успешно восстановлена! Пожалуйста, перезапустите приложение.';
+
+  @override
+  String get restoreConfirm =>
+      'Вы уверены, что хотите восстановить базу данных? Текущие данные будут перезаписаны.';
 }
