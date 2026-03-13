@@ -15,13 +15,11 @@ part 'billing_state.dart';
 class BillingBloc extends Bloc<BillingEvent, BillingState> {
   final GetProductByBarcodeUseCase getProductByBarcodeUseCase;
   final CreateSaleUseCase createSaleUseCase;
-  final UpdateProductUseCase updateProductUseCase;
   final PrinterRepository printerRepository;
 
   BillingBloc({
     required this.getProductByBarcodeUseCase,
     required this.createSaleUseCase,
-    required this.updateProductUseCase,
     required this.printerRepository,
   }) : super(const BillingState()) {
     on<ScanBarcodeEvent>(_onScanBarcode);
@@ -213,12 +211,7 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
         emit(state.copyWith(clearError: true));
       },
       (successSale) async {
-        // Subtract stock for each item
-        for (final item in state.cartItems) {
-          final updatedProduct =
-              item.product.copyWith(stock: item.product.stock - item.quantity);
-          await updateProductUseCase(updatedProduct);
-        }
+        // Stock mutation is handled atomically in SalesRepository.createSale.
         add(ClearCartEvent());
       },
     );

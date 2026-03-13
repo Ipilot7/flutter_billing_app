@@ -74,7 +74,6 @@ Future<void> init() async {
     () => BillingBloc(
       getProductByBarcodeUseCase: sl(),
       createSaleUseCase: sl(),
-      updateProductUseCase: sl(),
       printerRepository: sl(),
     ),
   );

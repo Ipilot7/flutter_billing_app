@@ -13,7 +13,6 @@ import 'package:print_bluetooth_thermal/print_bluetooth_thermal.dart';
 
 class _FakeProductRepository implements ProductRepository {
   final Map<String, Product> byBarcode = {};
-  final List<Product> updatedProducts = [];
 
   @override
   Future<Either<Failure, void>> addProduct(Product product) async {
@@ -43,7 +42,6 @@ class _FakeProductRepository implements ProductRepository {
 
   @override
   Future<Either<Failure, void>> updateProduct(Product product) async {
-    updatedProducts.add(product);
     byBarcode[product.barcode] = product;
     return const Right(null);
   }
@@ -142,7 +140,6 @@ void main() {
       bloc = BillingBloc(
         getProductByBarcodeUseCase: GetProductByBarcodeUseCase(productRepo),
         createSaleUseCase: CreateSaleUseCase(salesRepo),
-        updateProductUseCase: UpdateProductUseCase(productRepo),
         printerRepository: _FakePrinterRepository(),
       );
     });
@@ -162,7 +159,7 @@ void main() {
       expect(bloc.state.totalAmount, 100);
     });
 
-    test('completes sale, clears cart, and updates stock', () async {
+    test('completes sale and clears cart', () async {
       bloc.add(AddProductToCartEvent(tea));
       await Future<void>.delayed(Duration.zero);
       bloc.add(UpdateQuantityEvent(tea.id, 3));
@@ -177,11 +174,6 @@ void main() {
 
       expect(salesRepo.createdSales.length, 1);
       expect(salesRepo.createdSales.first.totalAmount, 150);
-
-      expect(productRepo.updatedProducts.isNotEmpty, true);
-      final updated = productRepo.updatedProducts.last;
-      expect(updated.id, tea.id);
-      expect(updated.stock, 7);
 
       expect(bloc.state.cartItems, isEmpty);
     });

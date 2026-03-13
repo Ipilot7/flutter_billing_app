@@ -21,6 +21,27 @@ class SalesRepositoryImpl implements SalesRepository {
   Future<Either<Failure, Sale>> createSale(Sale sale) async {
     try {
       await _db.transaction(() async {
+        // Validate and atomically update stock as part of sale creation.
+        // This prevents data drift between saved sales and inventory levels.
+        for (final item in sale.items) {
+          final product = await (_db.select(_db.products)
+                ..where((t) => t.id.equals(item.productId)))
+              .getSingleOrNull();
+
+          if (product == null) {
+            throw Exception('Product not found: ${item.productName}');
+          }
+
+          final newStock = product.stock - item.quantity;
+          if (newStock < 0) {
+            throw Exception('Insufficient stock for ${item.productName}');
+          }
+
+          await _db
+              .update(_db.products)
+              .replace(product.copyWith(stock: newStock));
+        }
+
         await _db.into(_db.sales).insert(_mapToTable(sale));
         for (var item in sale.items) {
           await _db
