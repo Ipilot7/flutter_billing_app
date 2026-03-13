@@ -141,6 +141,13 @@ class _SettingsPageState extends State<SettingsPage> {
                   subtitle: AppLocalizations.of(context)!.shopDetailsSubtitle,
                   onTap: () => context.push('/shop'),
                 ),
+                _buildDivider(),
+                _buildListItem(
+                  icon: Icons.cloud_sync,
+                  title: 'Backend V1 Setup',
+                  subtitle: 'Platform, cashier login, shift open',
+                  onTap: () => context.push('/settings/backend-v1'),
+                ),
               ],
             ),
 
@@ -262,7 +269,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     color: Colors.grey[500]),
               ),
             ),
-                                                        
+
             const SizedBox(height: 24),
 
             // Data & Backup Section
@@ -272,7 +279,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildListItem(
                   icon: Icons.backup_outlined,
                   title: AppLocalizations.of(context)!.backupDatabase,
-                  subtitle: AppLocalizations.of(context)!.backupDatabaseSubtitle,
+                  subtitle:
+                      AppLocalizations.of(context)!.backupDatabaseSubtitle,
                   onTap: () => _handleBackup(context),
                   trailingIcon: null,
                 ),
@@ -280,7 +288,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildListItem(
                   icon: Icons.restore_outlined,
                   title: AppLocalizations.of(context)!.restoreDatabase,
-                  subtitle: AppLocalizations.of(context)!.restoreDatabaseSubtitle,
+                  subtitle:
+                      AppLocalizations.of(context)!.restoreDatabaseSubtitle,
                   onTap: () => _handleRestore(context),
                   trailingIcon: null,
                 ),
@@ -481,7 +490,8 @@ class _SettingsPageState extends State<SettingsPage> {
       } catch (e) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(AppLocalizations.of(context)!.errorOccurred)),
+            SnackBar(
+                content: Text(AppLocalizations.of(context)!.errorOccurred)),
           );
         }
       }

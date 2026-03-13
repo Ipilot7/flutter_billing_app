@@ -3,6 +3,8 @@ import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:billing_app/core/network/backend_session.dart';
+import 'package:billing_app/core/service_locator.dart';
 
 import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../../../shift/presentation/bloc/shift_bloc.dart';
@@ -175,7 +177,8 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 title: AppLocalizations.of(context)!.quantity,
                 initialValue: item.quantity.toString(),
                 onSave: (val) => context.read<BillingBloc>().add(
-                    UpdateQuantityEvent(item.product.id, double.tryParse(val) ?? 0.0)),
+                    UpdateQuantityEvent(
+                        item.product.id, double.tryParse(val) ?? 0.0)),
               ),
             ),
             const SizedBox(width: 12),
@@ -283,9 +286,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
                         context,
                         title: AppLocalizations.of(context)!.discount,
                         initialValue: state.globalDiscount.toString(),
-                        onSave: (val) => context
-                            .read<BillingBloc>()
-                            .add(UpdateGlobalDiscountEvent(double.tryParse(val) ?? 0.0)),
+                        onSave: (val) => context.read<BillingBloc>().add(
+                            UpdateGlobalDiscountEvent(
+                                double.tryParse(val) ?? 0.0)),
                       ),
                     ),
                   ],
@@ -435,26 +438,29 @@ class _CheckoutPageState extends State<CheckoutPage> {
   }) {
     return Expanded(
       child: InkWell(
-        onTap: () {
+        onTap: () async {
           final shiftBloc = context.read<ShiftBloc>();
           final currentShift = shiftBloc.currentShift;
-          if (currentShift == null) {
+
+          final resolved = await _resolveShiftForSale(
+            context,
+            currentShift,
+          );
+          if (!context.mounted) return;
+          if (resolved == null) {
             Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(AppLocalizations.of(context)!.pleaseOpenShift),
-              backgroundColor: Colors.red,
-              behavior: SnackBarBehavior.floating,
-            ));
             return;
           }
 
+          final shiftId = resolved.$1;
+          final openedBy = resolved.$2;
+
           // Cash: show change calculator
           if (type == 0) {
-            _showCashChangeDialog(
-                context, billingState.totalAmount, currentShift, shopState);
+            _showCashChangeDialog(context, billingState.totalAmount, shiftId,
+                openedBy, shopState);
           } else {
-            _completeSale(context, currentShift.id, currentShift.openedBy, type,
-                shopState);
+            _completeSale(context, shiftId, openedBy, type, shopState);
           }
         },
         child: Container(
@@ -498,8 +504,62 @@ class _CheckoutPageState extends State<CheckoutPage> {
     Navigator.pop(context);
   }
 
-  void _showCashChangeDialog(BuildContext context, double totalAmount,
-      dynamic currentShift, ShopState shopState) {
+  Future<(String, String)?> _resolveShiftForSale(
+    BuildContext context,
+    dynamic currentShift,
+  ) async {
+    if (currentShift != null) {
+      return (currentShift.id as String, currentShift.openedBy as String);
+    }
+
+    final messenger = ScaffoldMessenger.of(context);
+    final l10n = AppLocalizations.of(context)!;
+
+    final session = sl<BackendSession>();
+    final baseUrl = await session.getBaseUrl();
+    final token = await session.getAccessToken();
+    final terminalId = await session.getTerminalId();
+    final backendShiftId = await session.getCurrentShiftId();
+
+    final isBackendMode = baseUrl != null &&
+        baseUrl.isNotEmpty &&
+        token != null &&
+        token.isNotEmpty &&
+        terminalId != null;
+
+    if (isBackendMode && backendShiftId == null) {
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text(
+              'Backend shift is not open. Open shift in Backend V1 Setup.'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return null;
+    }
+
+    if (isBackendMode && backendShiftId != null) {
+      return (backendShiftId.toString(), 'backend-cashier');
+    }
+
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.pleaseOpenShift),
+        backgroundColor: Colors.red,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+    return null;
+  }
+
+  void _showCashChangeDialog(
+    BuildContext context,
+    double totalAmount,
+    String shiftId,
+    String openedBy,
+    ShopState shopState,
+  ) {
     final controller = TextEditingController();
     double change = 0;
 
@@ -597,8 +657,7 @@ class _CheckoutPageState extends State<CheckoutPage> {
                   ? null
                   : () {
                       Navigator.pop(ctx); // close dialog
-                      _completeSale(context, currentShift.id,
-                          currentShift.openedBy, 0, shopState);
+                      _completeSale(context, shiftId, openedBy, 0, shopState);
                     },
               child: Text(AppLocalizations.of(context)!.completeSale),
             ),

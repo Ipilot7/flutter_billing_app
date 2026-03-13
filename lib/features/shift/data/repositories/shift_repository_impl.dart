@@ -4,11 +4,15 @@ import 'package:billing_app/core/error/failure.dart';
 import 'package:billing_app/features/shift/domain/entities/shift.dart';
 import 'package:billing_app/features/shift/domain/repositories/shift_repository.dart';
 import 'package:billing_app/core/data/app_database.dart';
+import 'package:billing_app/core/network/backend_session.dart';
+import 'package:billing_app/core/network/backend_v1_client.dart';
 
 class ShiftRepositoryImpl implements ShiftRepository {
   final AppDatabase _db;
+  final BackendSession _backendSession;
+  final BackendV1Client _backendClient;
 
-  ShiftRepositoryImpl(this._db);
+  ShiftRepositoryImpl(this._db, this._backendSession, this._backendClient);
 
   @override
   Future<Either<Failure, Shift>> openShift({
@@ -16,9 +20,37 @@ class ShiftRepositoryImpl implements ShiftRepository {
     required String openedBy,
   }) async {
     try {
+      final backendBaseUrl = await _backendSession.getBaseUrl();
+      final backendToken = await _backendSession.getAccessToken();
+      final backendTerminalId = await _backendSession.getTerminalId();
+
+      final shouldUseBackend = backendBaseUrl != null &&
+          backendBaseUrl.isNotEmpty &&
+          backendToken != null &&
+          backendToken.isNotEmpty &&
+          backendTerminalId != null;
+
+      if (shouldUseBackend) {
+        final response =
+            await _backendClient.openShift(startBalance: startBalance);
+
+        final shift = Shift(
+          id: response['id'].toString(),
+          openedAt: response['opened_at'] != null
+              ? DateTime.parse(response['opened_at'].toString())
+              : DateTime.now(),
+          openedBy: openedBy,
+          startBalance: startBalance,
+          status: 0,
+        );
+
+        await _db.into(_db.shifts).insertOnConflictUpdate(_mapToTable(shift));
+        return Right(shift);
+      }
+
       final currentShiftResult = await getCurrentShift();
       final currentShift = currentShiftResult.fold((l) => null, (s) => s);
-      
+
       if (currentShift != null) {
         return const Left(CacheFailure('A shift is already open'));
       }
@@ -46,7 +78,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
     try {
       final query = _db.select(_db.shifts)..where((t) => t.id.equals(shiftId));
       final existingShiftRow = await query.getSingleOrNull();
-      
+
       if (existingShiftRow == null) {
         return const Left(CacheFailure('Shift not found'));
       }
@@ -73,7 +105,7 @@ class ShiftRepositoryImpl implements ShiftRepository {
     try {
       final query = _db.select(_db.shifts)..where((t) => t.status.equals(0));
       final row = await query.getSingleOrNull();
-      
+
       if (row == null) {
         return const Right(null);
       }

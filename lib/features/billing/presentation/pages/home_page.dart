@@ -10,6 +10,9 @@ import '../../../shift/presentation/bloc/shift_bloc.dart';
 import '../../../shift/presentation/bloc/shift_state.dart';
 import '../../../shift/presentation/bloc/shift_event.dart';
 import '../../../sales/presentation/bloc/analytics_bloc.dart';
+import '../../../../core/data/app_database.dart';
+import '../../../../core/network/backend_session.dart';
+import '../../../../core/service_locator.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/primary_button.dart';
 import '../../domain/entities/cart_item.dart';
@@ -33,13 +36,41 @@ class _HomePageState extends State<HomePage> {
   // Cooldown mapping to prevent rapid firing of the same barcode
   final Map<String, DateTime> _lastScanTimes = {};
 
+  bool _backendConfigured = false;
+  bool _backendAuthenticated = false;
+  int? _backendTerminalId;
+  int? _backendShiftId;
+  int _backendLocalProductCount = 0;
+
   @override
   void initState() {
     super.initState();
     _isCameraOn = true;
     _refreshAnalytics(); // Initial load for today's stats
+    _loadBackendStatus();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _scannerController.start();
+    });
+  }
+
+  Future<void> _loadBackendStatus() async {
+    final session = sl<BackendSession>();
+    final db = sl<AppDatabase>();
+
+    final baseUrl = await session.getBaseUrl();
+    final token = await session.getAccessToken();
+    final terminalId = await session.getTerminalId();
+    final shiftId = await session.getCurrentShiftId();
+    final productCount = await db.countProducts();
+
+    if (!mounted) return;
+
+    setState(() {
+      _backendConfigured = baseUrl != null && baseUrl.trim().isNotEmpty;
+      _backendAuthenticated = token != null && token.trim().isNotEmpty;
+      _backendTerminalId = terminalId;
+      _backendShiftId = shiftId;
+      _backendLocalProductCount = productCount;
     });
   }
 
@@ -223,6 +254,12 @@ class _HomePageState extends State<HomePage> {
               },
             ),
           ),
+          if (_backendConfigured)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 58,
+              left: 16,
+              child: _buildBackendStatusChip(),
+            ),
           // Controls & Actions Sidebar (Right Side)
           Positioned(
             top: MediaQuery.of(context).padding.top + 2,
@@ -308,6 +345,7 @@ class _HomePageState extends State<HomePage> {
                   onPressed: () async {
                     Future.microtask(() => _scannerController.stop());
                     await context.push('/settings');
+                    await _loadBackendStatus();
                     if (_isCameraOn && mounted) {
                       Future.microtask(() => _scannerController.start());
                     }
@@ -617,6 +655,50 @@ class _HomePageState extends State<HomePage> {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildBackendStatusChip() {
+    final hasReadySession = _backendAuthenticated &&
+        _backendTerminalId != null &&
+        _backendShiftId != null;
+
+    final backgroundColor = hasReadySession
+        ? Colors.teal.withValues(alpha: 0.9)
+        : Colors.deepOrange.withValues(alpha: 0.9);
+
+    final statusText = hasReadySession
+        ? 'Backend ready · shift #$_backendShiftId'
+        : 'Backend set, shift not open';
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: backgroundColor.withValues(alpha: 0.3),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          )
+        ],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.cloud_done, color: Colors.white, size: 14),
+          const SizedBox(width: 6),
+          Text(
+            '$statusText · products $_backendLocalProductCount',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

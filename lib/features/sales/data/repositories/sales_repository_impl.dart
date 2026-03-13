@@ -3,6 +3,8 @@ import 'package:drift/drift.dart';
 import 'package:billing_app/core/error/failure.dart';
 import 'package:billing_app/features/sales/domain/entities/sale.dart';
 import 'package:billing_app/core/data/app_database.dart';
+import 'package:billing_app/core/network/backend_session.dart';
+import 'package:billing_app/core/network/backend_v1_client.dart';
 
 abstract class SalesRepository {
   Future<Either<Failure, Sale>> createSale(Sale sale);
@@ -14,12 +16,50 @@ abstract class SalesRepository {
 
 class SalesRepositoryImpl implements SalesRepository {
   final AppDatabase _db;
+  final BackendSession _backendSession;
+  final BackendV1Client _backendClient;
 
-  SalesRepositoryImpl(this._db);
+  SalesRepositoryImpl(this._db, this._backendSession, this._backendClient);
 
   @override
   Future<Either<Failure, Sale>> createSale(Sale sale) async {
     try {
+      final backendBaseUrl = await _backendSession.getBaseUrl();
+      final backendToken = await _backendSession.getAccessToken();
+      final backendShiftId = await _backendSession.getCurrentShiftId();
+
+      final shouldUseBackend = backendBaseUrl != null &&
+          backendBaseUrl.isNotEmpty &&
+          backendToken != null &&
+          backendToken.isNotEmpty &&
+          backendShiftId != null;
+
+      if (shouldUseBackend) {
+        final backendItems = <Map<String, dynamic>>[];
+        for (final item in sale.items) {
+          final productId = int.tryParse(item.productId);
+          if (productId == null) {
+            return Left(CacheFailure(
+                'Backend sale requires numeric product ids. Product `${item.productName}` is local-only.'));
+          }
+          backendItems.add({
+            'product_id': productId,
+            'quantity': item.quantity.toStringAsFixed(3),
+            'price': item.price.toStringAsFixed(2),
+            'discount': item.discount.toStringAsFixed(2),
+          });
+        }
+
+        await _backendClient.createSale(
+          receiptNumber: sale.id,
+          paymentType: _mapPaymentTypeToBackend(sale.paymentType),
+          items: backendItems,
+        );
+
+        await _saveSaleLocallyWithoutStockAdjustments(sale);
+        return Right(sale);
+      }
+
       await _db.transaction(() async {
         // Validate and atomically update stock as part of sale creation.
         // This prevents data drift between saved sales and inventory levels.
@@ -52,6 +92,29 @@ class SalesRepositoryImpl implements SalesRepository {
       return Right(sale);
     } catch (e) {
       return Left(CacheFailure('Failed to create sale: $e'));
+    }
+  }
+
+  Future<void> _saveSaleLocallyWithoutStockAdjustments(Sale sale) async {
+    await _db.transaction(() async {
+      await _db.into(_db.sales).insert(_mapToTable(sale));
+      for (final item in sale.items) {
+        await _db
+            .into(_db.saleItems)
+            .insert(_mapItemToCompanion(sale.id, item));
+      }
+    });
+  }
+
+  String _mapPaymentTypeToBackend(int paymentType) {
+    switch (paymentType) {
+      case 1:
+        return 'card';
+      case 2:
+        return 'terminal';
+      case 0:
+      default:
+        return 'cash';
     }
   }
 

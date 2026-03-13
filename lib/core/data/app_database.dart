@@ -147,25 +147,39 @@ class AppDatabase extends _$AppDatabase {
       );
 
   // You can add data access methods (DAOs) here later
-  
+
   // Example: Products
   Future<List<ProductTable>> getAllProducts() => select(products).get();
-  Future<int> addProduct(ProductTable product) => into(products).insert(product);
-  Future updateProduct(ProductTable product) => update(products).replace(product);
-  Future deleteProduct(String id) => (delete(products)..where((t) => t.id.equals(id))).go();
+  Future<int> addProduct(ProductTable product) =>
+      into(products).insert(product);
+  Future updateProduct(ProductTable product) =>
+      update(products).replace(product);
+  Future deleteProduct(String id) =>
+      (delete(products)..where((t) => t.id.equals(id))).go();
+  Future<void> upsertProduct(ProductTable product) =>
+      into(products).insertOnConflictUpdate(product);
+  Future<int> countProducts() async {
+    final countExpr = products.id.count();
+    final query = selectOnly(products)..addColumns([countExpr]);
+    final row = await query.getSingle();
+    return row.read(countExpr) ?? 0;
+  }
 
   // Categories
   Future<List<CategoryTable>> getAllCategories() => select(categories).get();
-  Future<int> addCategory(CategoryTable category) => into(categories).insert(category);
+  Future<int> addCategory(CategoryTable category) =>
+      into(categories).insert(category);
 
   // Settings
   Future<String?> getSetting(String key) async {
-    final row = await (select(appSettings)..where((t) => t.key.equals(key))).getSingleOrNull();
+    final row = await (select(appSettings)..where((t) => t.key.equals(key)))
+        .getSingleOrNull();
     return row?.value;
   }
 
   Future<void> saveSetting(String key, String value) async {
-    await into(appSettings).insertOnConflictUpdate(AppSettingTable(key: key, value: value));
+    await into(appSettings)
+        .insertOnConflictUpdate(AppSettingTable(key: key, value: value));
   }
 
   Future<void> deleteSetting(String key) async {

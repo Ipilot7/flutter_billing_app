@@ -205,9 +205,9 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
 
     result.fold(
       (failure) {
+        final friendly = _friendlySaleError(failure.message);
         emit(state.copyWith(
-            error: 'Failed to complete sale: ${failure.message}',
-            clearError: false));
+            error: 'Failed to complete sale: $friendly', clearError: false));
         emit(state.copyWith(clearError: true));
       },
       (successSale) async {
@@ -215,5 +215,22 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
         add(ClearCartEvent());
       },
     );
+  }
+
+  String _friendlySaleError(String raw) {
+    if (raw.contains('No open shift in session')) {
+      return 'Open shift first, then try again.';
+    }
+    if (raw.contains('numeric product ids')) {
+      return 'Sync products from backend before selling in backend mode.';
+    }
+    if (raw.contains('Not enough stock') ||
+        raw.contains('Insufficient stock')) {
+      return 'Not enough stock for one of the items.';
+    }
+    if (raw.contains('closed shift')) {
+      return 'Shift is closed. Open a new shift first.';
+    }
+    return raw;
   }
 }

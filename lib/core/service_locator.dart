@@ -29,6 +29,8 @@ import 'package:billing_app/features/measurement_unit/presentation/bloc/unit_blo
 import 'package:billing_app/core/data/app_database.dart';
 import 'package:billing_app/features/billing/presentation/bloc/billing_bloc.dart';
 import 'package:billing_app/core/util/backup_service.dart';
+import 'package:billing_app/core/network/backend_session.dart';
+import 'package:billing_app/core/network/backend_v1_client.dart';
 
 final sl = GetIt.instance;
 
@@ -36,6 +38,8 @@ Future<void> init() async {
   // Database
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase());
   sl.registerLazySingleton<BackupService>(() => BackupService(sl()));
+  sl.registerLazySingleton<BackendSession>(() => BackendSession(sl()));
+  sl.registerLazySingleton<BackendV1Client>(() => BackendV1Client(sl()));
 
   // Features - Product
   // Bloc
@@ -151,14 +155,16 @@ Future<void> init() async {
 
   // Features - Shift
   sl.registerLazySingleton<ShiftRepository>(
-    () => ShiftRepositoryImpl(sl()),
+    () => ShiftRepositoryImpl(sl(), sl(), sl()),
   );
   sl.registerLazySingleton(() => OpenShiftUseCase(sl()));
   sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
   sl.registerLazySingleton(() => GetCurrentShiftUseCase(sl()));
 
   // Features - Sales
-  sl.registerLazySingleton<SalesRepository>(() => SalesRepositoryImpl(sl()));
+  sl.registerLazySingleton<SalesRepository>(
+    () => SalesRepositoryImpl(sl(), sl(), sl()),
+  );
   sl.registerLazySingleton(() => CreateSaleUseCase(sl()));
   sl.registerLazySingleton(() => GetSalesHistoryUseCase(sl()));
   sl.registerLazySingleton(() => ReturnSaleUseCase(sl()));
