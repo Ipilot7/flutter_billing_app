@@ -17,14 +17,21 @@ class BackupService {
       final dbFile = File(p.join(dbFolder.path, 'db.sqlite'));
 
       if (await dbFile.exists()) {
-        final date = DateTime.now().toIso8601String().replaceAll(':', '-').split('.').first;
+        final date = DateTime.now()
+            .toIso8601String()
+            .replaceAll(':', '-')
+            .split('.')
+            .first;
         final backupFileName = 'billing_backup_$date.sqlite';
         final tempDir = await getTemporaryDirectory();
-        final backupFile = await dbFile.copy(p.join(tempDir.path, backupFileName));
+        final backupFile =
+            await dbFile.copy(p.join(tempDir.path, backupFileName));
 
-        await Share.shareXFiles(
-          [XFile(backupFile.path)],
-          subject: 'Billing App Database Backup',
+        await SharePlus.instance.share(
+          ShareParams(
+            files: [XFile(backupFile.path)],
+            subject: 'Billing App Database Backup',
+          ),
         );
       }
     } catch (e) {
@@ -41,7 +48,7 @@ class BackupService {
 
       if (result != null && result.files.single.path != null) {
         final pickedFile = File(result.files.single.path!);
-        
+
         // Basic validation: check if it's a sqlite file (optional but recommended)
         // For now, we'll just try to copy it.
 
@@ -53,7 +60,7 @@ class BackupService {
 
         // Copy picked file to database location
         await pickedFile.copy(dbPath);
-        
+
         return true;
       }
       return false;

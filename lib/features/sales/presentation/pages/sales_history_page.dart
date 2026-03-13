@@ -54,7 +54,8 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(primary: AppTheme.primaryColor),
+            colorScheme:
+                const ColorScheme.light(primary: AppTheme.primaryColor),
           ),
           child: child!,
         );
@@ -78,14 +79,25 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
 
   Future<void> _exportToCSV(List<Sale> filteredSales) async {
     final l = AppLocalizations.of(context)!;
-    
+
     List<List<dynamic>> rows = [];
-    
+
     // Headers
-    rows.add(["ID", "Date", "Items Count", "Total Amount", "Payment Method", "Opened By"]);
-    
+    rows.add([
+      "ID",
+      "Date",
+      "Items Count",
+      "Total Amount",
+      "Payment Method",
+      "Opened By"
+    ]);
+
     for (var sale in filteredSales) {
-      String paymentMethod = sale.paymentType == 0 ? "Cash" : sale.paymentType == 1 ? "Card" : "Terminal";
+      String paymentMethod = sale.paymentType == 0
+          ? "Cash"
+          : sale.paymentType == 1
+              ? "Card"
+              : "Terminal";
       rows.add([
         sale.id,
         DateFormat('dd.MM.yyyy HH:mm').format(sale.createdAt),
@@ -95,15 +107,21 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
         sale.openedBy
       ]);
     }
-    
+
     String csv = excel.encoder.convert(rows);
-    
+
     final directory = await getTemporaryDirectory();
-    final path = "${directory.path}/sales_report_${DateTime.now().millisecondsSinceEpoch}.csv";
+    final path =
+        "${directory.path}/sales_report_${DateTime.now().millisecondsSinceEpoch}.csv";
     final file = File(path);
     await file.writeAsString(csv);
-    
-    await Share.shareXFiles([XFile(path)], text: l.salesReport);
+
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile(path)],
+        text: l.salesReport,
+      ),
+    );
   }
 
   @override
