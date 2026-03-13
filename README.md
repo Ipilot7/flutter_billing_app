@@ -18,7 +18,7 @@ This application serves as a complete offline POS system for small to medium-siz
 - **Smart Checkout System**: Rapid cart building via camera-based barcode scanning or manual entry, and robust order calculation functionality.
 - **Bluetooth Thermal Printing**: Direct integration with thermal printers (`print_bluetooth_thermal`) to instantly output physical receipts.
 - **Shop Settings & Customization**: Centrally managed shop details printed dynamically on receipts.
-- **Offline-First Architecture**: Powered by `Hive` for lightning-fast localized NoSQL data storage. No active internet connectivity required.
+- **Offline-First Architecture**: Powered by `Drift` for lightning-fast localized NoSQL data storage. No active internet connectivity required.
 
 ## 🛠 Tech Stack & Architecture
 
@@ -28,7 +28,7 @@ Built leveraging industry-standard architectural principles (Clean Architecture 
 - **State Management**: `flutter_bloc`
 - **Dependency Injection**: `get_it`
 - **Routing**: `go_router`
-- **Local Database**: `hive` & `hive_flutter`
+- **Local Database**: `drift` & `drift`
 - **Data Modeling**: `json_serializable`, `equatable`
 - **Functional Programming**: `fpdart`
 - **Hardware Integrations**: `mobile_scanner` (barcodes), `print_bluetooth_thermal`
@@ -40,7 +40,7 @@ The codebase is organized using a **Feature-First Clean Architecture** utilizing
 ```text
 lib/
 ├── core/                       # Core application utilities and shared components
-│   ├── data/                   # Global data sources (e.g., Hive initialization)
+│   ├── data/                   # Global data sources (e.g., Drift initialization)
 │   ├── error/                  # Standardized Failure/Exception models (fpdart compatible)
 │   ├── theme/                  # UI aesthetics, typography, styling
 │   ├── usecase/                # Base UseCase contracts
@@ -62,7 +62,7 @@ lib/
 - **Rapid Billing Entry**: A cashier launches the app, navigates to the checkout page, and uses the device camera to instantly scan product barcodes. The products are added to the cart, the total is calculated including taxes, and a receipt is finalized.
 - **Physical Receipt Generation**: After checkout confirmation, the app triggers a connected external Bluetooth thermal POS printer to instantly print an itemized paper receipt with the shop’s header.
 - **Inventory Sideloading**: A manager opens the Product feature to add new stock to the local database, taking a picture of the barcode to bind the SKU for future lightning-fast checkouts.
-- **No-Connection Operation**: The business operates a stall at an exhibition with poor networking. The app functions entirely via its embedded Hive local database and Bluetooth, completely undisturbed by network drops.
+- **No-Connection Operation**: The business operates a stall at an exhibition with poor networking. The app functions entirely via its embedded Drift local database and Bluetooth, completely undisturbed by network drops.
 
 ## 🚀 Getting Started
 
@@ -84,7 +84,7 @@ lib/
    flutter pub get
    ```
 
-3. Run code generation (required for Hive adapters and JSON serialization):
+3. Run code generation (required for Drift adapters and JSON serialization):
    ```bash
    dart run build_runner build --delete-conflicting-outputs
    ```

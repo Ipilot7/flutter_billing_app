@@ -846,6 +846,7 @@ class _HomePageState extends State<HomePage> {
         ),
       );
     } else {
+      final startBalanceController = TextEditingController(text: '0');
       showDialog(
         context: context,
         builder: (ctx) => AlertDialog(
@@ -856,7 +857,7 @@ class _HomePageState extends State<HomePage> {
               labelText: AppLocalizations.of(context)!.startBalance,
               prefixText: '${AppLocalizations.of(context)!.currency} ',
             ),
-            controller: TextEditingController(text: '0'),
+            controller: startBalanceController,
           ),
           actions: [
             TextButton(
@@ -865,8 +866,8 @@ class _HomePageState extends State<HomePage> {
             ),
             ElevatedButton(
               onPressed: () {
-                final controller = TextEditingController(text: '0');
-                final balance = double.tryParse(controller.text) ?? 0;
+                final balance =
+                    double.tryParse(startBalanceController.text) ?? 0;
                 context.read<ShiftBloc>().add(OpenShiftEvent(
                       startBalance: balance,
                       openedBy: AppLocalizations.of(context)!.cashier,

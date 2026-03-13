@@ -23,7 +23,9 @@ class SalesRepositoryImpl implements SalesRepository {
       await _db.transaction(() async {
         await _db.into(_db.sales).insert(_mapToTable(sale));
         for (var item in sale.items) {
-          await _db.into(_db.saleItems).insert(_mapItemToCompanion(sale.id, item));
+          await _db
+              .into(_db.saleItems)
+              .insert(_mapItemToCompanion(sale.id, item));
         }
       });
       return Right(sale);
@@ -37,7 +39,7 @@ class SalesRepositoryImpl implements SalesRepository {
       {DateTime? from, DateTime? to, String? shiftId}) async {
     try {
       final query = _db.select(_db.sales);
-      
+
       if (shiftId != null) {
         query.where((t) => t.shiftId.equals(shiftId));
       }
@@ -46,7 +48,9 @@ class SalesRepositoryImpl implements SalesRepository {
       List<Sale> sales = [];
 
       for (var row in saleRows) {
-        final itemRows = await (_db.select(_db.saleItems)..where((t) => t.saleId.equals(row.id))).get();
+        final itemRows = await (_db.select(_db.saleItems)
+              ..where((t) => t.saleId.equals(row.id)))
+            .get();
         sales.add(_mapToEntity(row, itemRows));
       }
 
@@ -67,11 +71,14 @@ class SalesRepositoryImpl implements SalesRepository {
   @override
   Future<Either<Failure, Sale>> getSaleById(String id) async {
     try {
-      final row = await (_db.select(_db.sales)..where((t) => t.id.equals(id))).getSingleOrNull();
+      final row = await (_db.select(_db.sales)..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
       if (row == null) {
         return const Left(CacheFailure('Sale not found'));
       }
-      final itemRows = await (_db.select(_db.saleItems)..where((t) => t.saleId.equals(id))).get();
+      final itemRows = await (_db.select(_db.saleItems)
+            ..where((t) => t.saleId.equals(id)))
+          .get();
       return Right(_mapToEntity(row, itemRows));
     } catch (e) {
       return Left(CacheFailure('Failed to get sale: $e'));
@@ -82,10 +89,24 @@ class SalesRepositoryImpl implements SalesRepository {
   Future<Either<Failure, Sale>> returnSale(String saleId) async {
     try {
       final existingSaleResult = await getSaleById(saleId);
-      final existingSale = existingSaleResult.fold((l) => throw Exception(l.toString()), (s) => s);
+      final existingSale = existingSaleResult.fold(
+          (l) => throw Exception(l.toString()), (s) => s);
+
+      if (existingSale.isReturned) {
+        return const Left(
+            CacheFailure('Cannot return an already returned sale'));
+      }
+
+      final duplicateReturn = await (_db.select(_db.sales)
+            ..where((t) =>
+                t.returnedSaleId.equals(saleId) & t.isReturned.equals(true)))
+          .getSingleOrNull();
+      if (duplicateReturn != null) {
+        return const Left(CacheFailure('Sale has already been returned'));
+      }
 
       final returnedSale = Sale(
-        id: '${saleId}_return',
+        id: '${saleId}_return_${DateTime.now().millisecondsSinceEpoch}',
         createdAt: DateTime.now(),
         shiftId: existingSale.shiftId,
         openedBy: existingSale.openedBy,
@@ -97,7 +118,24 @@ class SalesRepositoryImpl implements SalesRepository {
         globalDiscount: existingSale.globalDiscount,
       );
 
-      await createSale(returnedSale);
+      await _db.transaction(() async {
+        await _db.into(_db.sales).insert(_mapToTable(returnedSale));
+
+        for (final item in existingSale.items) {
+          await _db
+              .into(_db.saleItems)
+              .insert(_mapItemToCompanion(returnedSale.id, item));
+
+          final productRow = await (_db.select(_db.products)
+                ..where((t) => t.id.equals(item.productId)))
+              .getSingleOrNull();
+          if (productRow != null) {
+            await _db.update(_db.products).replace(
+                productRow.copyWith(stock: productRow.stock + item.quantity));
+          }
+        }
+      });
+
       return Right(returnedSale);
     } catch (e) {
       return Left(CacheFailure('Failed to return sale: $e'));
@@ -154,5 +192,5 @@ class SalesRepositoryImpl implements SalesRepository {
       discount: Value(item.discount),
       costPrice: Value(item.costPrice),
     );
-    }
+  }
 }
