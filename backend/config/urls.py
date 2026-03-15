@@ -16,26 +16,24 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from accounts.views import (
-    CashierTerminalLoginView,
-    CashRegisterRegistrationView,
-    PlatformRegistrationView,
-)
+from drf_spectacular.views import SpectacularAPIView, SpectacularRedocView, SpectacularSwaggerView
 
-from .api import router
 from .health import health_check
-from syncx.views import SyncPullView, SyncPushView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('health/', health_check, name='health'),
-    path('api/auth/register/platform/', PlatformRegistrationView.as_view(), name='platform_register'),
-    path('api/auth/register/cash-register/', CashRegisterRegistrationView.as_view(), name='cash_register_register'),
-    path('api/auth/login/cashier-terminal/', CashierTerminalLoginView.as_view(), name='cashier_terminal_login'),
-    path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
-    path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('api/sync/push/', SyncPushView.as_view(), name='sync_push'),
-    path('api/sync/pull/', SyncPullView.as_view(), name='sync_pull'),
-    path('api/', include(router.urls)),
+    # Versioned API documentation
+    path('api/v1/schema/', SpectacularAPIView.as_view(), name='schema-v1'),
+    path('api/v1/docs/', SpectacularSwaggerView.as_view(url_name='schema-v1'), name='swagger-ui-v1'),
+    path('api/v1/redoc/', SpectacularRedocView.as_view(url_name='schema-v1'), name='redoc-v1'),
+    # Versioned API entry points
+    path('api/v1/', include('config.api_v1_urls')),
+    path('api/v2/', include('config.api_v2_urls')),
+    # Backward-compatible docs aliases
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    # Backward-compatible aliases without version segment
+    path('api/', include('config.api_legacy_urls')),
 ]

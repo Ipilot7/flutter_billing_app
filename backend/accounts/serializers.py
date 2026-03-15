@@ -165,3 +165,45 @@ class CashierTerminalLoginSerializer(serializers.Serializer):
         attrs['terminal'] = terminal
         attrs['cashier'] = matched_cashiers[0]
         return attrs
+
+
+class TokenPairSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+    access = serializers.CharField()
+
+
+class OrganizationInfoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+
+
+class StoreInfoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    organization_id = serializers.IntegerField(required=False)
+
+
+class TerminalInfoSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    name = serializers.CharField()
+    device_id = serializers.CharField()
+    store_id = serializers.IntegerField()
+
+
+class PlatformRegistrationResponseSerializer(serializers.Serializer):
+    user = UserSerializer()
+    organization = OrganizationInfoSerializer()
+    store = StoreInfoSerializer()
+    tokens = TokenPairSerializer()
+
+
+class CashRegisterRegistrationResponseSerializer(serializers.Serializer):
+    terminal = TerminalInfoSerializer()
+    cashier = UserSerializer()
+
+
+class CashierTerminalLoginResponseSerializer(serializers.Serializer):
+    user = UserSerializer()
+    terminal = TerminalInfoSerializer()
+    store = StoreInfoSerializer()
+    tokens = TokenPairSerializer()

@@ -105,7 +105,7 @@ class BackendV1Client {
     required String ownerPassword,
   }) async {
     final response = await _post(
-      '/api/auth/register/platform/',
+      '/auth/register/platform/',
       body: {
         'organization_name': organizationName,
         'store_name': storeName,
@@ -133,7 +133,7 @@ class BackendV1Client {
     required String cashierPin,
   }) async {
     return _post(
-      '/api/auth/register/cash-register/',
+      '/auth/register/cash-register/',
       body: {
         'store_id': storeId,
         'terminal_name': terminalName,
@@ -151,7 +151,7 @@ class BackendV1Client {
     required String cashierPin,
   }) async {
     final response = await _post(
-      '/api/auth/login/cashier-terminal/',
+      '/auth/login/cashier-terminal/',
       body: {
         'device_id': deviceId,
         'cashier_pin': cashierPin,
@@ -184,7 +184,7 @@ class BackendV1Client {
     required String password,
   }) async {
     final response = await _post(
-      '/api/token/',
+      '/token/',
       body: {
         'username': username,
         'password': password,
@@ -210,7 +210,7 @@ class BackendV1Client {
     }
 
     final response = await _post(
-      '/api/shifts/',
+      '/shifts/',
       body: {
         'terminal': terminalId,
         'start_balance': startBalance.toStringAsFixed(2),
@@ -238,7 +238,7 @@ class BackendV1Client {
     }
 
     return _post(
-      '/api/sales/',
+      '/sales/',
       body: {
         'shift': shiftId,
         'receipt_number': receiptNumber,
@@ -251,7 +251,7 @@ class BackendV1Client {
 
   Future<List<Map<String, dynamic>>> fetchProducts() async {
     final response = await _get(
-      '/api/products/',
+      '/products/',
       withAuth: true,
     );
 
@@ -275,7 +275,7 @@ class BackendV1Client {
     bool isActive = true,
   }) async {
     return _post(
-      '/api/products/',
+      '/products/',
       body: {
         'organization': organizationId,
         'category': categoryId,

@@ -1,0 +1,3958 @@
+openapi: 3.0.3
+info:
+  title: DeepPOS Backend API
+  version: 1.0.0
+  description: OpenAPI schema for DeepPOS backend.
+paths:
+  /api/auth/login/cashier-terminal/:
+    post:
+      operationId: api_auth_login_cashier_terminal_create
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashierTerminalLogin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CashierTerminalLogin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CashierTerminalLogin'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashierTerminalLoginResponse'
+          description: ''
+  /api/auth/register/cash-register/:
+    post:
+      operationId: api_auth_register_cash_register_create
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashRegisterRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CashRegisterRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CashRegisterRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashRegisterRegistrationResponse'
+          description: ''
+  /api/auth/register/platform/:
+    post:
+      operationId: api_auth_register_platform_create
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlatformRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlatformRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformRegistrationResponse'
+          description: ''
+  /api/categories/:
+    get:
+      operationId: api_categories_list
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+          description: ''
+    post:
+      operationId: api_categories_create
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Category'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Category'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/categories/{id}/:
+    get:
+      operationId: api_categories_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    put:
+      operationId: api_categories_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Category'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Category'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    patch:
+      operationId: api_categories_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    delete:
+      operationId: api_categories_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/organizations/:
+    get:
+      operationId: api_organizations_list
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+          description: ''
+    post:
+      operationId: api_organizations_create
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/organizations/{id}/:
+    get:
+      operationId: api_organizations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this organization.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    put:
+      operationId: api_organizations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this organization.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    patch:
+      operationId: api_organizations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this organization.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    delete:
+      operationId: api_organizations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this organization.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/products/:
+    get:
+      operationId: api_products_list
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
+    post:
+      operationId: api_products_create
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Product'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+  /api/products/{id}/:
+    get:
+      operationId: api_products_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this product.
+        required: true
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    put:
+      operationId: api_products_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this product.
+        required: true
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Product'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    patch:
+      operationId: api_products_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this product.
+        required: true
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProduct'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProduct'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProduct'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    delete:
+      operationId: api_products_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this product.
+        required: true
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/sale-items/:
+    get:
+      operationId: api_sale_items_list
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SaleItem'
+          description: ''
+  /api/sale-items/{id}/:
+    get:
+      operationId: api_sale_items_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sale item.
+        required: true
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaleItem'
+          description: ''
+  /api/sales/:
+    get:
+      operationId: api_sales_list
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sale'
+          description: ''
+    post:
+      operationId: api_sales_create
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaleCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SaleCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SaleCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaleCreate'
+          description: ''
+  /api/sales/{id}/:
+    get:
+      operationId: api_sales_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sale.
+        required: true
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sale'
+          description: ''
+    put:
+      operationId: api_sales_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sale.
+        required: true
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sale'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Sale'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Sale'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sale'
+          description: ''
+    patch:
+      operationId: api_sales_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sale.
+        required: true
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSale'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSale'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSale'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sale'
+          description: ''
+    delete:
+      operationId: api_sales_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sale.
+        required: true
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/shifts/:
+    get:
+      operationId: api_shifts_list
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Shift'
+          description: ''
+    post:
+      operationId: api_shifts_create
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Shift'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Shift'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Shift'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+  /api/shifts/{id}/:
+    get:
+      operationId: api_shifts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+    put:
+      operationId: api_shifts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Shift'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Shift'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Shift'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+    patch:
+      operationId: api_shifts_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedShift'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedShift'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedShift'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+    delete:
+      operationId: api_shifts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/stores/:
+    get:
+      operationId: api_stores_list
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Store'
+          description: ''
+    post:
+      operationId: api_stores_create
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Store'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Store'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Store'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+          description: ''
+  /api/stores/{id}/:
+    get:
+      operationId: api_stores_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this store.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+          description: ''
+    put:
+      operationId: api_stores_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this store.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Store'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Store'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Store'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+          description: ''
+    patch:
+      operationId: api_stores_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this store.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStore'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStore'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStore'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+          description: ''
+    delete:
+      operationId: api_stores_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this store.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/subscription-events/:
+    get:
+      operationId: api_subscription_events_list
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionEvent'
+          description: ''
+  /api/subscription-events/{id}/:
+    get:
+      operationId: api_subscription_events_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subscription event.
+        required: true
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionEvent'
+          description: ''
+  /api/sync-operations/:
+    get:
+      operationId: api_sync_operations_list
+      tags:
+      - Synchronization
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SyncOperation'
+          description: ''
+    post:
+      operationId: api_sync_operations_create
+      tags:
+      - Synchronization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncOperation'
+          description: ''
+  /api/sync-operations/{id}/:
+    get:
+      operationId: api_sync_operations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sync operation.
+        required: true
+      tags:
+      - Synchronization
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncOperation'
+          description: ''
+    put:
+      operationId: api_sync_operations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sync operation.
+        required: true
+      tags:
+      - Synchronization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncOperation'
+          description: ''
+    patch:
+      operationId: api_sync_operations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sync operation.
+        required: true
+      tags:
+      - Synchronization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSyncOperation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSyncOperation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSyncOperation'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncOperation'
+          description: ''
+    delete:
+      operationId: api_sync_operations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sync operation.
+        required: true
+      tags:
+      - Synchronization
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/sync/pull/:
+    get:
+      operationId: api_sync_pull_retrieve
+      parameters:
+      - in: query
+        name: organization_id
+        schema:
+          type: integer
+        description: Optional organization filter for privileged users.
+      - in: query
+        name: since
+        schema:
+          type: string
+          format: date-time
+        description: Return changes after this timestamp (ISO 8601).
+      tags:
+      - Synchronization
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncPullResponse'
+          description: ''
+  /api/sync/push/:
+    post:
+      operationId: api_sync_push_create
+      tags:
+      - Synchronization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncPushRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SyncPushRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SyncPushRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncPushResponse'
+          description: ''
+  /api/terminals/:
+    get:
+      operationId: api_terminals_list
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Terminal'
+          description: ''
+    post:
+      operationId: api_terminals_create
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terminal'
+          description: ''
+  /api/terminals/{id}/:
+    get:
+      operationId: api_terminals_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this terminal.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terminal'
+          description: ''
+    put:
+      operationId: api_terminals_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this terminal.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terminal'
+          description: ''
+    patch:
+      operationId: api_terminals_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this terminal.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTerminal'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTerminal'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTerminal'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terminal'
+          description: ''
+    delete:
+      operationId: api_terminals_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this terminal.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/token/:
+    post:
+      operationId: api_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/token/refresh/:
+    post:
+      operationId: api_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/users/:
+    get:
+      operationId: api_users_list
+      tags:
+      - Accounts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: ''
+  /api/users/{id}/:
+    get:
+      operationId: api_users_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - Accounts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/auth/login/cashier-terminal/:
+    post:
+      operationId: api_v1_auth_login_cashier_terminal_create
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashierTerminalLogin'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CashierTerminalLogin'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CashierTerminalLogin'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashierTerminalLoginResponse'
+          description: ''
+  /api/v1/auth/register/cash-register/:
+    post:
+      operationId: api_v1_auth_register_cash_register_create
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CashRegisterRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CashRegisterRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CashRegisterRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CashRegisterRegistrationResponse'
+          description: ''
+  /api/v1/auth/register/platform/:
+    post:
+      operationId: api_v1_auth_register_platform_create
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlatformRegistration'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlatformRegistration'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlatformRegistration'
+        required: true
+      security:
+      - jwtAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformRegistrationResponse'
+          description: ''
+  /api/v1/categories/:
+    get:
+      operationId: api_v1_categories_list
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+          description: ''
+    post:
+      operationId: api_v1_categories_create
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Category'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Category'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+  /api/v1/categories/{id}/:
+    get:
+      operationId: api_v1_categories_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    put:
+      operationId: api_v1_categories_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Category'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Category'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Category'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    patch:
+      operationId: api_v1_categories_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCategory'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+          description: ''
+    delete:
+      operationId: api_v1_categories_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this category.
+        required: true
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/organizations/:
+    get:
+      operationId: api_v1_organizations_list
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Organization'
+          description: ''
+    post:
+      operationId: api_v1_organizations_create
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+  /api/v1/organizations/{id}/:
+    get:
+      operationId: api_v1_organizations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this organization.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    put:
+      operationId: api_v1_organizations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this organization.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Organization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Organization'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    patch:
+      operationId: api_v1_organizations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this organization.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganization'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+    delete:
+      operationId: api_v1_organizations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this organization.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/products/:
+    get:
+      operationId: api_v1_products_list
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Product'
+          description: ''
+    post:
+      operationId: api_v1_products_create
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Product'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+  /api/v1/products/{id}/:
+    get:
+      operationId: api_v1_products_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this product.
+        required: true
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    put:
+      operationId: api_v1_products_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this product.
+        required: true
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Product'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Product'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Product'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    patch:
+      operationId: api_v1_products_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this product.
+        required: true
+      tags:
+      - Catalog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProduct'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProduct'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProduct'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+          description: ''
+    delete:
+      operationId: api_v1_products_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this product.
+        required: true
+      tags:
+      - Catalog
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/sale-items/:
+    get:
+      operationId: api_v1_sale_items_list
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SaleItem'
+          description: ''
+  /api/v1/sale-items/{id}/:
+    get:
+      operationId: api_v1_sale_items_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sale item.
+        required: true
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaleItem'
+          description: ''
+  /api/v1/sales/:
+    get:
+      operationId: api_v1_sales_list
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Sale'
+          description: ''
+    post:
+      operationId: api_v1_sales_create
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaleCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SaleCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SaleCreate'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaleCreate'
+          description: ''
+  /api/v1/sales/{id}/:
+    get:
+      operationId: api_v1_sales_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sale.
+        required: true
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sale'
+          description: ''
+    put:
+      operationId: api_v1_sales_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sale.
+        required: true
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Sale'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Sale'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Sale'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sale'
+          description: ''
+    patch:
+      operationId: api_v1_sales_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sale.
+        required: true
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSale'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSale'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSale'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sale'
+          description: ''
+    delete:
+      operationId: api_v1_sales_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sale.
+        required: true
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/shifts/:
+    get:
+      operationId: api_v1_shifts_list
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Shift'
+          description: ''
+    post:
+      operationId: api_v1_shifts_create
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Shift'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Shift'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Shift'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+  /api/v1/shifts/{id}/:
+    get:
+      operationId: api_v1_shifts_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+    put:
+      operationId: api_v1_shifts_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Shift'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Shift'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Shift'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+    patch:
+      operationId: api_v1_shifts_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - Sales
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedShift'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedShift'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedShift'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shift'
+          description: ''
+    delete:
+      operationId: api_v1_shifts_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this shift.
+        required: true
+      tags:
+      - Sales
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/stores/:
+    get:
+      operationId: api_v1_stores_list
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Store'
+          description: ''
+    post:
+      operationId: api_v1_stores_create
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Store'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Store'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Store'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+          description: ''
+  /api/v1/stores/{id}/:
+    get:
+      operationId: api_v1_stores_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this store.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+          description: ''
+    put:
+      operationId: api_v1_stores_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this store.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Store'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Store'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Store'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+          description: ''
+    patch:
+      operationId: api_v1_stores_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this store.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStore'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStore'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStore'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Store'
+          description: ''
+    delete:
+      operationId: api_v1_stores_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this store.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/subscription-events/:
+    get:
+      operationId: api_v1_subscription_events_list
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SubscriptionEvent'
+          description: ''
+  /api/v1/subscription-events/{id}/:
+    get:
+      operationId: api_v1_subscription_events_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this subscription event.
+        required: true
+      tags:
+      - Billing
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionEvent'
+          description: ''
+  /api/v1/sync-operations/:
+    get:
+      operationId: api_v1_sync_operations_list
+      tags:
+      - Synchronization
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SyncOperation'
+          description: ''
+    post:
+      operationId: api_v1_sync_operations_create
+      tags:
+      - Synchronization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncOperation'
+          description: ''
+  /api/v1/sync-operations/{id}/:
+    get:
+      operationId: api_v1_sync_operations_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sync operation.
+        required: true
+      tags:
+      - Synchronization
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncOperation'
+          description: ''
+    put:
+      operationId: api_v1_sync_operations_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sync operation.
+        required: true
+      tags:
+      - Synchronization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SyncOperation'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncOperation'
+          description: ''
+    patch:
+      operationId: api_v1_sync_operations_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sync operation.
+        required: true
+      tags:
+      - Synchronization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSyncOperation'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSyncOperation'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSyncOperation'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncOperation'
+          description: ''
+    delete:
+      operationId: api_v1_sync_operations_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this sync operation.
+        required: true
+      tags:
+      - Synchronization
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/sync/pull/:
+    get:
+      operationId: api_v1_sync_pull_retrieve
+      parameters:
+      - in: query
+        name: organization_id
+        schema:
+          type: integer
+        description: Optional organization filter for privileged users.
+      - in: query
+        name: since
+        schema:
+          type: string
+          format: date-time
+        description: Return changes after this timestamp (ISO 8601).
+      tags:
+      - Synchronization
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncPullResponse'
+          description: ''
+  /api/v1/sync/push/:
+    post:
+      operationId: api_v1_sync_push_create
+      tags:
+      - Synchronization
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncPushRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SyncPushRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SyncPushRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncPushResponse'
+          description: ''
+  /api/v1/terminals/:
+    get:
+      operationId: api_v1_terminals_list
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Terminal'
+          description: ''
+    post:
+      operationId: api_v1_terminals_create
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terminal'
+          description: ''
+  /api/v1/terminals/{id}/:
+    get:
+      operationId: api_v1_terminals_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this terminal.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terminal'
+          description: ''
+    put:
+      operationId: api_v1_terminals_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this terminal.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Terminal'
+        required: true
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terminal'
+          description: ''
+    patch:
+      operationId: api_v1_terminals_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this terminal.
+        required: true
+      tags:
+      - Tenancy
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTerminal'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTerminal'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTerminal'
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Terminal'
+          description: ''
+    delete:
+      operationId: api_v1_terminals_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this terminal.
+        required: true
+      tags:
+      - Tenancy
+      security:
+      - jwtAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/token/:
+    post:
+      operationId: api_v1_token_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenObtainPair'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenObtainPair'
+          description: ''
+  /api/v1/token/refresh/:
+    post:
+      operationId: api_v1_token_refresh_create
+      description: |-
+        Takes a refresh type JSON web token and returns an access type JSON web
+        token if the refresh token is valid.
+      tags:
+      - Authentication
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRefresh'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenRefresh'
+          description: ''
+  /api/v1/users/:
+    get:
+      operationId: api_v1_users_list
+      tags:
+      - Accounts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/users/{id}/:
+    get:
+      operationId: api_v1_users_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this user.
+        required: true
+      tags:
+      - Accounts
+      security:
+      - jwtAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+components:
+  schemas:
+    CashRegisterRegistration:
+      type: object
+      properties:
+        store_id:
+          type: integer
+        terminal_name:
+          type: string
+          maxLength: 100
+        device_id:
+          type: string
+          maxLength: 255
+        cashier_username:
+          type: string
+          maxLength: 150
+        cashier_password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        cashier_pin:
+          type: string
+          maxLength: 10
+        cashier_first_name:
+          type: string
+          maxLength: 150
+        cashier_last_name:
+          type: string
+          maxLength: 150
+      required:
+      - cashier_password
+      - cashier_username
+      - device_id
+      - store_id
+      - terminal_name
+    CashRegisterRegistrationResponse:
+      type: object
+      properties:
+        terminal:
+          $ref: '#/components/schemas/TerminalInfo'
+        cashier:
+          $ref: '#/components/schemas/User'
+      required:
+      - cashier
+      - terminal
+    CashierTerminalLogin:
+      type: object
+      properties:
+        device_id:
+          type: string
+          maxLength: 255
+        cashier_pin:
+          type: string
+          maxLength: 10
+      required:
+      - cashier_pin
+      - device_id
+    CashierTerminalLoginResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        terminal:
+          $ref: '#/components/schemas/TerminalInfo'
+        store:
+          $ref: '#/components/schemas/StoreInfo'
+        tokens:
+          $ref: '#/components/schemas/TokenPair'
+      required:
+      - store
+      - terminal
+      - tokens
+      - user
+    Category:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        organization:
+          type: integer
+      required:
+      - created_at
+      - id
+      - name
+      - organization
+    Organization:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        subscription_status:
+          $ref: '#/components/schemas/SubscriptionStatusEnum'
+        subscription_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - updated_at
+    OrganizationInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+      required:
+      - id
+      - name
+    PatchedCategory:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        organization:
+          type: integer
+    PatchedOrganization:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        subscription_status:
+          $ref: '#/components/schemas/SubscriptionStatusEnum'
+        subscription_expires_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    PatchedProduct:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        sku:
+          type: string
+          maxLength: 80
+        barcode:
+          type: string
+          maxLength: 120
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        stock:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        min_stock:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        is_active:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        organization:
+          type: integer
+        category:
+          type: integer
+          nullable: true
+    PatchedSale:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaleItem'
+          readOnly: true
+        receipt_number:
+          type: string
+          maxLength: 50
+        payment_type:
+          $ref: '#/components/schemas/PaymentTypeEnum'
+        subtotal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        discount_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        is_return:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        organization:
+          type: integer
+          readOnly: true
+        store:
+          type: integer
+          readOnly: true
+        terminal:
+          type: integer
+          readOnly: true
+        shift:
+          type: integer
+        created_by:
+          type: integer
+          readOnly: true
+        parent_sale:
+          type: integer
+          nullable: true
+    PatchedShift:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        start_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        end_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ShiftStatusEnum'
+        opened_at:
+          type: string
+          format: date-time
+          readOnly: true
+        closed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        organization:
+          type: integer
+          readOnly: true
+        store:
+          type: integer
+          readOnly: true
+        terminal:
+          type: integer
+        opened_by:
+          type: integer
+          readOnly: true
+        closed_by:
+          type: integer
+          readOnly: true
+          nullable: true
+    PatchedStore:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        timezone:
+          type: string
+          maxLength: 64
+        address:
+          type: string
+          maxLength: 500
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        organization:
+          type: integer
+    PatchedSyncOperation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        operation_id:
+          type: string
+          format: uuid
+        entity_type:
+          type: string
+          maxLength: 100
+        entity_id:
+          type: string
+          maxLength: 100
+        payload: {}
+        status:
+          $ref: '#/components/schemas/SyncOperationStatusEnum'
+        error:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        processed_at:
+          type: string
+          format: date-time
+          nullable: true
+        terminal:
+          type: integer
+    PatchedTerminal:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        device_id:
+          type: string
+          maxLength: 255
+        is_active:
+          type: boolean
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        store:
+          type: integer
+    PaymentTypeEnum:
+      enum:
+      - cash
+      - card
+      - terminal
+      type: string
+      description: |-
+        * `cash` - Cash
+        * `card` - Card
+        * `terminal` - Terminal
+    PlatformRegistration:
+      type: object
+      properties:
+        organization_name:
+          type: string
+          maxLength: 255
+        store_name:
+          type: string
+          maxLength: 255
+        timezone:
+          type: string
+          default: UTC
+          maxLength: 64
+        address:
+          type: string
+          maxLength: 500
+        owner_username:
+          type: string
+          maxLength: 150
+        owner_password:
+          type: string
+          writeOnly: true
+          minLength: 8
+        owner_email:
+          type: string
+          format: email
+        owner_first_name:
+          type: string
+          maxLength: 150
+        owner_last_name:
+          type: string
+          maxLength: 150
+      required:
+      - organization_name
+      - owner_password
+      - owner_username
+      - store_name
+    PlatformRegistrationResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/User'
+        organization:
+          $ref: '#/components/schemas/OrganizationInfo'
+        store:
+          $ref: '#/components/schemas/StoreInfo'
+        tokens:
+          $ref: '#/components/schemas/TokenPair'
+      required:
+      - organization
+      - store
+      - tokens
+      - user
+    Product:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 200
+        sku:
+          type: string
+          maxLength: 80
+        barcode:
+          type: string
+          maxLength: 120
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        stock:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        min_stock:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        is_active:
+          type: boolean
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        organization:
+          type: integer
+        category:
+          type: integer
+          nullable: true
+      required:
+      - barcode
+      - id
+      - name
+      - organization
+      - price
+      - updated_at
+    ProviderEnum:
+      enum:
+      - stripe
+      - store
+      type: string
+      description: |-
+        * `stripe` - Stripe
+        * `store` - Store Billing
+    RoleEnum:
+      enum:
+      - owner
+      - manager
+      - cashier
+      type: string
+      description: |-
+        * `owner` - Owner
+        * `manager` - Manager
+        * `cashier` - Cashier
+    Sale:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaleItem'
+          readOnly: true
+        receipt_number:
+          type: string
+          maxLength: 50
+        payment_type:
+          $ref: '#/components/schemas/PaymentTypeEnum'
+        subtotal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        discount_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        is_return:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        organization:
+          type: integer
+          readOnly: true
+        store:
+          type: integer
+          readOnly: true
+        terminal:
+          type: integer
+          readOnly: true
+        shift:
+          type: integer
+        created_by:
+          type: integer
+          readOnly: true
+        parent_sale:
+          type: integer
+          nullable: true
+      required:
+      - created_at
+      - created_by
+      - id
+      - items
+      - organization
+      - payment_type
+      - receipt_number
+      - shift
+      - store
+      - subtotal
+      - terminal
+      - total
+    SaleCreate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        shift:
+          type: integer
+        receipt_number:
+          type: string
+          maxLength: 50
+        payment_type:
+          $ref: '#/components/schemas/PaymentTypeEnum'
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaleCreateItemInput'
+      required:
+      - id
+      - items
+      - payment_type
+      - receipt_number
+      - shift
+    SaleCreateItemInput:
+      type: object
+      properties:
+        product_id:
+          type: integer
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        discount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          default: '0.00'
+      required:
+      - product_id
+      - quantity
+    SaleItem:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        product_name:
+          type: string
+          maxLength: 200
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,9}(?:\.\d{0,3})?$
+        price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        discount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        line_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        sale:
+          type: integer
+        product:
+          type: integer
+      required:
+      - id
+      - line_total
+      - price
+      - product
+      - product_name
+      - quantity
+      - sale
+    Shift:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        start_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        end_balance:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        status:
+          $ref: '#/components/schemas/ShiftStatusEnum'
+        opened_at:
+          type: string
+          format: date-time
+          readOnly: true
+        closed_at:
+          type: string
+          format: date-time
+          readOnly: true
+          nullable: true
+        organization:
+          type: integer
+          readOnly: true
+        store:
+          type: integer
+          readOnly: true
+        terminal:
+          type: integer
+        opened_by:
+          type: integer
+          readOnly: true
+        closed_by:
+          type: integer
+          readOnly: true
+          nullable: true
+      required:
+      - closed_at
+      - closed_by
+      - id
+      - opened_at
+      - opened_by
+      - organization
+      - start_balance
+      - store
+      - terminal
+    ShiftStatusEnum:
+      enum:
+      - open
+      - closed
+      type: string
+      description: |-
+        * `open` - Open
+        * `closed` - Closed
+    Store:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        timezone:
+          type: string
+          maxLength: 64
+        address:
+          type: string
+          maxLength: 500
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        organization:
+          type: integer
+      required:
+      - created_at
+      - id
+      - name
+      - organization
+      - updated_at
+    StoreInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        organization_id:
+          type: integer
+      required:
+      - id
+      - name
+    SubscriptionEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        provider:
+          $ref: '#/components/schemas/ProviderEnum'
+        event_type:
+          type: string
+          maxLength: 120
+        raw_payload: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        processed_at:
+          type: string
+          format: date-time
+          nullable: true
+        organization:
+          type: integer
+      required:
+      - created_at
+      - event_type
+      - id
+      - organization
+      - provider
+    SubscriptionStatusEnum:
+      enum:
+      - trial
+      - active
+      - past_due
+      - canceled
+      type: string
+      description: |-
+        * `trial` - Trial
+        * `active` - Active
+        * `past_due` - Past Due
+        * `canceled` - Canceled
+    SyncOperation:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        operation_id:
+          type: string
+          format: uuid
+        entity_type:
+          type: string
+          maxLength: 100
+        entity_id:
+          type: string
+          maxLength: 100
+        payload: {}
+        status:
+          $ref: '#/components/schemas/SyncOperationStatusEnum'
+        error:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        processed_at:
+          type: string
+          format: date-time
+          nullable: true
+        terminal:
+          type: integer
+      required:
+      - created_at
+      - entity_id
+      - entity_type
+      - id
+      - operation_id
+      - terminal
+    SyncOperationStatusEnum:
+      enum:
+      - pending
+      - applied
+      - failed
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `applied` - Applied
+        * `failed` - Failed
+    SyncPullData:
+      type: object
+      properties:
+        products:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        categories:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        shifts:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        sales:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+      required:
+      - categories
+      - products
+      - sales
+      - shifts
+    SyncPullResponse:
+      type: object
+      properties:
+        server_time:
+          type: string
+          format: date-time
+        next_cursor:
+          type: string
+          format: date-time
+        data:
+          $ref: '#/components/schemas/SyncPullData'
+      required:
+      - data
+      - next_cursor
+      - server_time
+    SyncPushErrorItem:
+      type: object
+      properties:
+        operation:
+          type: object
+          additionalProperties: {}
+        error:
+          type: string
+      required:
+      - error
+      - operation
+    SyncPushOperation:
+      type: object
+      properties:
+        operation_id:
+          type: string
+        entity_type:
+          type: string
+        entity_id:
+          type: string
+        payload:
+          type: object
+          additionalProperties: {}
+      required:
+      - entity_type
+      - operation_id
+    SyncPushRequest:
+      type: object
+      properties:
+        terminal_id:
+          type: integer
+        operations:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncPushOperation'
+      required:
+      - operations
+      - terminal_id
+    SyncPushResponse:
+      type: object
+      properties:
+        applied:
+          type: array
+          items:
+            type: string
+        duplicates:
+          type: array
+          items:
+            type: string
+        failed:
+          type: array
+          items:
+            $ref: '#/components/schemas/SyncPushErrorItem'
+        server_time:
+          type: string
+          format: date-time
+      required:
+      - applied
+      - duplicates
+      - failed
+      - server_time
+    Terminal:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          maxLength: 100
+        device_id:
+          type: string
+          maxLength: 255
+        is_active:
+          type: boolean
+        last_seen_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        store:
+          type: integer
+      required:
+      - created_at
+      - device_id
+      - id
+      - name
+      - store
+    TerminalInfo:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        device_id:
+          type: string
+        store_id:
+          type: integer
+      required:
+      - device_id
+      - id
+      - name
+      - store_id
+    TokenObtainPair:
+      type: object
+      properties:
+        username:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+          readOnly: true
+      required:
+      - access
+      - password
+      - refresh
+      - username
+    TokenPair:
+      type: object
+      properties:
+        refresh:
+          type: string
+        access:
+          type: string
+      required:
+      - access
+      - refresh
+    TokenRefresh:
+      type: object
+      properties:
+        access:
+          type: string
+          readOnly: true
+        refresh:
+          type: string
+      required:
+      - access
+      - refresh
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        username:
+          type: string
+          description: Required. 150 characters or fewer. Letters, digits and @/./+/-/_
+            only.
+          pattern: ^[\w.@+-]+$
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          title: Email address
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        organization:
+          type: integer
+          nullable: true
+        store:
+          type: integer
+          nullable: true
+        is_active:
+          type: boolean
+          title: Active
+          description: Designates whether this user should be treated as active. Unselect
+            this instead of deleting accounts.
+      required:
+      - id
+      - username
+  securitySchemes:
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+tags:
+- name: Authentication
+  description: Owner/cashier auth and JWT operations.
+- name: Accounts
+  description: User/account management.
+- name: Tenancy
+  description: Organizations, stores and terminals.
+- name: Catalog
+  description: Products and categories.
+- name: Sales
+  description: Shifts, sales and sale items.
+- name: Synchronization
+  description: Push/pull and sync operations.
+- name: Billing
+  description: Billing/subscription events.
+- name: Other
+  description: Unclassified endpoints.

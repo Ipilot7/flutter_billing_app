@@ -1,6 +1,7 @@
 from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
@@ -10,8 +11,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from .serializers import (
 	CashRegisterRegistrationSerializer,
+	CashRegisterRegistrationResponseSerializer,
 	CashierTerminalLoginSerializer,
+	CashierTerminalLoginResponseSerializer,
 	PlatformRegistrationSerializer,
+	PlatformRegistrationResponseSerializer,
 	UserSerializer,
 )
 
@@ -24,7 +28,12 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
 class PlatformRegistrationView(APIView):
 	permission_classes = [permissions.AllowAny]
+	serializer_class = PlatformRegistrationSerializer
 
+	@extend_schema(
+		request=PlatformRegistrationSerializer,
+		responses={201: PlatformRegistrationResponseSerializer},
+	)
 	@transaction.atomic
 	def post(self, request):
 		serializer = PlatformRegistrationSerializer(data=request.data)
@@ -56,7 +65,12 @@ class PlatformRegistrationView(APIView):
 
 class CashRegisterRegistrationView(APIView):
 	permission_classes = [permissions.IsAuthenticated]
+	serializer_class = CashRegisterRegistrationSerializer
 
+	@extend_schema(
+		request=CashRegisterRegistrationSerializer,
+		responses={201: CashRegisterRegistrationResponseSerializer},
+	)
 	@transaction.atomic
 	def post(self, request):
 		serializer = CashRegisterRegistrationSerializer(
@@ -82,10 +96,15 @@ class CashRegisterRegistrationView(APIView):
 
 class CashierTerminalLoginView(APIView):
 	permission_classes = [permissions.AllowAny]
+	serializer_class = CashierTerminalLoginSerializer
 	MAX_FAILED_ATTEMPTS = 5
 	FAILED_WINDOW_SECONDS = 300
 	LOCK_SECONDS = 900
 
+	@extend_schema(
+		request=CashierTerminalLoginSerializer,
+		responses={200: CashierTerminalLoginResponseSerializer},
+	)
 	def post(self, request):
 		device_id = str(request.data.get('device_id', '')).strip()
 		failed_key = f'cashier_login:failed:{device_id}'

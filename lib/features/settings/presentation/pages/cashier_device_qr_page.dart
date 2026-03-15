@@ -34,11 +34,6 @@ class CashierDeviceQrPage extends StatelessWidget {
                   decoration: const PrettyQrDecoration(),
                 ),
               ),
-              // const SizedBox(height: 20),
-              // SelectableText(
-              //   'Device ID: $deviceId',
-              //   textAlign: TextAlign.center,
-              // ),
               const SizedBox(height: 8),
               const Text(
                 'QR поддерживается только форматом DeepPOS.',

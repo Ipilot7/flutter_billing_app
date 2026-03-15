@@ -1,5 +1,6 @@
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
+from drf_spectacular.utils import OpenApiParameter, OpenApiTypes, extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -11,7 +12,12 @@ from sales.serializers import SaleSerializer, ShiftSerializer
 from tenancy.models import Terminal
 from .handlers import apply_operation
 from .models import SyncOperation
-from .serializers import SyncOperationSerializer
+from .serializers import (
+	SyncOperationSerializer,
+	SyncPullResponseSerializer,
+	SyncPushRequestSerializer,
+	SyncPushResponseSerializer,
+)
 
 
 class SyncOperationViewSet(viewsets.ModelViewSet):
@@ -22,7 +28,12 @@ class SyncOperationViewSet(viewsets.ModelViewSet):
 
 class SyncPushView(APIView):
 	permission_classes = [permissions.IsAuthenticated]
+	serializer_class = SyncPushRequestSerializer
 
+	@extend_schema(
+		request=SyncPushRequestSerializer,
+		responses={200: SyncPushResponseSerializer},
+	)
 	def post(self, request):
 		terminal_id = request.data.get('terminal_id')
 		operations = request.data.get('operations', [])
@@ -109,6 +120,26 @@ class SyncPushView(APIView):
 
 class SyncPullView(APIView):
 	permission_classes = [permissions.IsAuthenticated]
+
+	@extend_schema(
+		parameters=[
+			OpenApiParameter(
+				name='since',
+				type=OpenApiTypes.DATETIME,
+				location=OpenApiParameter.QUERY,
+				required=False,
+				description='Return changes after this timestamp (ISO 8601).',
+			),
+			OpenApiParameter(
+				name='organization_id',
+				type=OpenApiTypes.INT,
+				location=OpenApiParameter.QUERY,
+				required=False,
+				description='Optional organization filter for privileged users.',
+			),
+		],
+		responses={200: SyncPullResponseSerializer},
+	)
 
 	def get(self, request):
 		since_raw = request.query_params.get('since')

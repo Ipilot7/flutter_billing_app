@@ -25,29 +25,86 @@ python manage.py createsuperuser
 python manage.py runserver
 ```
 
+## Settings Environments
+
+Settings are split into:
+
+- `config/settings/base.py`
+- `config/settings/dev.py`
+- `config/settings/prod.py`
+- `config/settings/__init__.py` (entrypoint selector)
+
+Environment variables:
+
+- `DJANGO_ENV=dev|prod` (default: `dev`)
+- `DJANGO_DEBUG=1|0|true|false`
+- `DJANGO_ALLOWED_HOSTS=host1,host2`
+- `DJANGO_CORS_ALLOW_ALL=1|0`
+- `DB_NAME` (SQLite file in dev, PostgreSQL database in prod)
+- `DB_USER` (prod)
+- `DB_PASSWORD` (prod)
+- `DB_HOST` (prod)
+- `DB_PORT` (prod, default `5432`)
+
+Loading order:
+
+- OS/shell environment variables (highest priority)
+- `backend/.env`
+- `backend/.env.example` (fallback if `.env` is absent)
+
+Examples:
+
+```bash
+# Development
+set DJANGO_ENV=dev
+set DJANGO_DEBUG=1
+set DB_NAME=db.sqlite3
+
+# Production
+set DJANGO_ENV=prod
+set DJANGO_DEBUG=0
+set DB_NAME=deeppos
+set DB_USER=postgres
+set DB_PASSWORD=your_password
+set DB_HOST=127.0.0.1
+set DB_PORT=5432
+```
+
+Database policy:
+
+- `dev` -> SQLite (`django.db.backends.sqlite3`)
+- `prod` -> PostgreSQL (`django.db.backends.postgresql`)
+
 ## API Endpoints
 
 - `GET /health/`
-- `POST /api/auth/register/platform/`
-- `POST /api/auth/register/cash-register/`
-- `POST /api/auth/login/cashier-terminal/`
-- `POST /api/token/`
-- `POST /api/token/refresh/`
-- `POST /api/sync/push/`
-- `GET /api/sync/pull/?since=<iso_datetime>`
-- `GET/POST /api/organizations/`
-- `GET/POST /api/stores/`
-- `GET/POST /api/terminals/`
-- `GET/POST /api/products/`
-- `GET/POST /api/sales/`
-- `GET/POST /api/shifts/`
-- `GET/POST /api/sync-operations/`
+- `POST /api/v1/auth/register/platform/`
+- `POST /api/v1/auth/register/cash-register/`
+- `POST /api/v1/auth/login/cashier-terminal/`
+- `POST /api/v1/token/`
+- `POST /api/v1/token/refresh/`
+- `POST /api/v1/sync/push/`
+- `GET /api/v1/sync/pull/?since=<iso_datetime>`
+- `GET/POST /api/v1/organizations/`
+- `GET/POST /api/v1/stores/`
+- `GET/POST /api/v1/terminals/`
+- `GET/POST /api/v1/products/`
+- `GET/POST /api/v1/sales/`
+- `GET/POST /api/v1/shifts/`
+- `GET/POST /api/v1/sync-operations/`
+
+Docs:
+
+- Swagger v1: `/api/v1/docs/`
+- ReDoc v1: `/api/v1/redoc/`
+
+Backward compatibility aliases without version are still available (`/api/...`).
 
 ## Sync Contract (v1)
 
 ### Push
 
-`POST /api/sync/push/`
+`POST /api/v1/sync/push/`
 
 ```json
 {
@@ -73,7 +130,7 @@ Supported `entity_type` values:
 
 ### Pull
 
-`GET /api/sync/pull/?since=2026-03-13T10:00:00Z`
+`GET /api/v1/sync/pull/?since=2026-03-13T10:00:00Z`
 
 Returns changed `products`, `categories`, `shifts`, and `sales` after cursor time.
 
@@ -81,19 +138,19 @@ Returns changed `products`, `categories`, `shifts`, and `sales` after cursor tim
 
 ### Platform Registration
 
-`POST /api/auth/register/platform/`
+`POST /api/v1/auth/register/platform/`
 
 Creates organization, first store, and owner account. Returns JWT `access` and `refresh` tokens.
 
 ### Cash Register Registration
 
-`POST /api/auth/register/cash-register/`
+`POST /api/v1/auth/register/cash-register/`
 
 Requires authenticated `owner` or `manager`. Creates a terminal and cashier user for the selected store.
 
 ### Cashier Terminal Login
 
-`POST /api/auth/login/cashier-terminal/`
+`POST /api/v1/auth/login/cashier-terminal/`
 
 Quick cashier login for POS terminal using `device_id` + `cashier_pin`. Returns JWT tokens and terminal context.
 
@@ -106,7 +163,7 @@ Security behavior:
 
 ### Create Sale With Items
 
-`POST /api/sales/`
+`POST /api/v1/sales/`
 
 ```json
 {
