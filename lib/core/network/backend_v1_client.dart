@@ -176,6 +176,11 @@ class BackendV1Client {
         store['id'] as int,
         store['organization_id'] as int,
       );
+
+      final terminalDeviceId = terminal['device_id']?.toString();
+      if (terminalDeviceId != null && terminalDeviceId.isNotEmpty) {
+        await _persistDeviceId(terminalDeviceId);
+      }
     }
 
     await _persistSessionRole(BackendSession.roleCashier);
@@ -310,6 +315,19 @@ class BackendV1Client {
     }
 
     throw BackendApiException('Unexpected products response format.');
+  }
+
+  Future<Map<String, dynamic>> fetchCurrentUser() async {
+    final response = await _get(
+      '/auth/me/',
+      withAuth: true,
+    );
+
+    if (response is Map<String, dynamic>) {
+      return response;
+    }
+
+    throw BackendApiException('Unexpected current user response format.');
   }
 
   Future<List<Map<String, dynamic>>> fetchTerminals() async {
@@ -641,6 +659,11 @@ class BackendV1Client {
   Future<void> _persistSessionRole(String role) async {
     if (_session == null) return;
     await _session!.saveSessionRole(role);
+  }
+
+  Future<void> _persistDeviceId(String deviceId) async {
+    if (_session == null) return;
+    await _session!.saveDeviceId(deviceId);
   }
 
   int? _extractUserIdFromToken(String token) {

@@ -307,6 +307,7 @@ class CashRegisterSetupState extends Equatable {
   final bool loading;
   final String storeId;
   final String deviceId;
+  final bool registrationCompleted;
   final String? message;
   final String? error;
 
@@ -314,6 +315,7 @@ class CashRegisterSetupState extends Equatable {
     this.loading = false,
     this.storeId = '',
     this.deviceId = '',
+    this.registrationCompleted = false,
     this.message,
     this.error,
   });
@@ -322,6 +324,7 @@ class CashRegisterSetupState extends Equatable {
     bool? loading,
     String? storeId,
     String? deviceId,
+    bool? registrationCompleted,
     String? message,
     String? error,
   }) {
@@ -329,13 +332,22 @@ class CashRegisterSetupState extends Equatable {
       loading: loading ?? this.loading,
       storeId: storeId ?? this.storeId,
       deviceId: deviceId ?? this.deviceId,
+      registrationCompleted:
+          registrationCompleted ?? this.registrationCompleted,
       message: message,
       error: error,
     );
   }
 
   @override
-  List<Object?> get props => [loading, storeId, deviceId, message, error];
+  List<Object?> get props => [
+        loading,
+        storeId,
+        deviceId,
+        registrationCompleted,
+        message,
+        error,
+      ];
 }
 
 class CashRegisterSetupCubit extends Cubit<CashRegisterSetupState> {
@@ -355,14 +367,21 @@ class CashRegisterSetupCubit extends Cubit<CashRegisterSetupState> {
   void applyScannedQr(String raw) {
     final parsedDeviceId = CashierQrPayload.parseDeviceId(raw.trim());
     if (parsedDeviceId == null) {
-      emit(state.copyWith(error: 'Это не QR DeepPOS для устройства кассира.'));
+      emit(state.copyWith(
+        registrationCompleted: false,
+        error: 'Это не QR DeepPOS для устройства кассира.',
+      ));
       return;
     }
     emit(state.copyWith(
-        deviceId: parsedDeviceId, message: 'Device ID заполнен из QR.'));
+      deviceId: parsedDeviceId,
+      registrationCompleted: false,
+      message: 'Device ID заполнен из QR.',
+    ));
   }
 
   Future<void> register({
+    required String terminalName,
     required String cashierUsername,
     required String cashierPassword,
     required String cashierPin,
@@ -372,29 +391,38 @@ class CashRegisterSetupCubit extends Cubit<CashRegisterSetupState> {
       await _client.ensureOwnerContext();
       parsedStoreId = await _session.getStoreId();
     }
+    final normalizedTerminalName = terminalName.trim();
     final deviceId = state.deviceId.trim();
-    final terminalName = 'POS-${DateTime.now().millisecondsSinceEpoch}';
 
     if (parsedStoreId == null ||
+        normalizedTerminalName.isEmpty ||
         deviceId.isEmpty ||
         cashierUsername.trim().isEmpty ||
         cashierPassword.trim().length < 8 ||
         cashierPin.trim().isEmpty) {
       emit(state.copyWith(
+        registrationCompleted: false,
         error: parsedStoreId == null
             ? 'Сначала войдите как owner и зарегистрируйте платформу.'
-            : deviceId.isEmpty
-                ? 'Сначала отсканируйте QR устройства кассира.'
-                : 'Заполните логин, пароль и PIN кассира. Пароль не менее 8 символов.',
+            : normalizedTerminalName.isEmpty
+                ? 'Введите название кассы.'
+                : deviceId.isEmpty
+                    ? 'Сначала отсканируйте QR устройства кассира.'
+                    : 'Заполните логин, пароль и PIN кассира. Пароль не менее 8 символов.',
       ));
       return;
     }
 
-    emit(state.copyWith(loading: true, message: null, error: null));
+    emit(state.copyWith(
+      loading: true,
+      registrationCompleted: false,
+      message: null,
+      error: null,
+    ));
     try {
       await _client.registerCashRegister(
         storeId: parsedStoreId,
-        terminalName: terminalName,
+        terminalName: normalizedTerminalName,
         deviceId: deviceId,
         cashierUsername: cashierUsername.trim(),
         cashierPassword: cashierPassword,
@@ -402,10 +430,14 @@ class CashRegisterSetupCubit extends Cubit<CashRegisterSetupState> {
       );
 
       emit(state.copyWith(
-          loading: false, message: 'Касса и кассир зарегистрированы.'));
+        loading: false,
+        registrationCompleted: true,
+        message: 'Касса и кассир зарегистрированы.',
+      ));
     } catch (e) {
       emit(state.copyWith(
         loading: false,
+        registrationCompleted: false,
         error: 'Ошибка регистрации кассы: $e',
       ));
     }

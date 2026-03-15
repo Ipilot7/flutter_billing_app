@@ -5,7 +5,6 @@ import 'package:app_settings/app_settings.dart';
 
 import 'package:billing_app/l10n/app_localizations.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../shop/presentation/bloc/shop_bloc.dart';
 import '../bloc/printer_bloc.dart';
 import '../bloc/printer_event.dart';
 import '../bloc/printer_state.dart';
@@ -13,6 +12,7 @@ import '../bloc/locale_cubit.dart';
 import '../../../../core/util/backup_service.dart';
 import '../../../../core/service_locator.dart';
 import '../../../../core/network/backend_session.dart';
+import '../../../../core/network/backend_v1_client.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -22,15 +22,63 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
+  String? _sessionRole;
+  String _profileName = 'USER';
+  String _profileInitials = 'U';
+
   @override
   void initState() {
     super.initState();
     // Re-initialize printer state whenever settings page opens
     context.read<PrinterBloc>().add(InitPrinterEvent());
+    _loadSessionRole();
+    _loadCurrentUserProfile();
+  }
+
+  Future<void> _loadSessionRole() async {
+    final role = await sl<BackendSession>().getSessionRole();
+    if (!mounted) return;
+    setState(() {
+      _sessionRole = role;
+    });
+  }
+
+  Future<void> _loadCurrentUserProfile() async {
+    try {
+      final user = await sl<BackendV1Client>().fetchCurrentUser();
+      final username = (user['username']?.toString() ?? '').trim();
+
+      if (username.isEmpty || !mounted) return;
+
+      setState(() {
+        _profileName = username;
+        _profileInitials = _buildInitials(username);
+      });
+    } catch (_) {
+      // Keep fallback placeholder when user endpoint is unavailable.
+    }
+  }
+
+  String _buildInitials(String value) {
+    final tokens = value
+        .replaceAll(RegExp(r'[_\-]+'), ' ')
+        .split(' ')
+        .where((part) => part.isNotEmpty)
+        .toList();
+
+    if (tokens.isEmpty) return 'U';
+    if (tokens.length == 1) {
+      return tokens.first.substring(0, 1).toUpperCase();
+    }
+
+    return (tokens.first.substring(0, 1) + tokens[1].substring(0, 1))
+        .toUpperCase();
   }
 
   @override
   Widget build(BuildContext context) {
+    final isOwner = _sessionRole == BackendSession.roleOwner;
+
     return Scaffold(
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.settings,
@@ -52,108 +100,92 @@ class _SettingsPageState extends State<SettingsPage> {
               width: double.infinity,
               color: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
-              child: BlocBuilder<ShopBloc, ShopState>(
-                builder: (context, state) {
-                  String shopName = 'Elite Groceries';
-                  String initials = 'EG';
-                  if (state is ShopLoaded && state.shop.name.isNotEmpty) {
-                    shopName = state.shop.name;
-                    final parts = shopName.split(' ');
-                    initials = parts
-                        .take(2)
-                        .map((p) => p.isNotEmpty ? p[0].toUpperCase() : '')
-                        .join('');
-                    if (initials.isEmpty) initials = 'S';
-                  }
-
-                  return Column(
-                    children: [
-                      Container(
-                        width: 96,
-                        height: 96,
-                        decoration: BoxDecoration(
-                            color: AppTheme.primaryColor,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.primaryColor
-                                    .withValues(alpha: 0.2),
-                                blurRadius: 15,
-                                spreadRadius: 5,
-                              )
-                            ]),
-                        alignment: Alignment.center,
-                        child: Text(initials,
-                            style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 32,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -1)),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(shopName.toUpperCase(),
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold)),
-                    ],
-                  );
-                },
+              child: Column(
+                children: [
+                  Container(
+                    width: 96,
+                    height: 96,
+                    decoration: BoxDecoration(
+                        color: AppTheme.primaryColor,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.2),
+                            blurRadius: 15,
+                            spreadRadius: 5,
+                          )
+                        ]),
+                    alignment: Alignment.center,
+                    child: Text(_profileInitials,
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: -1)),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(_profileName.toUpperCase(),
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold)),
+                ],
               ),
             ),
 
             const SizedBox(height: 24),
 
-            // Management Section
-            _buildSectionHeader(AppLocalizations.of(context)!.management),
-            _buildListGroup(
-              children: [
-                _buildListItem(
-                  icon: Icons.qr_code_scanner,
-                  title: AppLocalizations.of(context)!.products,
-                  onTap: () => context.push('/products'),
-                ),
-                _buildDivider(),
-                _buildListItem(
-                  icon: Icons.inventory_2_outlined,
-                  title: AppLocalizations.of(context)!.stockManagement,
-                  onTap: () => context.push('/products/inventory'),
-                ),
-                _buildDivider(),
-                _buildListItem(
-                  icon: Icons.history,
-                  title: AppLocalizations.of(context)!.salesHistory,
-                  onTap: () => context.push('/sales'),
-                ),
-                _buildDivider(),
-                _buildListItem(
-                  icon: Icons.bar_chart,
-                  title: AppLocalizations.of(context)!.analytics,
-                  onTap: () => context.push('/analytics'),
-                ),
-                _buildDivider(),
-                _buildListItem(
-                  icon: Icons.scale_outlined,
-                  title: AppLocalizations.of(context)!.measurementUnits,
-                  onTap: () => context.push('/settings/units'),
-                ),
-                _buildDivider(),
-                _buildListItem(
-                  icon: Icons.storefront,
-                  title: AppLocalizations.of(context)!.shopDetails,
-                  subtitle: AppLocalizations.of(context)!.shopDetailsSubtitle,
-                  onTap: () => context.push('/shop'),
-                ),
-                _buildDivider(),
-                _buildListItem(
-                  icon: Icons.point_of_sale,
-                  title: 'Кассы',
-                  subtitle: 'Список касс и добавление новой',
-                  onTap: () => context.push('/settings/cash-registers'),
-                ),
-                _buildDivider(),
-              ],
-            ),
-
-            const SizedBox(height: 24),
+            if (isOwner) ...[
+              // Management Section (Owner only)
+              _buildSectionHeader(AppLocalizations.of(context)!.management),
+              _buildListGroup(
+                children: [
+                  _buildListItem(
+                    icon: Icons.qr_code_scanner,
+                    title: AppLocalizations.of(context)!.products,
+                    onTap: () => context.push('/products'),
+                  ),
+                  _buildDivider(),
+                  _buildListItem(
+                    icon: Icons.inventory_2_outlined,
+                    title: AppLocalizations.of(context)!.stockManagement,
+                    onTap: () => context.push('/products/inventory'),
+                  ),
+                  _buildDivider(),
+                  _buildListItem(
+                    icon: Icons.history,
+                    title: AppLocalizations.of(context)!.salesHistory,
+                    onTap: () => context.push('/sales'),
+                  ),
+                  _buildDivider(),
+                  _buildListItem(
+                    icon: Icons.bar_chart,
+                    title: AppLocalizations.of(context)!.analytics,
+                    onTap: () => context.push('/analytics'),
+                  ),
+                  _buildDivider(),
+                  _buildListItem(
+                    icon: Icons.scale_outlined,
+                    title: AppLocalizations.of(context)!.measurementUnits,
+                    onTap: () => context.push('/settings/units'),
+                  ),
+                  _buildDivider(),
+                  _buildListItem(
+                    icon: Icons.storefront,
+                    title: AppLocalizations.of(context)!.shopDetails,
+                    subtitle: AppLocalizations.of(context)!.shopDetailsSubtitle,
+                    onTap: () => context.push('/shop'),
+                  ),
+                  _buildDivider(),
+                  _buildListItem(
+                    icon: Icons.point_of_sale,
+                    title: 'Кассы',
+                    subtitle: 'Список касс и добавление новой',
+                    onTap: () => context.push('/settings/cash-registers'),
+                  ),
+                  _buildDivider(),
+                ],
+              ),
+              const SizedBox(height: 24),
+            ],
 
             // Language Section
             _buildSectionHeader(AppLocalizations.of(context)!.language),
@@ -289,31 +321,32 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 24),
 
-            // Data & Backup Section
-            _buildSectionHeader(AppLocalizations.of(context)!.dataBackup),
-            _buildListGroup(
-              children: [
-                _buildListItem(
-                  icon: Icons.backup_outlined,
-                  title: AppLocalizations.of(context)!.backupDatabase,
-                  subtitle:
-                      AppLocalizations.of(context)!.backupDatabaseSubtitle,
-                  onTap: () => _handleBackup(context),
-                  trailingIcon: null,
-                ),
-                _buildDivider(),
-                _buildListItem(
-                  icon: Icons.restore_outlined,
-                  title: AppLocalizations.of(context)!.restoreDatabase,
-                  subtitle:
-                      AppLocalizations.of(context)!.restoreDatabaseSubtitle,
-                  onTap: () => _handleRestore(context),
-                  trailingIcon: null,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 48),
+            if (isOwner) ...[
+              // Data & Backup Section (Owner only)
+              _buildSectionHeader(AppLocalizations.of(context)!.dataBackup),
+              _buildListGroup(
+                children: [
+                  _buildListItem(
+                    icon: Icons.backup_outlined,
+                    title: AppLocalizations.of(context)!.backupDatabase,
+                    subtitle:
+                        AppLocalizations.of(context)!.backupDatabaseSubtitle,
+                    onTap: () => _handleBackup(context),
+                    trailingIcon: null,
+                  ),
+                  _buildDivider(),
+                  _buildListItem(
+                    icon: Icons.restore_outlined,
+                    title: AppLocalizations.of(context)!.restoreDatabase,
+                    subtitle:
+                        AppLocalizations.of(context)!.restoreDatabaseSubtitle,
+                    onTap: () => _handleRestore(context),
+                    trailingIcon: null,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 48),
+            ],
           ],
         ),
       ),

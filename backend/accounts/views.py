@@ -26,6 +26,14 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 	permission_classes = [permissions.IsAuthenticated]
 
 
+class CurrentUserView(APIView):
+	permission_classes = [permissions.IsAuthenticated]
+
+	@extend_schema(responses={200: UserSerializer})
+	def get(self, request):
+		return Response(UserSerializer(request.user).data, status=status.HTTP_200_OK)
+
+
 class PlatformRegistrationView(APIView):
 	permission_classes = [permissions.AllowAny]
 	serializer_class = PlatformRegistrationSerializer

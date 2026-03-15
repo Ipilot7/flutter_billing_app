@@ -75,6 +75,25 @@ class CashRegisterRegistrationSerializer(serializers.Serializer):
     cashier_first_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
     cashier_last_name = serializers.CharField(max_length=150, required=False, allow_blank=True)
 
+    def _build_unique_cashier_username(self, base_username: str, store_id: int) -> str:
+        candidate = base_username.strip()
+        if not candidate:
+            candidate = f'cashier_{store_id}'
+
+        # Django username field max length is 150.
+        candidate = candidate[:150]
+        if not User.objects.filter(username=candidate).exists():
+            return candidate
+
+        index = 1
+        while True:
+            suffix = f'_s{store_id}_{index}'
+            trimmed_base = candidate[: max(1, 150 - len(suffix))]
+            unique_candidate = f'{trimmed_base}{suffix}'
+            if not User.objects.filter(username=unique_candidate).exists():
+                return unique_candidate
+            index += 1
+
     def validate(self, attrs):
         request = self.context['request']
         user = request.user
@@ -93,8 +112,23 @@ class CashRegisterRegistrationSerializer(serializers.Serializer):
         if Terminal.objects.filter(device_id=attrs['device_id']).exists():
             raise serializers.ValidationError('device_id already exists.')
 
-        if User.objects.filter(username=attrs['cashier_username']).exists():
-            raise serializers.ValidationError('cashier_username already exists.')
+        attrs['resolved_cashier_username'] = self._build_unique_cashier_username(
+            attrs['cashier_username'],
+            store.id,
+        )
+
+        cashier_pin = attrs.get('cashier_pin', '').strip()
+        if cashier_pin:
+            existing_cashiers = User.objects.filter(
+                role='cashier',
+                store=store,
+                is_active=True,
+            )
+            for existing_cashier in existing_cashiers:
+                if existing_cashier.check_pin(cashier_pin):
+                    raise serializers.ValidationError(
+                        'cashier_pin already exists in this store. Use a unique PIN.'
+                    )
 
         attrs['store'] = store
         return attrs
@@ -110,7 +144,7 @@ class CashRegisterRegistrationSerializer(serializers.Serializer):
         )
 
         cashier = User.objects.create_user(
-            username=validated_data['cashier_username'],
+            username=validated_data['resolved_cashier_username'],
             password=validated_data['cashier_password'],
             first_name=validated_data.get('cashier_first_name', ''),
             last_name=validated_data.get('cashier_last_name', ''),
@@ -158,9 +192,8 @@ class CashierTerminalLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError('Invalid cashier PIN for this terminal.')
 
         if len(matched_cashiers) > 1:
-            raise serializers.ValidationError(
-                'Multiple cashiers share this PIN. Use unique cashier PINs per store.'
-            )
+            # Keep login flow operational for legacy duplicate PIN data.
+            matched_cashiers.sort(key=lambda cashier: cashier.id, reverse=True)
 
         attrs['terminal'] = terminal
         attrs['cashier'] = matched_cashiers[0]

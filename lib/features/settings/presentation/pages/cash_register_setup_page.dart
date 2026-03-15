@@ -13,6 +13,7 @@ class CashRegisterSetupPage extends StatefulWidget {
 }
 
 class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
+  final _terminalNameController = TextEditingController();
   final _cashierUserController = TextEditingController();
   final _cashierPassController = TextEditingController();
   final _cashierPinController = TextEditingController();
@@ -22,11 +23,13 @@ class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
   @override
   void initState() {
     super.initState();
+    _terminalNameController.text = 'Касса';
     _cubit = sl<CashRegisterSetupCubit>()..prefillStoreId();
   }
 
   @override
   void dispose() {
+    _terminalNameController.dispose();
     _cashierUserController.dispose();
     _cashierPassController.dispose();
     _cashierPinController.dispose();
@@ -57,6 +60,14 @@ class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
         listener: (context, state) {
           if (state.error != null) {
             _showMessage(state.error!, isError: true);
+          } else if (state.registrationCompleted) {
+            if (mounted) {
+              if (context.canPop()) {
+                context.pop(true);
+              } else {
+                context.go('/settings/cash-registers');
+              }
+            }
           } else if (state.message != null) {
             _showMessage(state.message!);
           }
@@ -93,6 +104,12 @@ class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
                 ),
                 const SizedBox(height: 10),
                 TextField(
+                  controller: _terminalNameController,
+                  decoration:
+                      const InputDecoration(labelText: 'Название кассы'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
                   controller: _cashierUserController,
                   decoration: const InputDecoration(labelText: 'Логин кассира'),
                 ),
@@ -114,6 +131,7 @@ class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
                   onPressed: state.loading
                       ? null
                       : () => _cubit.register(
+                            terminalName: _terminalNameController.text,
                             cashierUsername: _cashierUserController.text,
                             cashierPassword: _cashierPassController.text,
                             cashierPin: _cashierPinController.text,

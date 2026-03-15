@@ -139,7 +139,6 @@ class BackendSession {
     await _db.deleteSetting(_accessTokenKey);
     await _db.deleteSetting(_refreshTokenKey);
     await _db.deleteSetting(_terminalIdKey);
-    await _db.deleteSetting(_deviceIdKey);
     await _db.deleteSetting(_storeIdKey);
     await _db.deleteSetting(_organizationIdKey);
     await _db.deleteSetting(_shiftIdKey);

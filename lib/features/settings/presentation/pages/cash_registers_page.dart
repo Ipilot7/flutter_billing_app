@@ -265,9 +265,12 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            await context.push('/settings/cash-register-setup');
+            final created =
+                await context.push<bool>('/settings/cash-register-setup');
             if (!mounted) return;
-            _refresh();
+            if (created == true) {
+              _refresh();
+            }
           },
           child: const Icon(Icons.add),
         ),
