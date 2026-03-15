@@ -126,7 +126,11 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImpl(sl()),
+    () => ProductRepositoryImpl(
+      sl(),
+      backendClient: sl(),
+      backendSession: sl(),
+    ),
   );
 
   sl.registerLazySingleton<CategoryRepository>(

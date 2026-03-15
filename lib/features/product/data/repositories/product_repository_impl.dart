@@ -1,13 +1,23 @@
 import 'package:fpdart/fpdart.dart';
+import 'package:flutter/foundation.dart';
 import '../../../../core/data/app_database.dart';
 import '../../../../core/error/failure.dart';
+import '../../../../core/network/backend_session.dart';
+import '../../../../core/network/backend_v1_client.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
   final AppDatabase _db;
+  final BackendV1Client? _backendClient;
+  final BackendSession? _backendSession;
 
-  ProductRepositoryImpl(this._db);
+  ProductRepositoryImpl(
+    this._db, {
+    BackendV1Client? backendClient,
+    BackendSession? backendSession,
+  })  : _backendClient = backendClient,
+        _backendSession = backendSession;
 
   @override
   Future<Either<Failure, List<Product>>> getProducts() async {
@@ -22,7 +32,8 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, Product>> getProductByBarcode(String barcode) async {
     try {
-      final query = _db.select(_db.products)..where((t) => t.barcode.equals(barcode));
+      final query = _db.select(_db.products)
+        ..where((t) => t.barcode.equals(barcode));
       final row = await query.getSingle();
       return Right(_mapToEntity(row));
     } catch (e) {
@@ -34,6 +45,7 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<Either<Failure, void>> addProduct(Product product) async {
     try {
       await _db.addProduct(_mapToTable(product));
+      await _trySyncProductToBackend(product);
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -84,5 +96,39 @@ class ProductRepositoryImpl implements ProductRepository {
       unit: product.unit,
       categoryId: product.categoryId,
     );
+  }
+
+  Future<void> _trySyncProductToBackend(Product product) async {
+    final backendClient = _backendClient;
+    final backendSession = _backendSession;
+    if (backendClient == null || backendSession == null) {
+      return;
+    }
+
+    final baseUrl = await backendSession.getBaseUrl();
+    final accessToken = await backendSession.getAccessToken();
+    final organizationId = await backendSession.getOrganizationId();
+    if (baseUrl == null ||
+        baseUrl.trim().isEmpty ||
+        accessToken == null ||
+        accessToken.isEmpty ||
+        organizationId == null) {
+      return;
+    }
+
+    try {
+      await backendClient.createProduct(
+        organizationId: organizationId,
+        name: product.name,
+        barcode: product.barcode,
+        price: product.price,
+        cost: product.costPrice,
+        stock: product.stock,
+        sku: product.id,
+      );
+    } catch (e) {
+      // Local save is primary; backend sync is best effort in current flow.
+      debugPrint('Product backend auto-sync skipped: $e');
+    }
   }
 }

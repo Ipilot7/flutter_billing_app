@@ -1,9 +1,6 @@
-import 'dart:convert';
-
 import 'package:billing_app/core/network/backend_v1_client.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
 
 void main() {
   group('BackendV1Client mock smoke', () {
@@ -17,87 +14,113 @@ void main() {
       int? organizationId;
       int? shiftId;
 
-      final mockHttp = MockClient((http.Request request) async {
-        if (request.url.path == '/api/auth/login/cashier-terminal/' &&
-            request.method == 'POST') {
-          final body = jsonDecode(request.body) as Map<String, dynamic>;
-          expect(body['device_id'], 'dev-1');
-          expect(body['cashier_pin'], '1234');
+      final mockDio = Dio();
+      mockDio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (options, handler) {
+            if (options.path == '/api/auth/login/cashier-terminal/' &&
+                options.method == 'POST') {
+              final body = options.data as Map<String, dynamic>;
+              expect(body['device_id'], 'dev-1');
+              expect(body['cashier_pin'], '1234');
 
-          return http.Response(
-            jsonEncode({
-              'tokens': {'access': 'token-access', 'refresh': 'token-refresh'},
-              'terminal': {
-                'id': 10,
-                'name': 'Cash 1',
-                'device_id': 'dev-1',
-                'store_id': 3
-              },
-              'store': {'id': 3, 'name': 'Main Store', 'organization_id': 1},
-            }),
-            200,
-            headers: {'content-type': 'application/json'},
-          );
-        }
+              return handler.resolve(
+                Response(
+                  requestOptions: options,
+                  statusCode: 200,
+                  data: {
+                    'tokens': {
+                      'access': 'token-access',
+                      'refresh': 'token-refresh'
+                    },
+                    'terminal': {
+                      'id': 10,
+                      'name': 'Cash 1',
+                      'device_id': 'dev-1',
+                      'store_id': 3
+                    },
+                    'store': {
+                      'id': 3,
+                      'name': 'Main Store',
+                      'organization_id': 1
+                    },
+                  },
+                ),
+              );
+            }
 
-        if (request.url.path == '/api/shifts/' && request.method == 'POST') {
-          expect(request.headers['authorization'], 'Bearer token-access');
-          final body = jsonDecode(request.body) as Map<String, dynamic>;
-          expect(body['terminal'], 10);
+            if (options.path == '/api/shifts/' && options.method == 'POST') {
+              expect(options.headers['Authorization'], 'Bearer token-access');
+              final body = options.data as Map<String, dynamic>;
+              expect(body['terminal'], 10);
 
-          return http.Response(
-            jsonEncode({'id': 99, 'status': 'open'}),
-            201,
-            headers: {'content-type': 'application/json'},
-          );
-        }
+              return handler.resolve(
+                Response(
+                  requestOptions: options,
+                  statusCode: 201,
+                  data: {'id': 99, 'status': 'open'},
+                ),
+              );
+            }
 
-        if (request.url.path == '/api/sales/' && request.method == 'POST') {
-          expect(request.headers['authorization'], 'Bearer token-access');
-          final body = jsonDecode(request.body) as Map<String, dynamic>;
-          expect(body['shift'], 99);
-          expect(body['receipt_number'], 'R-1001');
-          expect(body['items'], isA<List<dynamic>>());
+            if (options.path == '/api/sales/' && options.method == 'POST') {
+              expect(options.headers['Authorization'], 'Bearer token-access');
+              final body = options.data as Map<String, dynamic>;
+              expect(body['shift'], 99);
+              expect(body['receipt_number'], 'R-1001');
+              expect(body['items'], isA<List<dynamic>>());
 
-          return http.Response(
-            jsonEncode({'id': 501, 'total': '100.00'}),
-            201,
-            headers: {'content-type': 'application/json'},
-          );
-        }
+              return handler.resolve(
+                Response(
+                  requestOptions: options,
+                  statusCode: 201,
+                  data: {'id': 501, 'total': '100.00'},
+                ),
+              );
+            }
 
-        if (request.url.path == '/api/products/' && request.method == 'GET') {
-          expect(request.headers['authorization'], 'Bearer token-access');
+            if (options.path == '/api/products/' && options.method == 'GET') {
+              expect(options.headers['Authorization'], 'Bearer token-access');
 
-          return http.Response(
-            jsonEncode([
-              {
-                'id': 101,
-                'name': 'Milk',
-                'barcode': '111',
-                'price': '50.00',
-                'cost': '30.00',
-                'stock': '12.000'
-              },
-              {
-                'id': 102,
-                'name': 'Bread',
-                'barcode': '222',
-                'price': '30.00',
-                'cost': '20.00',
-                'stock': '8.000'
-              },
-            ]),
-            200,
-            headers: {'content-type': 'application/json'},
-          );
-        }
+              return handler.resolve(
+                Response(
+                  requestOptions: options,
+                  statusCode: 200,
+                  data: [
+                    {
+                      'id': 101,
+                      'name': 'Milk',
+                      'barcode': '111',
+                      'price': '50.00',
+                      'cost': '30.00',
+                      'stock': '12.000'
+                    },
+                    {
+                      'id': 102,
+                      'name': 'Bread',
+                      'barcode': '222',
+                      'price': '30.00',
+                      'cost': '20.00',
+                      'stock': '8.000'
+                    },
+                  ],
+                ),
+              );
+            }
 
-        return http.Response('Not Found', 404);
-      });
+            return handler.resolve(
+              Response(
+                requestOptions: options,
+                statusCode: 404,
+                data: {'detail': 'Not Found'},
+              ),
+            );
+          },
+        ),
+      );
 
       final client = BackendV1Client.forTesting(
-        httpClient: mockHttp,
+        dio: mockDio,
         baseUrlProvider: () async => baseUrl,
         accessTokenProvider: () async => accessToken,
         terminalIdProvider: () async => terminalId,

@@ -6,6 +6,10 @@ import '../../features/product/presentation/pages/edit_product_page.dart';
 import '../../features/shop/presentation/pages/shop_details_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/backend_v1_setup_page.dart';
+import '../../features/settings/presentation/pages/platform_registration_page.dart';
+import '../../features/settings/presentation/pages/cash_register_setup_page.dart';
+import '../../features/settings/presentation/pages/cashier_login_page.dart';
+import '../../features/settings/presentation/pages/open_shift_page.dart';
 import '../../features/billing/presentation/pages/scanner_page.dart';
 import '../../features/billing/presentation/pages/checkout_page.dart';
 import '../../features/product/domain/entities/product.dart';
@@ -45,6 +49,22 @@ final router = GoRouter(
       path: '/settings',
       builder: (context, state) => const SettingsPage(),
       routes: [
+        GoRoute(
+          path: 'platform-registration',
+          builder: (context, state) => const PlatformRegistrationPage(),
+        ),
+        GoRoute(
+          path: 'cash-register-setup',
+          builder: (context, state) => const CashRegisterSetupPage(),
+        ),
+        GoRoute(
+          path: 'cashier-login',
+          builder: (context, state) => const CashierLoginPage(),
+        ),
+        GoRoute(
+          path: 'open-shift',
+          builder: (context, state) => const OpenShiftPage(),
+        ),
         GoRoute(
           path: 'backend-v1',
           builder: (context, state) => const BackendV1SetupPage(),

@@ -61,7 +61,7 @@ class _BackendV1SetupPageState extends State<BackendV1SetupPage> {
     final productCount = await _db.countProducts();
     if (!mounted) return;
     setState(() {
-      _baseUrlController.text = baseUrl ?? 'http://127.0.0.1:8000/';
+      _baseUrlController.text = baseUrl ?? 'http://192.168.0.54:8000/';
       _message = null;
       _hasToken = token != null && token.isNotEmpty;
       _terminalId = terminalId;
@@ -149,7 +149,7 @@ class _BackendV1SetupPageState extends State<BackendV1SetupPage> {
               controller: _baseUrlController,
               decoration: const InputDecoration(
                 labelText: 'Base URL',
-                hintText: 'http://127.0.0.1:8000/',
+                hintText: 'http://192.168.0.54:8000/',
               ),
             ),
             const SizedBox(height: 8),

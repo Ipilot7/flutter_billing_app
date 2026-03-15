@@ -1,6 +1,7 @@
 import 'dart:convert';
 
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import 'backend_session.dart';
 
@@ -16,7 +17,7 @@ class BackendApiException implements Exception {
 
 class BackendV1Client {
   final BackendSession? _session;
-  final http.Client _httpClient;
+  final Dio _dio;
   final Future<String?> Function()? _baseUrlProvider;
   final Future<String?> Function()? _accessTokenProvider;
   final Future<int?> Function()? _terminalIdProvider;
@@ -26,15 +27,17 @@ class BackendV1Client {
       _saveTerminalContext;
   final Future<void> Function(int shiftId)? _saveShiftId;
 
-  BackendV1Client(this._session, {http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client(),
+  BackendV1Client(this._session, {Dio? dio})
+      : _dio = dio ?? Dio(),
         _baseUrlProvider = null,
         _accessTokenProvider = null,
         _terminalIdProvider = null,
         _shiftIdProvider = null,
         _saveTokens = null,
         _saveTerminalContext = null,
-        _saveShiftId = null;
+        _saveShiftId = null {
+    _setupDioLogging();
+  }
 
   BackendV1Client.forTesting({
     required Future<String?> Function() baseUrlProvider,
@@ -46,16 +49,54 @@ class BackendV1Client {
             int terminalId, int storeId, int organizationId)
         saveTerminalContext,
     required Future<void> Function(int shiftId) saveShiftId,
-    http.Client? httpClient,
+    Dio? dio,
   })  : _session = null,
-        _httpClient = httpClient ?? http.Client(),
+        _dio = dio ?? Dio(),
         _baseUrlProvider = baseUrlProvider,
         _accessTokenProvider = accessTokenProvider,
         _terminalIdProvider = terminalIdProvider,
         _shiftIdProvider = shiftIdProvider,
         _saveTokens = saveTokens,
         _saveTerminalContext = saveTerminalContext,
-        _saveShiftId = saveShiftId;
+        _saveShiftId = saveShiftId {
+    _setupDioLogging();
+  }
+
+  void _setupDioLogging() {
+    _dio.interceptors.add(
+      InterceptorsWrapper(
+        onRequest: (options, handler) {
+          if (kDebugMode) {
+            final headers = Map<String, dynamic>.from(options.headers);
+            if (headers.containsKey('Authorization')) {
+              headers['Authorization'] = 'Bearer ***';
+            }
+            debugPrint('[DIO][REQ] ${options.method} ${options.uri}');
+            debugPrint('[DIO][REQ][HEADERS] $headers');
+            debugPrint('[DIO][REQ][BODY] ${options.data}');
+          }
+          handler.next(options);
+        },
+        onResponse: (response, handler) {
+          if (kDebugMode) {
+            debugPrint(
+                '[DIO][RES] ${response.statusCode} ${response.requestOptions.method} ${response.requestOptions.uri}');
+            debugPrint('[DIO][RES][BODY] ${response.data}');
+          }
+          handler.next(response);
+        },
+        onError: (error, handler) {
+          if (kDebugMode) {
+            debugPrint(
+                '[DIO][ERR] ${error.response?.statusCode} ${error.requestOptions.method} ${error.requestOptions.uri}');
+            debugPrint('[DIO][ERR][BODY] ${error.response?.data}');
+            debugPrint('[DIO][ERR][MESSAGE] ${error.message}');
+          }
+          handler.next(error);
+        },
+      ),
+    );
+  }
 
   Future<Map<String, dynamic>> registerPlatform({
     required String organizationName,
@@ -198,6 +239,36 @@ class BackendV1Client {
     throw BackendApiException('Unexpected products response format.');
   }
 
+  Future<Map<String, dynamic>> createProduct({
+    required int organizationId,
+    required String name,
+    required String barcode,
+    required double price,
+    double cost = 0,
+    double stock = 0,
+    String sku = '',
+    int? categoryId,
+    double minStock = 0,
+    bool isActive = true,
+  }) async {
+    return _post(
+      '/api/products/',
+      body: {
+        'organization': organizationId,
+        'category': categoryId,
+        'name': name,
+        'sku': sku,
+        'barcode': barcode,
+        'price': price.toStringAsFixed(2),
+        'cost': cost.toStringAsFixed(2),
+        'stock': stock.toStringAsFixed(3),
+        'min_stock': minStock.toStringAsFixed(3),
+        'is_active': isActive,
+      },
+      withAuth: true,
+    );
+  }
+
   Future<Map<String, dynamic>> _post(
     String path, {
     required Map<String, dynamic> body,
@@ -206,10 +277,14 @@ class BackendV1Client {
     final uri = await _buildUri(path);
     final headers = await _buildHeaders(withAuth: withAuth);
 
-    final response = await _httpClient.post(
+    final response = await _dio.postUri(
       uri,
-      headers: headers,
-      body: jsonEncode(body),
+      data: body,
+      options: Options(
+        headers: headers,
+        responseType: ResponseType.json,
+        validateStatus: (status) => status != null && status < 600,
+      ),
     );
 
     return _decodeResponse(response);
@@ -222,7 +297,14 @@ class BackendV1Client {
     final uri = await _buildUri(path);
     final headers = await _buildHeaders(withAuth: withAuth);
 
-    final response = await _httpClient.get(uri, headers: headers);
+    final response = await _dio.getUri(
+      uri,
+      options: Options(
+        headers: headers,
+        responseType: ResponseType.json,
+        validateStatus: (status) => status != null && status < 600,
+      ),
+    );
 
     return _decodeResponseAny(response);
   }
@@ -256,28 +338,28 @@ class BackendV1Client {
     return headers;
   }
 
-  Map<String, dynamic> _decodeResponse(http.Response response) {
-    final dynamic decoded =
-        response.body.isEmpty ? {} : jsonDecode(response.body);
+  Map<String, dynamic> _decodeResponse(Response<dynamic> response) {
+    final statusCode = response.statusCode ?? 0;
+    final dynamic decoded = _normalizeResponseData(response.data);
     final body = decoded is Map<String, dynamic>
         ? decoded
         : <String, dynamic>{'detail': decoded.toString()};
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
+    if (statusCode >= 200 && statusCode < 300) {
       return body;
     }
 
     throw BackendApiException(
-      _mapErrorMessage(_extractErrorMessage(body), response.statusCode),
-      statusCode: response.statusCode,
+      _mapErrorMessage(_extractErrorMessage(body), statusCode),
+      statusCode: statusCode,
     );
   }
 
-  dynamic _decodeResponseAny(http.Response response) {
-    final dynamic decoded =
-        response.body.isEmpty ? {} : jsonDecode(response.body);
+  dynamic _decodeResponseAny(Response<dynamic> response) {
+    final statusCode = response.statusCode ?? 0;
+    final dynamic decoded = _normalizeResponseData(response.data);
 
-    if (response.statusCode >= 200 && response.statusCode < 300) {
+    if (statusCode >= 200 && statusCode < 300) {
       return decoded;
     }
 
@@ -286,9 +368,22 @@ class BackendV1Client {
         : <String, dynamic>{'detail': decoded.toString()};
 
     throw BackendApiException(
-      _mapErrorMessage(_extractErrorMessage(body), response.statusCode),
-      statusCode: response.statusCode,
+      _mapErrorMessage(_extractErrorMessage(body), statusCode),
+      statusCode: statusCode,
     );
+  }
+
+  dynamic _normalizeResponseData(dynamic data) {
+    if (data == null) return {};
+    if (data is String) {
+      if (data.isEmpty) return {};
+      try {
+        return jsonDecode(data);
+      } catch (_) {
+        return data;
+      }
+    }
+    return data;
   }
 
   String _extractErrorMessage(Map<String, dynamic> body) {
