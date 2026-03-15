@@ -13,9 +13,6 @@ class CashRegisterSetupPage extends StatefulWidget {
 }
 
 class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
-  final _storeIdController = TextEditingController();
-  final _terminalNameController = TextEditingController();
-  final _deviceIdController = TextEditingController();
   final _cashierUserController = TextEditingController();
   final _cashierPassController = TextEditingController();
   final _cashierPinController = TextEditingController();
@@ -30,9 +27,6 @@ class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
 
   @override
   void dispose() {
-    _storeIdController.dispose();
-    _terminalNameController.dispose();
-    _deviceIdController.dispose();
     _cashierUserController.dispose();
     _cashierPassController.dispose();
     _cashierPinController.dispose();
@@ -43,7 +37,7 @@ class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
   Future<void> _scanCashierQr() async {
     final raw = await context.push<String>('/scanner');
     if (!mounted || raw == null || raw.trim().isEmpty) return;
-    context.read<CashRegisterSetupCubit>().applyScannedQr(raw.trim());
+    _cubit.applyScannedQr(raw.trim());
   }
 
   void _showMessage(String text, {bool isError = false}) {
@@ -61,13 +55,6 @@ class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
       value: _cubit,
       child: BlocConsumer<CashRegisterSetupCubit, CashRegisterSetupState>(
         listener: (context, state) {
-          if (state.storeId.isNotEmpty && _storeIdController.text.isEmpty) {
-            _storeIdController.text = state.storeId;
-          }
-          if (state.deviceId.isNotEmpty &&
-              _deviceIdController.text != state.deviceId) {
-            _deviceIdController.text = state.deviceId;
-          }
           if (state.error != null) {
             _showMessage(state.error!, isError: true);
           } else if (state.message != null) {
@@ -81,25 +68,22 @@ class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
               padding: const EdgeInsets.all(16),
               children: [
                 const Text(
-                  'Шаг setup: добавить terminal и кассира с PIN',
+                  'Добавление кассы: отсканируйте QR устройства и укажите данные кассира',
                   style: TextStyle(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _storeIdController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(labelText: 'Store ID'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _terminalNameController,
-                  decoration:
-                      const InputDecoration(labelText: 'Название кассы'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _deviceIdController,
-                  decoration: const InputDecoration(labelText: 'Device ID'),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: const Text('QR устройства кассира'),
+                  subtitle: Text(state.deviceId.isEmpty
+                      ? 'Не отсканирован'
+                      : 'QR успешно отсканирован'),
+                  trailing: Icon(
+                    state.deviceId.isEmpty
+                        ? Icons.qr_code_2_outlined
+                        : Icons.check_circle,
+                    color: state.deviceId.isEmpty ? Colors.grey : Colors.green,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
@@ -129,10 +113,7 @@ class _CashRegisterSetupPageState extends State<CashRegisterSetupPage> {
                 FilledButton(
                   onPressed: state.loading
                       ? null
-                      : () => context.read<CashRegisterSetupCubit>().register(
-                            storeId: _storeIdController.text,
-                            terminalName: _terminalNameController.text,
-                            deviceId: _deviceIdController.text,
+                      : () => _cubit.register(
                             cashierUsername: _cashierUserController.text,
                             cashierPassword: _cashierPassController.text,
                             cashierPin: _cashierPinController.text,

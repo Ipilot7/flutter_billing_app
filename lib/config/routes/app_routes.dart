@@ -6,12 +6,12 @@ import '../../features/product/presentation/pages/edit_product_page.dart';
 import '../../features/shop/presentation/pages/shop_details_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/auth_entry_page.dart';
-import '../../features/settings/presentation/pages/platform_registration_page.dart';
 import '../../features/settings/presentation/pages/cash_register_setup_page.dart';
 import '../../features/settings/presentation/pages/cashier_login_page.dart';
 import '../../features/settings/presentation/pages/owner_login_page.dart';
 import '../../features/settings/presentation/pages/open_shift_page.dart';
 import '../../features/settings/presentation/pages/cashier_device_qr_page.dart';
+import '../../features/settings/presentation/pages/cash_registers_page.dart';
 import '../../features/billing/presentation/pages/scanner_page.dart';
 import '../../features/billing/presentation/pages/checkout_page.dart';
 import '../../features/product/domain/entities/product.dart';
@@ -28,10 +28,6 @@ final router = GoRouter(
     GoRoute(
       path: '/auth',
       builder: (context, state) => const AuthEntryPage(),
-    ),
-    GoRoute(
-      path: '/platform-registration',
-      builder: (context, state) => const PlatformRegistrationPage(),
     ),
     GoRoute(
       path: '/cash-register-setup',
@@ -83,8 +79,8 @@ final router = GoRouter(
       builder: (context, state) => const SettingsPage(),
       routes: [
         GoRoute(
-          path: 'platform-registration',
-          builder: (context, state) => const PlatformRegistrationPage(),
+          path: 'cash-registers',
+          builder: (context, state) => const CashRegistersPage(),
         ),
         GoRoute(
           path: 'cash-register-setup',

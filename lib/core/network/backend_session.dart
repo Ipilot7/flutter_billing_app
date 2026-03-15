@@ -1,6 +1,9 @@
 import 'package:billing_app/core/data/app_database.dart';
 
 class BackendSession {
+  static const roleOwner = 'owner';
+  static const roleCashier = 'cashier';
+
   static const _baseUrlKey = 'backend.base_url';
   static const defaultApiBasePath = '/api/v1/';
   static const _accessTokenKey = 'backend.access_token';
@@ -10,6 +13,7 @@ class BackendSession {
   static const _storeIdKey = 'backend.store_id';
   static const _organizationIdKey = 'backend.organization_id';
   static const _shiftIdKey = 'backend.shift_id';
+  static const _roleKey = 'backend.role';
 
   final AppDatabase _db;
 
@@ -40,6 +44,8 @@ class BackendSession {
     final raw = await _db.getSetting(_shiftIdKey);
     return raw == null ? null : int.tryParse(raw);
   }
+
+  Future<String?> getSessionRole() => _db.getSetting(_roleKey);
 
   Future<void> saveBaseUrl(String baseUrl) =>
       _db.saveSetting(_baseUrlKey, normalizeBaseUrl(baseUrl));
@@ -111,11 +117,21 @@ class BackendSession {
     await _db.saveSetting(_organizationIdKey, organizationId.toString());
   }
 
+  Future<void> saveOwnerContext({
+    required int storeId,
+    required int organizationId,
+  }) async {
+    await _db.saveSetting(_storeIdKey, storeId.toString());
+    await _db.saveSetting(_organizationIdKey, organizationId.toString());
+  }
+
   Future<void> saveDeviceId(String deviceId) =>
       _db.saveSetting(_deviceIdKey, deviceId.trim());
 
   Future<void> saveCurrentShiftId(int shiftId) =>
       _db.saveSetting(_shiftIdKey, shiftId.toString());
+
+  Future<void> saveSessionRole(String role) => _db.saveSetting(_roleKey, role);
 
   Future<void> clearShift() => _db.deleteSetting(_shiftIdKey);
 
@@ -123,8 +139,10 @@ class BackendSession {
     await _db.deleteSetting(_accessTokenKey);
     await _db.deleteSetting(_refreshTokenKey);
     await _db.deleteSetting(_terminalIdKey);
+    await _db.deleteSetting(_deviceIdKey);
     await _db.deleteSetting(_storeIdKey);
     await _db.deleteSetting(_organizationIdKey);
     await _db.deleteSetting(_shiftIdKey);
+    await _db.deleteSetting(_roleKey);
   }
 }

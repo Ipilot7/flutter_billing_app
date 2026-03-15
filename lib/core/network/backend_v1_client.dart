@@ -121,6 +121,8 @@ class BackendV1Client {
           tokens['access'] as String, tokens['refresh'] as String);
     }
 
+    await _persistSessionRole(BackendSession.roleOwner);
+
     return response;
   }
 
@@ -176,6 +178,8 @@ class BackendV1Client {
       );
     }
 
+    await _persistSessionRole(BackendSession.roleCashier);
+
     return response;
   }
 
@@ -199,7 +203,53 @@ class BackendV1Client {
     }
 
     await _persistTokens(access, refresh);
+    await _persistSessionRole(BackendSession.roleOwner);
+    await _hydrateOwnerContext(access);
     return response;
+  }
+
+  Future<bool> ensureOwnerContext() async {
+    if (_session == null) return false;
+
+    final existingStoreId = await _session!.getStoreId();
+    final existingOrganizationId = await _session!.getOrganizationId();
+    if (existingStoreId != null && existingOrganizationId != null) {
+      return true;
+    }
+
+    final accessToken = await _session!.getAccessToken();
+    if (accessToken == null || accessToken.isEmpty) {
+      return false;
+    }
+
+    await _hydrateOwnerContext(accessToken);
+
+    final hydratedStoreId = await _session!.getStoreId();
+    final hydratedOrganizationId = await _session!.getOrganizationId();
+    return hydratedStoreId != null && hydratedOrganizationId != null;
+  }
+
+  Future<void> _hydrateOwnerContext(String accessToken) async {
+    final userId = _extractUserIdFromToken(accessToken);
+    if (userId == null) return;
+
+    try {
+      final response = await _get('/users/$userId/', withAuth: true);
+      if (response is! Map<String, dynamic>) return;
+
+      final storeId = _toInt(response['store']);
+      final organizationId = _toInt(response['organization']);
+      if (storeId == null || organizationId == null) return;
+
+      if (_session != null) {
+        await _session!.saveOwnerContext(
+          storeId: storeId,
+          organizationId: organizationId,
+        );
+      }
+    } catch (_) {
+      // Owner login remains valid even if optional context hydration fails.
+    }
   }
 
   Future<Map<String, dynamic>> openShift({required double startBalance}) async {
@@ -260,6 +310,46 @@ class BackendV1Client {
     }
 
     throw BackendApiException('Unexpected products response format.');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchTerminals() async {
+    final response = await _get(
+      '/terminals/',
+      withAuth: true,
+    );
+
+    if (response is List) {
+      return response.whereType<Map<String, dynamic>>().toList();
+    }
+
+    throw BackendApiException('Unexpected terminals response format.');
+  }
+
+  Future<Map<String, dynamic>> updateTerminal({
+    required int terminalId,
+    String? name,
+    bool? isActive,
+  }) async {
+    final body = <String, dynamic>{};
+    if (name != null) body['name'] = name;
+    if (isActive != null) body['is_active'] = isActive;
+
+    if (body.isEmpty) {
+      throw BackendApiException('Nothing to update for terminal.');
+    }
+
+    return _patch(
+      '/terminals/$terminalId/',
+      body: body,
+      withAuth: true,
+    );
+  }
+
+  Future<void> deleteTerminal({required int terminalId}) async {
+    await _delete(
+      '/terminals/$terminalId/',
+      withAuth: true,
+    );
   }
 
   Future<Map<String, dynamic>> createProduct({
@@ -330,6 +420,59 @@ class BackendV1Client {
     );
 
     return _decodeResponseAny(response);
+  }
+
+  Future<Map<String, dynamic>> _patch(
+    String path, {
+    required Map<String, dynamic> body,
+    required bool withAuth,
+  }) async {
+    final uri = await _buildUri(path);
+    final headers = await _buildHeaders(withAuth: withAuth);
+
+    final response = await _dio.patchUri(
+      uri,
+      data: body,
+      options: Options(
+        headers: headers,
+        responseType: ResponseType.json,
+        validateStatus: (status) => status != null && status < 600,
+      ),
+    );
+
+    return _decodeResponse(response);
+  }
+
+  Future<void> _delete(
+    String path, {
+    required bool withAuth,
+  }) async {
+    final uri = await _buildUri(path);
+    final headers = await _buildHeaders(withAuth: withAuth);
+
+    final response = await _dio.deleteUri(
+      uri,
+      options: Options(
+        headers: headers,
+        responseType: ResponseType.json,
+        validateStatus: (status) => status != null && status < 600,
+      ),
+    );
+
+    final statusCode = response.statusCode ?? 0;
+    if (statusCode >= 200 && statusCode < 300) {
+      return;
+    }
+
+    final dynamic decoded = _normalizeResponseData(response.data);
+    final body = decoded is Map<String, dynamic>
+        ? decoded
+        : <String, dynamic>{'detail': decoded.toString()};
+
+    throw BackendApiException(
+      _mapErrorMessage(_extractErrorMessage(body), statusCode),
+      statusCode: statusCode,
+    );
   }
 
   Future<Uri> _buildUri(String path) async {
@@ -493,5 +636,31 @@ class BackendV1Client {
     if (_session != null) {
       await _session!.saveCurrentShiftId(shiftId);
     }
+  }
+
+  Future<void> _persistSessionRole(String role) async {
+    if (_session == null) return;
+    await _session!.saveSessionRole(role);
+  }
+
+  int? _extractUserIdFromToken(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return null;
+
+      final payload =
+          utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+      final decoded = jsonDecode(payload);
+      if (decoded is! Map<String, dynamic>) return null;
+      return _toInt(decoded['user_id']);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  int? _toInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    return null;
   }
 }

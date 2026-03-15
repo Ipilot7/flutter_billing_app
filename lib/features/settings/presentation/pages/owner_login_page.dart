@@ -51,11 +51,6 @@ class _OwnerLoginPageState extends State<OwnerLoginPage> {
             body: ListView(
               padding: const EdgeInsets.all(16),
               children: [
-                const Text(
-                  'Owner login: вход по username/password',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 12),
                 TextField(
                   controller: _usernameController,
                   decoration: const InputDecoration(labelText: 'Username'),
@@ -81,11 +76,6 @@ class _OwnerLoginPageState extends State<OwnerLoginPage> {
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
                       : const Text('Войти как владелец'),
-                ),
-                const SizedBox(height: 10),
-                OutlinedButton(
-                  onPressed: () => context.push('/platform-registration'),
-                  child: const Text('Нет owner? Зарегистрировать платформу'),
                 ),
                 const SizedBox(height: 10),
                 TextButton(

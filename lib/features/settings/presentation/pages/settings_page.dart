@@ -12,6 +12,7 @@ import '../bloc/printer_state.dart';
 import '../bloc/locale_cubit.dart';
 import '../../../../core/util/backup_service.dart';
 import '../../../../core/service_locator.dart';
+import '../../../../core/network/backend_session.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -143,32 +144,12 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 _buildDivider(),
                 _buildListItem(
-                  icon: Icons.cloud_sync,
-                  title: 'Регистрация платформы',
-                  subtitle: 'Owner + магазин',
-                  onTap: () => context.push('/settings/platform-registration'),
-                ),
-                _buildDivider(),
-                _buildListItem(
                   icon: Icons.point_of_sale,
-                  title: 'Добавление кассы',
-                  subtitle: 'Terminal + cashier + PIN',
-                  onTap: () => context.push('/settings/cash-register-setup'),
+                  title: 'Кассы',
+                  subtitle: 'Список касс и добавление новой',
+                  onTap: () => context.push('/settings/cash-registers'),
                 ),
                 _buildDivider(),
-                _buildListItem(
-                  icon: Icons.login,
-                  title: 'Вход кассира',
-                  subtitle: 'Device ID + PIN',
-                  onTap: () => context.push('/settings/cashier-login'),
-                ),
-                _buildDivider(),
-                _buildListItem(
-                  icon: Icons.lock_open,
-                  title: 'Открыть смену',
-                  subtitle: 'Старт баланса перед продажами',
-                  onTap: () => context.push('/settings/open-shift'),
-                ),
               ],
             ),
 
@@ -289,6 +270,21 @@ class _SettingsPageState extends State<SettingsPage> {
                     fontStyle: FontStyle.italic,
                     color: Colors.grey[500]),
               ),
+            ),
+
+            const SizedBox(height: 24),
+
+            _buildSectionHeader('Аккаунт'),
+            _buildListGroup(
+              children: [
+                _buildListItem(
+                  icon: Icons.logout,
+                  title: 'Выйти',
+                  subtitle: 'Очистить локальную сессию и вернуться ко входу',
+                  trailingIcon: null,
+                  onTap: () => _handleLogout(context),
+                ),
+              ],
             ),
 
             const SizedBox(height: 24),
@@ -517,5 +513,31 @@ class _SettingsPageState extends State<SettingsPage> {
         }
       }
     }
+  }
+
+  Future<void> _handleLogout(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Выход из аккаунта'),
+        content: const Text('Очистить локальные токены и выйти?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(AppLocalizations.of(context)!.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Выйти'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed != true || !context.mounted) return;
+
+    await sl<BackendSession>().clearAuth();
+    if (!context.mounted) return;
+    context.go('/auth');
   }
 }

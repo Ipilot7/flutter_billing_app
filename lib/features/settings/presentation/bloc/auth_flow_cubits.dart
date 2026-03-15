@@ -31,14 +31,24 @@ class AuthEntryCubit extends Cubit<AuthEntryState> {
 
   Future<void> checkSession() async {
     final token = await _session.getAccessToken();
+    final role = await _session.getSessionRole();
     final terminalId = await _session.getTerminalId();
 
     if (token != null && token.isNotEmpty) {
+      if (role == BackendSession.roleCashier) {
+        emit(const AuthEntryState(checking: false, redirectRoute: '/'));
+        return;
+      }
+
+      if (role == BackendSession.roleOwner) {
+        emit(const AuthEntryState(checking: false, redirectRoute: '/settings'));
+        return;
+      }
+
       if (terminalId != null) {
         emit(const AuthEntryState(checking: false, redirectRoute: '/'));
       } else {
-        emit(const AuthEntryState(
-            checking: false, redirectRoute: '/owner-login'));
+        emit(const AuthEntryState(checking: false, redirectRoute: '/settings'));
       }
       return;
     }
@@ -97,7 +107,7 @@ class OwnerLoginCubit extends Cubit<OwnerLoginState> {
       emit(state.copyWith(
         loading: false,
         message: 'Owner login успешен.',
-        navigateTo: '/settings/cash-register-setup',
+        navigateTo: '/settings',
       ));
     } catch (e) {
       emit(state.copyWith(loading: false, error: 'Ошибка owner login: $e'));
@@ -353,23 +363,29 @@ class CashRegisterSetupCubit extends Cubit<CashRegisterSetupState> {
   }
 
   Future<void> register({
-    required String storeId,
-    required String terminalName,
-    required String deviceId,
     required String cashierUsername,
     required String cashierPassword,
     required String cashierPin,
   }) async {
-    final parsedStoreId = int.tryParse(storeId.trim());
+    var parsedStoreId = await _session.getStoreId();
+    if (parsedStoreId == null) {
+      await _client.ensureOwnerContext();
+      parsedStoreId = await _session.getStoreId();
+    }
+    final deviceId = state.deviceId.trim();
+    final terminalName = 'POS-${DateTime.now().millisecondsSinceEpoch}';
+
     if (parsedStoreId == null ||
-        terminalName.trim().isEmpty ||
-        deviceId.trim().isEmpty ||
+        deviceId.isEmpty ||
         cashierUsername.trim().isEmpty ||
         cashierPassword.trim().length < 8 ||
         cashierPin.trim().isEmpty) {
       emit(state.copyWith(
-        error:
-            'Заполните все поля. Пароль кассира должен быть не менее 8 символов.',
+        error: parsedStoreId == null
+            ? 'Сначала войдите как owner и зарегистрируйте платформу.'
+            : deviceId.isEmpty
+                ? 'Сначала отсканируйте QR устройства кассира.'
+                : 'Заполните логин, пароль и PIN кассира. Пароль не менее 8 символов.',
       ));
       return;
     }
@@ -378,8 +394,8 @@ class CashRegisterSetupCubit extends Cubit<CashRegisterSetupState> {
     try {
       await _client.registerCashRegister(
         storeId: parsedStoreId,
-        terminalName: terminalName.trim(),
-        deviceId: deviceId.trim(),
+        terminalName: terminalName,
+        deviceId: deviceId,
         cashierUsername: cashierUsername.trim(),
         cashierPassword: cashierPassword,
         cashierPin: cashierPin.trim(),

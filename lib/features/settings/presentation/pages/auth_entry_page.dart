@@ -68,19 +68,13 @@ class _AuthEntryPageState extends State<AuthEntryPage> {
                       subtitle: 'Вход по device_id и PIN для продаж.',
                       primaryLabel: 'Вход кассира',
                       onPrimaryTap: () => context.go('/cashier-login'),
-                      secondaryLabel: 'Первый запуск: регистрация платформы',
-                      onSecondaryTap: () =>
-                          context.push('/platform-registration'),
                     ),
                     _RoleEntryCard(
                       title: 'Администрирование',
                       subtitle:
-                          'Owner вход по username/password и настройка кассы.',
+                          'Owner вход по username/password и управление кассами в Settings.',
                       primaryLabel: 'Вход владельца',
                       onPrimaryTap: () => context.go('/owner-login'),
-                      secondaryLabel: 'Добавить кассу/кассира',
-                      onSecondaryTap: () =>
-                          context.push('/cash-register-setup'),
                     ),
                   ],
                 ),
@@ -98,16 +92,12 @@ class _RoleEntryCard extends StatelessWidget {
   final String subtitle;
   final String primaryLabel;
   final VoidCallback onPrimaryTap;
-  final String secondaryLabel;
-  final VoidCallback onSecondaryTap;
 
   const _RoleEntryCard({
     required this.title,
     required this.subtitle,
     required this.primaryLabel,
     required this.onPrimaryTap,
-    required this.secondaryLabel,
-    required this.onSecondaryTap,
   });
 
   @override
@@ -137,11 +127,6 @@ class _RoleEntryCard extends StatelessWidget {
                 FilledButton(
                   onPressed: onPrimaryTap,
                   child: Text(primaryLabel),
-                ),
-                const SizedBox(height: 8),
-                OutlinedButton(
-                  onPressed: onSecondaryTap,
-                  child: Text(secondaryLabel),
                 ),
               ],
             ),
