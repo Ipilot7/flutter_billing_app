@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) {
           return MaterialApp.router(
-            title: 'Billing App',
+            title: 'DeepPOS',
             theme: AppTheme.lightTheme,
             routerConfig: router,
             debugShowCheckedModeBanner: false,

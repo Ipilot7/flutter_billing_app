@@ -22,7 +22,7 @@ class BackupService {
             .replaceAll(':', '-')
             .split('.')
             .first;
-        final backupFileName = 'billing_backup_$date.sqlite';
+        final backupFileName = 'deeppos_backup_$date.sqlite';
         final tempDir = await getTemporaryDirectory();
         final backupFile =
             await dbFile.copy(p.join(tempDir.path, backupFileName));
@@ -30,7 +30,7 @@ class BackupService {
         await SharePlus.instance.share(
           ShareParams(
             files: [XFile(backupFile.path)],
-            subject: 'Billing App Database Backup',
+            subject: 'DeepPOS Database Backup',
           ),
         );
       }

@@ -9,7 +9,7 @@ class AppLocalizationsRu extends AppLocalizations {
   AppLocalizationsRu([String locale = 'ru']) : super(locale);
 
   @override
-  String get appTitle => 'Billing App';
+  String get appTitle => 'DeepPOS';
 
   @override
   String get openShift => 'Открыть смену';

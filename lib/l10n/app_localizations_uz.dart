@@ -9,7 +9,7 @@ class AppLocalizationsUz extends AppLocalizations {
   AppLocalizationsUz([String locale = 'uz']) : super(locale);
 
   @override
-  String get appTitle => 'Billing App';
+  String get appTitle => 'DeepPOS';
 
   @override
   String get openShift => 'Smena ochish';

@@ -1,6 +1,6 @@
 {
-    "name": "billing_app",
-    "short_name": "billing_app",
+    "name": "DeepPOS",
+    "short_name": "DeepPOS",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

@@ -15,11 +15,47 @@ class BackendApiException implements Exception {
 }
 
 class BackendV1Client {
-  final BackendSession _session;
+  final BackendSession? _session;
   final http.Client _httpClient;
+  final Future<String?> Function()? _baseUrlProvider;
+  final Future<String?> Function()? _accessTokenProvider;
+  final Future<int?> Function()? _terminalIdProvider;
+  final Future<int?> Function()? _shiftIdProvider;
+  final Future<void> Function(String access, String refresh)? _saveTokens;
+  final Future<void> Function(int terminalId, int storeId, int organizationId)?
+      _saveTerminalContext;
+  final Future<void> Function(int shiftId)? _saveShiftId;
 
   BackendV1Client(this._session, {http.Client? httpClient})
-      : _httpClient = httpClient ?? http.Client();
+      : _httpClient = httpClient ?? http.Client(),
+        _baseUrlProvider = null,
+        _accessTokenProvider = null,
+        _terminalIdProvider = null,
+        _shiftIdProvider = null,
+        _saveTokens = null,
+        _saveTerminalContext = null,
+        _saveShiftId = null;
+
+  BackendV1Client.forTesting({
+    required Future<String?> Function() baseUrlProvider,
+    required Future<String?> Function() accessTokenProvider,
+    required Future<int?> Function() terminalIdProvider,
+    required Future<int?> Function() shiftIdProvider,
+    required Future<void> Function(String access, String refresh) saveTokens,
+    required Future<void> Function(
+            int terminalId, int storeId, int organizationId)
+        saveTerminalContext,
+    required Future<void> Function(int shiftId) saveShiftId,
+    http.Client? httpClient,
+  })  : _session = null,
+        _httpClient = httpClient ?? http.Client(),
+        _baseUrlProvider = baseUrlProvider,
+        _accessTokenProvider = accessTokenProvider,
+        _terminalIdProvider = terminalIdProvider,
+        _shiftIdProvider = shiftIdProvider,
+        _saveTokens = saveTokens,
+        _saveTerminalContext = saveTerminalContext,
+        _saveShiftId = saveShiftId;
 
   Future<Map<String, dynamic>> registerPlatform({
     required String organizationName,
@@ -40,10 +76,8 @@ class BackendV1Client {
 
     final tokens = response['tokens'] as Map<String, dynamic>?;
     if (tokens != null) {
-      await _session.saveTokens(
-        access: tokens['access'] as String,
-        refresh: tokens['refresh'] as String,
-      );
+      await _persistTokens(
+          tokens['access'] as String, tokens['refresh'] as String);
     }
 
     return response;
@@ -89,17 +123,15 @@ class BackendV1Client {
     final store = response['store'] as Map<String, dynamic>?;
 
     if (tokens != null) {
-      await _session.saveTokens(
-        access: tokens['access'] as String,
-        refresh: tokens['refresh'] as String,
-      );
+      await _persistTokens(
+          tokens['access'] as String, tokens['refresh'] as String);
     }
 
     if (terminal != null && store != null) {
-      await _session.saveTerminalContext(
-        terminalId: terminal['id'] as int,
-        storeId: store['id'] as int,
-        organizationId: store['organization_id'] as int,
+      await _persistTerminalContext(
+        terminal['id'] as int,
+        store['id'] as int,
+        store['organization_id'] as int,
       );
     }
 
@@ -107,7 +139,7 @@ class BackendV1Client {
   }
 
   Future<Map<String, dynamic>> openShift({required double startBalance}) async {
-    final terminalId = await _session.getTerminalId();
+    final terminalId = await _readTerminalId();
     if (terminalId == null) {
       throw BackendApiException(
           'Terminal is not configured. Login cashier first.');
@@ -125,7 +157,7 @@ class BackendV1Client {
 
     final shiftId = response['id'] as int?;
     if (shiftId != null) {
-      await _session.saveCurrentShiftId(shiftId);
+      await _persistShiftId(shiftId);
     }
 
     return response;
@@ -136,7 +168,7 @@ class BackendV1Client {
     required String paymentType,
     required List<Map<String, dynamic>> items,
   }) async {
-    final shiftId = await _session.getCurrentShiftId();
+    final shiftId = await _readShiftId();
     if (shiftId == null) {
       throw BackendApiException('No open shift in session. Open shift first.');
     }
@@ -196,7 +228,7 @@ class BackendV1Client {
   }
 
   Future<Uri> _buildUri(String path) async {
-    final baseUrl = await _session.getBaseUrl();
+    final baseUrl = await _readBaseUrl();
     if (baseUrl == null || baseUrl.trim().isEmpty) {
       throw BackendApiException('Backend URL is not configured.');
     }
@@ -214,7 +246,7 @@ class BackendV1Client {
     };
 
     if (withAuth) {
-      final token = await _session.getAccessToken();
+      final token = await _readAccessToken();
       if (token == null || token.isEmpty) {
         throw BackendApiException('Not authenticated. Perform login first.');
       }
@@ -284,5 +316,64 @@ class BackendV1Client {
       return 'Session expired. Login again.';
     }
     return raw;
+  }
+
+  Future<String?> _readBaseUrl() async {
+    if (_baseUrlProvider != null) return _baseUrlProvider!();
+    if (_session == null) return null;
+    return _session!.getBaseUrl();
+  }
+
+  Future<String?> _readAccessToken() async {
+    if (_accessTokenProvider != null) return _accessTokenProvider!();
+    if (_session == null) return null;
+    return _session!.getAccessToken();
+  }
+
+  Future<int?> _readTerminalId() async {
+    if (_terminalIdProvider != null) return _terminalIdProvider!();
+    if (_session == null) return null;
+    return _session!.getTerminalId();
+  }
+
+  Future<int?> _readShiftId() async {
+    if (_shiftIdProvider != null) return _shiftIdProvider!();
+    if (_session == null) return null;
+    return _session!.getCurrentShiftId();
+  }
+
+  Future<void> _persistTokens(String access, String refresh) async {
+    if (_saveTokens != null) {
+      await _saveTokens!(access, refresh);
+      return;
+    }
+    if (_session != null) {
+      await _session!.saveTokens(access: access, refresh: refresh);
+    }
+  }
+
+  Future<void> _persistTerminalContext(
+      int terminalId, int storeId, int organizationId) async {
+    if (_saveTerminalContext != null) {
+      await _saveTerminalContext!(terminalId, storeId, organizationId);
+      return;
+    }
+    if (_session != null) {
+      await _session!.saveTerminalContext(
+        terminalId: terminalId,
+        storeId: storeId,
+        organizationId: organizationId,
+      );
+    }
+  }
+
+  Future<void> _persistShiftId(int shiftId) async {
+    if (_saveShiftId != null) {
+      await _saveShiftId!(shiftId);
+      return;
+    }
+    if (_session != null) {
+      await _session!.saveCurrentShiftId(shiftId);
+    }
   }
 }

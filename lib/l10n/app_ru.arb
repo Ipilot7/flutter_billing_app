@@ -1,6 +1,6 @@
 {
   "@@locale": "ru",
-  "appTitle": "Billing App",
+  "appTitle": "DeepPOS",
   "openShift": "Открыть смену",
   "closeShift": "Закрыть смену",
   "salesHistory": "История продаж",

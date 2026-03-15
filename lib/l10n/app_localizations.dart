@@ -103,7 +103,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In ru, this message translates to:
-  /// **'Billing App'**
+  /// **'DeepPOS'**
   String get appTitle;
 
   /// No description provided for @openShift.
