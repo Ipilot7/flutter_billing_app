@@ -179,6 +179,29 @@ class BackendV1Client {
     return response;
   }
 
+  Future<Map<String, dynamic>> loginOwner({
+    required String username,
+    required String password,
+  }) async {
+    final response = await _post(
+      '/api/token/',
+      body: {
+        'username': username,
+        'password': password,
+      },
+      withAuth: false,
+    );
+
+    final access = response['access']?.toString();
+    final refresh = response['refresh']?.toString();
+    if (access == null || refresh == null) {
+      throw BackendApiException('Invalid owner login response.');
+    }
+
+    await _persistTokens(access, refresh);
+    return response;
+  }
+
   Future<Map<String, dynamic>> openShift({required double startBalance}) async {
     final terminalId = await _readTerminalId();
     if (terminalId == null) {

@@ -6,7 +6,7 @@ void main() {
   group('BackendV1Client mock smoke', () {
     test('full flow login -> open shift -> create sale -> fetch products',
         () async {
-      String? baseUrl = 'http://localhost:8000';
+      String? baseUrl = 'http://localhost:8000/api/v1/';
       String? accessToken;
       String? refreshToken;
       int? terminalId;
@@ -18,7 +18,9 @@ void main() {
       mockDio.interceptors.add(
         InterceptorsWrapper(
           onRequest: (options, handler) {
-            if (options.path == '/api/auth/login/cashier-terminal/' &&
+            final requestPath = options.uri.path;
+
+            if (requestPath.endsWith('/auth/login/cashier-terminal/') &&
                 options.method == 'POST') {
               final body = options.data as Map<String, dynamic>;
               expect(body['device_id'], 'dev-1');
@@ -49,7 +51,7 @@ void main() {
               );
             }
 
-            if (options.path == '/api/shifts/' && options.method == 'POST') {
+            if (requestPath.endsWith('/shifts/') && options.method == 'POST') {
               expect(options.headers['Authorization'], 'Bearer token-access');
               final body = options.data as Map<String, dynamic>;
               expect(body['terminal'], 10);
@@ -63,7 +65,7 @@ void main() {
               );
             }
 
-            if (options.path == '/api/sales/' && options.method == 'POST') {
+            if (requestPath.endsWith('/sales/') && options.method == 'POST') {
               expect(options.headers['Authorization'], 'Bearer token-access');
               final body = options.data as Map<String, dynamic>;
               expect(body['shift'], 99);
@@ -79,7 +81,7 @@ void main() {
               );
             }
 
-            if (options.path == '/api/products/' && options.method == 'GET') {
+            if (requestPath.endsWith('/products/') && options.method == 'GET') {
               expect(options.headers['Authorization'], 'Bearer token-access');
 
               return handler.resolve(

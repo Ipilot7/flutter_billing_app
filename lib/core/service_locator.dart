@@ -15,6 +15,7 @@ import 'package:billing_app/features/settings/data/repositories/printer_reposito
 import 'package:billing_app/features/settings/domain/repositories/printer_repository.dart';
 import 'package:billing_app/features/settings/presentation/bloc/printer_bloc.dart';
 import 'package:billing_app/features/settings/presentation/bloc/locale_cubit.dart';
+import 'package:billing_app/features/settings/presentation/bloc/auth_flow_cubits.dart';
 import 'package:billing_app/features/shift/data/repositories/shift_repository_impl.dart';
 import 'package:billing_app/features/shift/domain/repositories/shift_repository.dart';
 import 'package:billing_app/features/shift/domain/usecases/shift_usecases.dart';
@@ -33,12 +34,16 @@ import 'package:billing_app/core/network/backend_session.dart';
 import 'package:billing_app/core/network/backend_v1_client.dart';
 
 final sl = GetIt.instance;
+const _defaultBackendBaseUrl = 'http://192.168.0.54:8000/api/v1/';
 
 Future<void> init() async {
   // Database
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase());
   sl.registerLazySingleton<BackupService>(() => BackupService(sl()));
   sl.registerLazySingleton<BackendSession>(() => BackendSession(sl()));
+  await sl<BackendSession>().ensureBaseUrlInitialized(
+    defaultBaseUrl: _defaultBackendBaseUrl,
+  );
   sl.registerLazySingleton<BackendV1Client>(() => BackendV1Client(sl()));
 
   // Features - Product
@@ -116,6 +121,12 @@ Future<void> init() async {
 
   // Features - Settings
   sl.registerFactory(() => LocaleCubit(sl()));
+  sl.registerFactory(() => AuthEntryCubit(sl()));
+  sl.registerFactory(() => OwnerLoginCubit(sl()));
+  sl.registerFactory(() => CashierLoginCubit(sl(), sl(), sl()));
+  sl.registerFactory(() => PlatformRegistrationCubit(sl(), sl()));
+  sl.registerFactory(() => CashRegisterSetupCubit(sl(), sl()));
+  sl.registerFactory(() => OpenShiftCubit(sl(), sl()));
 
   // Use cases
   sl.registerLazySingleton(() => GetProductsUseCase(sl()));

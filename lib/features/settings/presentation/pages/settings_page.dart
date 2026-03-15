@@ -169,13 +169,6 @@ class _SettingsPageState extends State<SettingsPage> {
                   subtitle: 'Старт баланса перед продажами',
                   onTap: () => context.push('/settings/open-shift'),
                 ),
-                _buildDivider(),
-                _buildListItem(
-                  icon: Icons.tune,
-                  title: 'Backend V1 (все шаги)',
-                  subtitle: 'Старый объединенный экран',
-                  onTap: () => context.push('/settings/backend-v1'),
-                ),
               ],
             ),
 

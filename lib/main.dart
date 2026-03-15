@@ -17,24 +17,10 @@ import 'features/sales/presentation/bloc/analytics_bloc.dart';
 import 'features/measurement_unit/presentation/bloc/unit_bloc.dart';
 import 'features/product/presentation/bloc/category_bloc.dart';
 import 'features/product/presentation/bloc/category_event.dart';
-import 'core/network/backend_session.dart';
-
-const _defaultBackendBaseUrl = 'http://192.168.0.54:8000/';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await di.init();
-
-  final backendSession = di.sl<BackendSession>();
-  final currentBaseUrl = await backendSession.getBaseUrl();
-  final normalized = (currentBaseUrl ?? '').trim().toLowerCase();
-  final isLegacyLocalhost = normalized.startsWith('http://127.0.0.1') ||
-      normalized.startsWith('https://127.0.0.1') ||
-      normalized.startsWith('http://localhost') ||
-      normalized.startsWith('https://localhost');
-  if (normalized.isEmpty || isLegacyLocalhost) {
-    await backendSession.saveBaseUrl(_defaultBackendBaseUrl);
-  }
 
   runApp(const MyApp());
 }

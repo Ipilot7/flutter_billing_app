@@ -16,6 +16,9 @@ class AnalyticsPage extends StatefulWidget {
 
 class _AnalyticsPageState extends State<AnalyticsPage> {
   int _selectedPeriod = 0; // 0: today, 1: week, 2: month
+  final ValueNotifier<int> _uiTick = ValueNotifier<int>(0);
+
+  void _refreshUi() => _uiTick.value++;
 
   @override
   void initState() {
@@ -46,37 +49,47 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
   }
 
   @override
+  void dispose() {
+    _uiTick.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text(l.analytics,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        centerTitle: true,
-        backgroundColor: Colors.white,
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          _buildPeriodSelector(),
-          Expanded(
-            child: BlocBuilder<AnalyticsBloc, AnalyticsState>(
-              builder: (context, state) {
-                if (state is AnalyticsLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (state is AnalyticsError) {
-                  return Center(child: Text(state.message));
-                }
-                if (state is AnalyticsLoaded) {
-                  return _buildDashboard(state);
-                }
-                return const SizedBox.shrink();
-              },
+    return ValueListenableBuilder<int>(
+      valueListenable: _uiTick,
+      builder: (_, __, ___) => Scaffold(
+        backgroundColor: Colors.grey[50],
+        appBar: AppBar(
+          title: Text(l.analytics,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          elevation: 0,
+        ),
+        body: Column(
+          children: [
+            _buildPeriodSelector(),
+            Expanded(
+              child: BlocBuilder<AnalyticsBloc, AnalyticsState>(
+                builder: (context, state) {
+                  if (state is AnalyticsLoading) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (state is AnalyticsError) {
+                    return Center(child: Text(state.message));
+                  }
+                  if (state is AnalyticsLoaded) {
+                    return _buildDashboard(state);
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -103,7 +116,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     return GestureDetector(
       onTap: () {
         if (!isSelected) {
-          setState(() => _selectedPeriod = index);
+          _selectedPeriod = index;
+          _refreshUi();
           _loadData();
         }
       },

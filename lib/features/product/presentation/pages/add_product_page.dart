@@ -24,6 +24,7 @@ class AddProductPage extends StatefulWidget {
 
 class _AddProductPageState extends State<AddProductPage> {
   final _formKey = GlobalKey<FormState>();
+  final ValueNotifier<int> _uiTick = ValueNotifier<int>(0);
   String _name = '';
   String _barcode = '';
   double _price = 0.0;
@@ -46,12 +47,17 @@ class _AddProductPageState extends State<AddProductPage> {
     context.read<UnitBloc>().add(LoadUnitsEvent());
   }
 
+  @override
+  void dispose() {
+    _uiTick.dispose();
+    super.dispose();
+  }
+
   void _scanBarcode() async {
     final result = await context.push<String>('/scanner');
     if (result != null && result.isNotEmpty) {
-      setState(() {
-        _barcode = result;
-      });
+      _barcode = result;
+      _uiTick.value++;
     }
   }
 
@@ -92,211 +98,230 @@ class _AddProductPageState extends State<AddProductPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.chevron_left,
-                size: 28, color: Theme.of(context).primaryColor),
-            onPressed: () => context.pop(),
+    return ValueListenableBuilder<int>(
+      valueListenable: _uiTick,
+      builder: (_, __, ___) => Scaffold(
+          appBar: AppBar(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            leading: IconButton(
+              icon: Icon(Icons.chevron_left,
+                  size: 28, color: Theme.of(context).primaryColor),
+              onPressed: () => context.pop(),
+            ),
+            title: Text(AppLocalizations.of(context)!.addProduct,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            centerTitle: true,
           ),
-          title: Text(AppLocalizations.of(context)!.addProduct,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-          centerTitle: true,
-        ),
-        body: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  InputLabel(text: AppLocalizations.of(context)!.barcode),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextFormField(
-                          key: ValueKey(_barcode),
-                          initialValue: _barcode,
-                          decoration: InputDecoration(
-                            hintText: AppLocalizations.of(context)!
-                                .scanOrEnterBarcode,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    InputLabel(text: AppLocalizations.of(context)!.barcode),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            key: ValueKey(_barcode),
+                            initialValue: _barcode,
+                            decoration: InputDecoration(
+                              hintText: AppLocalizations.of(context)!
+                                  .scanOrEnterBarcode,
+                            ),
+                            validator: (value) => value == null || value.isEmpty
+                                ? AppLocalizations.of(context)!.enterBarcode
+                                : null,
+                            onSaved: (value) => _barcode = value!,
                           ),
-                          validator: (value) => value == null || value.isEmpty
-                              ? AppLocalizations.of(context)!.enterBarcode
-                              : null,
-                          onSaved: (value) => _barcode = value!,
                         ),
+                        const SizedBox(width: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.qr_code_scanner,
+                                color: AppTheme.primaryColor),
+                            onPressed: _scanBarcode,
+                            padding: const EdgeInsets.all(14),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(AppLocalizations.of(context)!.scanIconHint,
+                        style: const TextStyle(
+                            fontSize: 12, color: Color(0xFF4C669A))),
+                    const SizedBox(height: 24),
+                    const SizedBox(height: 24),
+                    InputLabel(text: AppLocalizations.of(context)!.productName),
+                    TextFormField(
+                      decoration: InputDecoration(
+                        hintText: AppLocalizations.of(context)!.namePlaceholder,
                       ),
-                      const SizedBox(width: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.qr_code_scanner,
-                              color: AppTheme.primaryColor),
-                          onPressed: _scanBarcode,
-                          padding: const EdgeInsets.all(14),
-                        ),
+                      textCapitalization: TextCapitalization.words,
+                      validator: (value) => value == null || value.isEmpty
+                          ? AppLocalizations.of(context)!.pleaseEnterName
+                          : null,
+                      onSaved: (value) => _name = value!,
+                    ),
+                    const SizedBox(height: 24),
+                    const SizedBox(height: 24),
+                    InputLabel(text: AppLocalizations.of(context)!.price),
+                    TextFormField(
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        hintText:
+                            AppLocalizations.of(context)!.pricePlaceholder,
+                        prefixText:
+                            '${AppLocalizations.of(context)!.currency} ',
+                        prefixStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(AppLocalizations.of(context)!.scanIconHint,
-                      style: const TextStyle(
-                          fontSize: 12, color: Color(0xFF4C669A))),
-                  const SizedBox(height: 24),
-                  const SizedBox(height: 24),
-                  InputLabel(text: AppLocalizations.of(context)!.productName),
-                  TextFormField(
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.namePlaceholder,
+                      validator: (value) => value == null || value.isEmpty
+                          ? AppLocalizations.of(context)!.pleaseEnterPrice
+                          : null,
+                      onSaved: (value) =>
+                          _price = double.tryParse(value ?? '0') ?? 0.0,
                     ),
-                    textCapitalization: TextCapitalization.words,
-                    validator: (value) => value == null || value.isEmpty
-                        ? AppLocalizations.of(context)!.pleaseEnterName
-                        : null,
-                    onSaved: (value) => _name = value!,
-                  ),
-                  const SizedBox(height: 24),
-                  const SizedBox(height: 24),
-                  InputLabel(text: AppLocalizations.of(context)!.price),
-                  TextFormField(
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.pricePlaceholder,
-                      prefixText: '${AppLocalizations.of(context)!.currency} ',
-                      prefixStyle: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black),
+                    const SizedBox(height: 24),
+                    InputLabel(text: AppLocalizations.of(context)!.costPrice),
+                    TextFormField(
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        hintText:
+                            AppLocalizations.of(context)!.pricePlaceholder,
+                        prefixText:
+                            '${AppLocalizations.of(context)!.currency} ',
+                        prefixStyle: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.black),
+                      ),
+                      onSaved: (value) =>
+                          _costPrice = double.tryParse(value ?? '0') ?? 0.0,
                     ),
-                    validator: (value) => value == null || value.isEmpty
-                        ? AppLocalizations.of(context)!.pleaseEnterPrice
-                        : null,
-                    onSaved: (value) => _price = double.tryParse(value ?? '0') ?? 0.0,
-                  ),
-                  const SizedBox(height: 24),
-                  InputLabel(text: AppLocalizations.of(context)!.costPrice),
-                  TextFormField(
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)!.pricePlaceholder,
-                      prefixText: '${AppLocalizations.of(context)!.currency} ',
-                      prefixStyle: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.black),
+                    const SizedBox(height: 24),
+                    InputLabel(text: AppLocalizations.of(context)!.stock),
+                    TextFormField(
+                      keyboardType:
+                          const TextInputType.numberWithOptions(decimal: true),
+                      decoration: const InputDecoration(
+                        hintText: '0',
+                      ),
+                      onSaved: (value) =>
+                          _stock = double.tryParse(value ?? '0') ?? 0.0,
                     ),
-                    onSaved: (value) =>
-                        _costPrice = double.tryParse(value ?? '0') ?? 0.0,
-                  ),
-                  const SizedBox(height: 24),
-                  InputLabel(text: AppLocalizations.of(context)!.stock),
-                  TextFormField(
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    decoration: const InputDecoration(
-                      hintText: '0',
-                    ),
-                    onSaved: (value) => _stock = double.tryParse(value ?? '0') ?? 0.0,
-                  ),
-                  const SizedBox(height: 24),
-                  const SizedBox(height: 24),
-                  InputLabel(
-                      text: AppLocalizations.of(context)!.measurementUnit),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: BlocBuilder<UnitBloc, UnitState>(
-                          builder: (context, state) {
-                            List<String> units = [
-                              AppLocalizations.of(context)!.unitDefault
-                            ];
-                            if (state is UnitLoaded) {
-                              units =
-                                  state.units.map((u) => u.shortName).toList();
-                              if (!units.contains(
-                                  AppLocalizations.of(context)!.unitDefault)) {
-                                units.insert(0,
-                                    AppLocalizations.of(context)!.unitDefault);
+                    const SizedBox(height: 24),
+                    const SizedBox(height: 24),
+                    InputLabel(
+                        text: AppLocalizations.of(context)!.measurementUnit),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: BlocBuilder<UnitBloc, UnitState>(
+                            builder: (context, state) {
+                              List<String> units = [
+                                AppLocalizations.of(context)!.unitDefault
+                              ];
+                              if (state is UnitLoaded) {
+                                units = state.units
+                                    .map((u) => u.shortName)
+                                    .toList();
+                                if (!units.contains(
+                                    AppLocalizations.of(context)!
+                                        .unitDefault)) {
+                                  units.insert(
+                                      0,
+                                      AppLocalizations.of(context)!
+                                          .unitDefault);
+                                }
                               }
-                            }
 
-                            if (!units.contains(_unit)) {
-                              _unit = units.first;
-                            }
+                              if (!units.contains(_unit)) {
+                                _unit = units.first;
+                              }
 
-                            return DropdownButtonFormField<String>(
-                              initialValue: _unit,
-                              decoration: const InputDecoration(
-                                contentPadding: EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 8),
-                              ),
-                              items: units
-                                  .map((u) => DropdownMenuItem(
-                                      value: u, child: Text(u)))
-                                  .toList(),
-                              onChanged: (val) => setState(() => _unit = val!),
-                            );
+                              return DropdownButtonFormField<String>(
+                                initialValue: _unit,
+                                decoration: const InputDecoration(
+                                  contentPadding: EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                ),
+                                items: units
+                                    .map((u) => DropdownMenuItem(
+                                        value: u, child: Text(u)))
+                                    .toList(),
+                                onChanged: (val) {
+                                  _unit = val!;
+                                  _uiTick.value++;
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.add,
+                                color: AppTheme.primaryColor),
+                            onPressed: () => _showAddUnitDialog(context),
+                            padding: const EdgeInsets.all(14),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    InputLabel(
+                        text: AppLocalizations.of(context)!.selectCategory),
+                    BlocBuilder<CategoryBloc, CategoryState>(
+                      builder: (context, state) {
+                        return DropdownButtonFormField<String>(
+                          initialValue: _categoryId,
+                          decoration: const InputDecoration(
+                            contentPadding: EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
+                          ),
+                          hint: Text(
+                              AppLocalizations.of(context)!.selectCategory),
+                          items: state.categories
+                              .map((c) => DropdownMenuItem(
+                                    value: c.id,
+                                    child: Text(c.name),
+                                  ))
+                              .toList(),
+                          onChanged: (val) {
+                            _categoryId = val;
+                            _uiTick.value++;
                           },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.add,
-                              color: AppTheme.primaryColor),
-                          onPressed: () => _showAddUnitDialog(context),
-                          padding: const EdgeInsets.all(14),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  InputLabel(
-                      text: AppLocalizations.of(context)!.selectCategory),
-                  BlocBuilder<CategoryBloc, CategoryState>(
-                    builder: (context, state) {
-                      return DropdownButtonFormField<String>(
-                        initialValue: _categoryId,
-                        decoration: const InputDecoration(
-                          contentPadding:
-                              EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        ),
-                        hint:
-                            Text(AppLocalizations.of(context)!.selectCategory),
-                        items: state.categories
-                            .map((c) => DropdownMenuItem(
-                                  value: c.id,
-                                  child: Text(c.name),
-                                ))
-                            .toList(),
-                        onChanged: (val) => setState(() => _categoryId = val),
-                      );
-                    },
-                  ),
-                ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
-        ),
-        bottomNavigationBar: PrimaryButton(
-          onPressed: _submit,
-          icon: Icons.add_circle,
-          label: AppLocalizations.of(context)!.addProduct,
-        ));
+          bottomNavigationBar: PrimaryButton(
+            onPressed: _submit,
+            icon: Icons.add_circle,
+            label: AppLocalizations.of(context)!.addProduct,
+          )),
+    );
   }
 
   void _showAddUnitDialog(BuildContext context) {

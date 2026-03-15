@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:billing_app/core/network/backend_v1_client.dart';
-import 'package:billing_app/core/network/backend_session.dart';
+import 'package:billing_app/features/settings/presentation/bloc/auth_flow_cubits.dart';
 import 'package:billing_app/core/service_locator.dart';
 
 class PlatformRegistrationPage extends StatefulWidget {
@@ -18,10 +18,13 @@ class _PlatformRegistrationPageState extends State<PlatformRegistrationPage> {
   final _ownerUserController = TextEditingController();
   final _ownerPassController = TextEditingController();
 
-  bool _loading = false;
+  late final PlatformRegistrationCubit _cubit;
 
-  BackendV1Client get _client => sl<BackendV1Client>();
-  BackendSession get _session => sl<BackendSession>();
+  @override
+  void initState() {
+    super.initState();
+    _cubit = sl<PlatformRegistrationCubit>();
+  }
 
   @override
   void dispose() {
@@ -29,46 +32,8 @@ class _PlatformRegistrationPageState extends State<PlatformRegistrationPage> {
     _storeController.dispose();
     _ownerUserController.dispose();
     _ownerPassController.dispose();
+    _cubit.close();
     super.dispose();
-  }
-
-  Future<void> _registerPlatform() async {
-    if (_orgController.text.trim().isEmpty ||
-        _storeController.text.trim().isEmpty ||
-        _ownerUserController.text.trim().isEmpty ||
-        _ownerPassController.text.trim().length < 8) {
-      _showMessage(
-        'Заполните все поля. Пароль владельца должен быть не менее 8 символов.',
-        isError: true,
-      );
-      return;
-    }
-
-    setState(() => _loading = true);
-    try {
-      final currentBaseUrl = await _session.getBaseUrl();
-      if (currentBaseUrl == null || currentBaseUrl.trim().isEmpty) {
-        await _session.saveBaseUrl('http://192.168.0.54:8000/');
-      }
-      final response = await _client.registerPlatform(
-        organizationName: _orgController.text.trim(),
-        storeName: _storeController.text.trim(),
-        ownerUsername: _ownerUserController.text.trim(),
-        ownerPassword: _ownerPassController.text,
-      );
-
-      final store = response['store'] as Map<String, dynamic>?;
-      final storeId = store?['id'];
-      _showMessage(
-        storeId != null
-            ? 'Платформа зарегистрирована. Store ID: $storeId'
-            : 'Платформа зарегистрирована.',
-      );
-    } catch (e) {
-      _showMessage('Ошибка регистрации: $e', isError: true);
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
   }
 
   void _showMessage(String text, {bool isError = false}) {
@@ -82,49 +47,74 @@ class _PlatformRegistrationPageState extends State<PlatformRegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('Регистрация платформы')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: [
-          const Text(
-            'Шаг owner: создать организацию и магазин',
-            style: TextStyle(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _orgController,
-            decoration:
-                const InputDecoration(labelText: 'Название организации'),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _storeController,
-            decoration: const InputDecoration(labelText: 'Название магазина'),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _ownerUserController,
-            decoration: const InputDecoration(labelText: 'Логин владельца'),
-          ),
-          const SizedBox(height: 10),
-          TextField(
-            controller: _ownerPassController,
-            obscureText: true,
-            decoration: const InputDecoration(labelText: 'Пароль владельца'),
-          ),
-          const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _loading ? null : _registerPlatform,
-            child: _loading
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Text('Зарегистрировать платформу'),
-          ),
-        ],
+    return BlocProvider.value(
+      value: _cubit,
+      child: BlocConsumer<PlatformRegistrationCubit, PlatformRegistrationState>(
+        listener: (context, state) {
+          if (state.error != null) {
+            _showMessage(state.error!, isError: true);
+          } else if (state.message != null) {
+            _showMessage(state.message!);
+          }
+        },
+        builder: (context, state) {
+          return Scaffold(
+            appBar: AppBar(title: const Text('Регистрация платформы')),
+            body: ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                const Text(
+                  'Шаг owner: создать организацию и магазин',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _orgController,
+                  decoration:
+                      const InputDecoration(labelText: 'Название организации'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _storeController,
+                  decoration:
+                      const InputDecoration(labelText: 'Название магазина'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _ownerUserController,
+                  decoration:
+                      const InputDecoration(labelText: 'Логин владельца'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _ownerPassController,
+                  obscureText: true,
+                  decoration:
+                      const InputDecoration(labelText: 'Пароль владельца'),
+                ),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: state.loading
+                      ? null
+                      : () =>
+                          context.read<PlatformRegistrationCubit>().register(
+                                organizationName: _orgController.text,
+                                storeName: _storeController.text,
+                                ownerUsername: _ownerUserController.text,
+                                ownerPassword: _ownerPassController.text,
+                              ),
+                  child: state.loading
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Зарегистрировать платформу'),
+                ),
+              ],
+            ),
+          );
+        },
       ),
     );
   }

@@ -17,35 +17,50 @@ class StockManagementPage extends StatefulWidget {
 class _StockManagementPageState extends State<StockManagementPage> {
   String _searchQuery = '';
   String? _selectedCategoryId;
+  final ValueNotifier<int> _uiTick = ValueNotifier<int>(0);
+
+  void _refreshUi() => _uiTick.value++;
+
+  @override
+  void dispose() {
+    _uiTick.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context)!;
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.stockManagement,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: l.searchProducts,
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+    return ValueListenableBuilder<int>(
+      valueListenable: _uiTick,
+      builder: (_, __, ___) => Scaffold(
+        appBar: AppBar(
+          title: Text(l.stockManagement,
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+          centerTitle: true,
+        ),
+        body: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: l.searchProducts,
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
+                onChanged: (value) {
+                  _searchQuery = value.toLowerCase();
+                  _refreshUi();
+                },
               ),
-              onChanged: (value) =>
-                  setState(() => _searchQuery = value.toLowerCase()),
             ),
-          ),
-          _buildCategoryFilter(),
-          Expanded(child: _buildProductList()),
-        ],
+            _buildCategoryFilter(),
+            Expanded(child: _buildProductList()),
+          ],
+        ),
       ),
     );
   }
@@ -77,9 +92,8 @@ class _StockManagementPageState extends State<StockManagementPage> {
                       : category!.name),
                   selected: isSelected,
                   onSelected: (selected) {
-                    setState(() {
-                      _selectedCategoryId = isAll ? null : category?.id;
-                    });
+                    _selectedCategoryId = isAll ? null : category?.id;
+                    _refreshUi();
                   },
                   selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
                   checkmarkColor: AppTheme.primaryColor,

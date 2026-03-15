@@ -29,6 +29,7 @@ class _HomePageState extends State<HomePage> {
     detectionSpeed: DetectionSpeed.normal,
     returnImage: false,
   );
+  final ValueNotifier<int> _uiTick = ValueNotifier<int>(0);
 
   bool _isCameraOn = false;
   bool _isFlashOn = false;
@@ -65,13 +66,12 @@ class _HomePageState extends State<HomePage> {
 
     if (!mounted) return;
 
-    setState(() {
-      _backendConfigured = baseUrl != null && baseUrl.trim().isNotEmpty;
-      _backendAuthenticated = token != null && token.trim().isNotEmpty;
-      _backendTerminalId = terminalId;
-      _backendShiftId = shiftId;
-      _backendLocalProductCount = productCount;
-    });
+    _backendConfigured = baseUrl != null && baseUrl.trim().isNotEmpty;
+    _backendAuthenticated = token != null && token.trim().isNotEmpty;
+    _backendTerminalId = terminalId;
+    _backendShiftId = shiftId;
+    _backendLocalProductCount = productCount;
+    _uiTick.value++;
   }
 
   void _refreshAnalytics() {
@@ -83,6 +83,7 @@ class _HomePageState extends State<HomePage> {
 
   @override
   void dispose() {
+    _uiTick.dispose();
     _scannerController.dispose();
     super.dispose();
   }
@@ -121,77 +122,82 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: MultiBlocListener(
-        listeners: [
-          BlocListener<BillingBloc, BillingState>(
-            listenWhen: (previous, current) =>
-                previous.cartItems.isNotEmpty && current.cartItems.isEmpty,
-            listener: (context, state) {
-              // Cart cleared usually means sale completed or manually cleared
-              _refreshAnalytics();
-            },
-          ),
-          BlocListener<BillingBloc, BillingState>(
-            listenWhen: (previous, current) =>
-                previous.error != current.error && current.error != null,
-            listener: (context, state) {
-              if (state.error != null) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.error!),
-                    backgroundColor: Colors.red,
-                    behavior: SnackBarBehavior.floating,
+    return ValueListenableBuilder<int>(
+        valueListenable: _uiTick,
+        builder: (_, __, ___) => Scaffold(
+              body: MultiBlocListener(
+                listeners: [
+                  BlocListener<BillingBloc, BillingState>(
+                    listenWhen: (previous, current) =>
+                        previous.cartItems.isNotEmpty &&
+                        current.cartItems.isEmpty,
+                    listener: (context, state) {
+                      // Cart cleared usually means sale completed or manually cleared
+                      _refreshAnalytics();
+                    },
                   ),
-                );
-              }
-            },
-          ),
-          BlocListener<ShiftBloc, ShiftState>(
-            listener: (context, state) {
-              // We no longer toggle camera based on shift status.
-            },
-          ),
-        ],
-        child: Stack(
-          children: [
-            // SCANNER VIEW (TOP 50%)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              height: MediaQuery.of(context).size.height * 0.4,
-              child: _buildScannerSection(),
-            ),
+                  BlocListener<BillingBloc, BillingState>(
+                    listenWhen: (previous, current) =>
+                        previous.error != current.error &&
+                        current.error != null,
+                    listener: (context, state) {
+                      if (state.error != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(state.error!),
+                            backgroundColor: Colors.red,
+                            behavior: SnackBarBehavior.floating,
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                  BlocListener<ShiftBloc, ShiftState>(
+                    listener: (context, state) {
+                      // We no longer toggle camera based on shift status.
+                    },
+                  ),
+                ],
+                child: Stack(
+                  children: [
+                    // SCANNER VIEW (TOP 50%)
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: MediaQuery.of(context).size.height * 0.4,
+                      child: _buildScannerSection(),
+                    ),
 
-            // BOTTOM PANEL (BOTTOM 50% + OVERLAP)
-            Positioned(
-              top: (MediaQuery.of(context).size.height * 0.4) - 24, // overlap
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: _buildBottomPanel(),
-            ),
-          ],
-        ),
-      ),
-      bottomSheet:
-          BlocBuilder<BillingBloc, BillingState>(builder: (context, state) {
-        return PrimaryButton(
-          onPressed: state.cartItems.isEmpty
-              ? null
-              : () async {
-                  Future.microtask(() => _scannerController.stop());
-                  await context.push('/checkout');
-                  if (_isCameraOn && mounted) {
-                    Future.microtask(() => _scannerController.start());
-                  }
-                },
-          icon: Icons.payment,
-          label: AppLocalizations.of(context)!.reviewOrder,
-        );
-      }),
-    );
+                    // BOTTOM PANEL (BOTTOM 50% + OVERLAP)
+                    Positioned(
+                      top: (MediaQuery.of(context).size.height * 0.4) -
+                          24, // overlap
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: _buildBottomPanel(),
+                    ),
+                  ],
+                ),
+              ),
+              bottomSheet: BlocBuilder<BillingBloc, BillingState>(
+                  builder: (context, state) {
+                return PrimaryButton(
+                  onPressed: state.cartItems.isEmpty
+                      ? null
+                      : () async {
+                          Future.microtask(() => _scannerController.stop());
+                          await context.push('/checkout');
+                          if (_isCameraOn && mounted) {
+                            Future.microtask(() => _scannerController.start());
+                          }
+                        },
+                  icon: Icons.payment,
+                  label: AppLocalizations.of(context)!.reviewOrder,
+                );
+              }),
+            ));
   }
 
   Widget _buildScannerSection() {
@@ -274,14 +280,16 @@ class _HomePageState extends State<HomePage> {
                     icon:
                         _isFlashOn ? Icons.flashlight_off : Icons.flashlight_on,
                     onPressed: () {
-                      setState(() => _isFlashOn = !_isFlashOn);
+                      _isFlashOn = !_isFlashOn;
+                      _uiTick.value++;
                       _scannerController.toggleTorch();
                     },
                   ),
                 _buildOverlayButton(
                   icon: _isCameraOn ? Icons.videocam : Icons.videocam_off,
                   onPressed: () {
-                    setState(() => _isCameraOn = !_isCameraOn);
+                    _isCameraOn = !_isCameraOn;
+                    _uiTick.value++;
                     if (_isCameraOn) {
                       Future.microtask(() => _scannerController.start());
                     } else {
@@ -426,7 +434,8 @@ class _HomePageState extends State<HomePage> {
             label: Text(AppLocalizations.of(context)!.turnOnCamera,
                 style: const TextStyle(fontWeight: FontWeight.bold)),
             onPressed: () {
-              setState(() => _isCameraOn = true);
+              _isCameraOn = true;
+              _uiTick.value++;
               _scannerController.start();
             },
           )

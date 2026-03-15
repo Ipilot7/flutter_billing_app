@@ -18,34 +18,51 @@ class ProductSearchPage extends StatefulWidget {
 class _ProductSearchPageState extends State<ProductSearchPage> {
   String _searchQuery = '';
   String? _selectedCategoryId;
+  final ValueNotifier<int> _uiTick = ValueNotifier<int>(0);
+
+  void _refreshUi() => _uiTick.value++;
+
+  @override
+  void dispose() {
+    _uiTick.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: TextField(
-          autofocus: true,
-          decoration: InputDecoration(
-            hintText: AppLocalizations.of(context)!.searchProducts,
-            border: InputBorder.none,
-            hintStyle: const TextStyle(color: Colors.grey),
-          ),
-          onChanged: (value) =>
-              setState(() => _searchQuery = value.toLowerCase()),
-        ),
-        actions: [
-          if (_searchQuery.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.clear),
-              onPressed: () => setState(() => _searchQuery = ''),
+    return ValueListenableBuilder<int>(
+      valueListenable: _uiTick,
+      builder: (_, __, ___) => Scaffold(
+        appBar: AppBar(
+          title: TextField(
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: AppLocalizations.of(context)!.searchProducts,
+              border: InputBorder.none,
+              hintStyle: const TextStyle(color: Colors.grey),
             ),
-        ],
-      ),
-      body: Column(
-        children: [
-          _buildCategoryFilter(),
-          Expanded(child: _buildProductGrid()),
-        ],
+            onChanged: (value) {
+              _searchQuery = value.toLowerCase();
+              _refreshUi();
+            },
+          ),
+          actions: [
+            if (_searchQuery.isNotEmpty)
+              IconButton(
+                icon: const Icon(Icons.clear),
+                onPressed: () {
+                  _searchQuery = '';
+                  _refreshUi();
+                },
+              ),
+          ],
+        ),
+        body: Column(
+          children: [
+            _buildCategoryFilter(),
+            Expanded(child: _buildProductGrid()),
+          ],
+        ),
       ),
     );
   }
@@ -77,9 +94,8 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
                       : category!.name),
                   selected: isSelected,
                   onSelected: (selected) {
-                    setState(() {
-                      _selectedCategoryId = isAll ? null : category?.id;
-                    });
+                    _selectedCategoryId = isAll ? null : category?.id;
+                    _refreshUi();
                   },
                   selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
                   checkmarkColor: AppTheme.primaryColor,
@@ -132,7 +148,8 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
         context.read<BillingBloc>().add(ScanBarcodeEvent(product.barcode));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(AppLocalizations.of(context)!.productAddedToCart(product.name)),
+            content: Text(
+                AppLocalizations.of(context)!.productAddedToCart(product.name)),
             duration: const Duration(seconds: 1),
             behavior: SnackBarBehavior.floating,
           ),

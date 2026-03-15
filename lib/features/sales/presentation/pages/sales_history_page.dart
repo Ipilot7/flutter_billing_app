@@ -20,6 +20,7 @@ class SalesHistoryPage extends StatefulWidget {
 }
 
 class _SalesHistoryPageState extends State<SalesHistoryPage> {
+  final ValueNotifier<int> _uiTick = ValueNotifier<int>(0);
   DateTime? _fromDate;
   DateTime? _toDate;
   int _filterPayment = -1; // -1 = all, 0=cash, 1=card, 2=terminal
@@ -28,6 +29,12 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
   void initState() {
     super.initState();
     context.read<SalesBloc>().add(const LoadSalesHistoryEvent());
+  }
+
+  @override
+  void dispose() {
+    _uiTick.dispose();
+    super.dispose();
   }
 
   List<Sale> _filterSales(List<Sale> sales) {
@@ -62,19 +69,17 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
       },
     );
     if (range != null) {
-      setState(() {
-        _fromDate = range.start;
-        _toDate = range.end;
-      });
+      _fromDate = range.start;
+      _toDate = range.end;
+      _uiTick.value++;
     }
   }
 
   void _clearFilters() {
-    setState(() {
-      _fromDate = null;
-      _toDate = null;
-      _filterPayment = -1;
-    });
+    _fromDate = null;
+    _toDate = null;
+    _filterPayment = -1;
+    _uiTick.value++;
   }
 
   Future<void> _exportToCSV(List<Sale> filteredSales) async {
@@ -126,145 +131,153 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context)!;
-    final dateFormat = DateFormat('dd.MM.yy');
-    final hasFilter =
-        _fromDate != null || _toDate != null || _filterPayment != -1;
+    return ValueListenableBuilder<int>(
+      valueListenable: _uiTick,
+      builder: (_, __, ___) {
+        final l = AppLocalizations.of(context)!;
+        final dateFormat = DateFormat('dd.MM.yy');
+        final hasFilter =
+            _fromDate != null || _toDate != null || _filterPayment != -1;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(l.salesHistory,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
-        centerTitle: true,
-        actions: [
-          BlocBuilder<SalesBloc, SalesState>(
-            builder: (context, state) {
-              if (state is SalesLoaded && state.sales.isNotEmpty) {
-                return IconButton(
-                  icon: const Icon(Icons.share_outlined),
-                  tooltip: l.exportCSV,
-                  onPressed: () => _exportToCSV(_filterSales(state.sales)),
-                );
-              }
-              return const SizedBox.shrink();
-            },
-          ),
-          if (hasFilter)
-            IconButton(
-              icon: const Icon(Icons.filter_alt_off_outlined),
-              tooltip: 'Clear filters',
-              onPressed: _clearFilters,
-            ),
-          IconButton(
-            icon: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(Icons.calendar_month_outlined),
-                if (hasFilter)
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Colors.orange,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            onPressed: _showDateRangePicker,
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
-      body: Column(
-        children: [
-          // Filter chips row
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              children: [
-                // Date range chip
-                if (_fromDate != null || _toDate != null)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: Chip(
-                      avatar: const Icon(Icons.calendar_today,
-                          size: 14, color: Colors.white),
-                      label: Text(
-                        _fromDate != null && _toDate != null
-                            ? '${dateFormat.format(_fromDate!)} – ${dateFormat.format(_toDate!)}'
-                            : _fromDate != null
-                                ? '${l.dateLabel}: ${dateFormat.format(_fromDate!)}'
-                                : '',
-                        style:
-                            const TextStyle(color: Colors.white, fontSize: 12),
-                      ),
-                      backgroundColor: AppTheme.primaryColor,
-                      deleteIcon: const Icon(Icons.close,
-                          size: 14, color: Colors.white),
-                      onDeleted: () => setState(() {
-                        _fromDate = null;
-                        _toDate = null;
-                      }),
-                    ),
-                  ),
-                // Payment filter chips
-                _paymentChip(-1, l.all),
-                const SizedBox(width: 8),
-                _paymentChip(0, l.cash),
-                const SizedBox(width: 8),
-                _paymentChip(1, l.card),
-                const SizedBox(width: 8),
-                _paymentChip(2, l.terminal),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          // Sales list
-          Expanded(
-            child: BlocBuilder<SalesBloc, SalesState>(
-              builder: (context, state) {
-                if (state is SalesLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-                if (state is SalesError) {
-                  return Center(child: Text(state.message));
-                }
-                if (state is SalesLoaded) {
-                  final filtered = _filterSales(state.sales);
-                  if (filtered.isEmpty) {
-                    return _buildEmpty(l);
+        return Scaffold(
+          appBar: AppBar(
+            title: Text(l.salesHistory,
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+            centerTitle: true,
+            actions: [
+              BlocBuilder<SalesBloc, SalesState>(
+                builder: (context, state) {
+                  if (state is SalesLoaded && state.sales.isNotEmpty) {
+                    return IconButton(
+                      icon: const Icon(Icons.share_outlined),
+                      tooltip: l.exportCSV,
+                      onPressed: () => _exportToCSV(_filterSales(state.sales)),
+                    );
                   }
-                  // Summary header
-                  final totalRevenue = filtered
-                      .where((s) => !s.isReturned)
-                      .fold<double>(0, (sum, s) => sum + s.totalAmount);
-                  return Column(
-                    children: [
-                      _buildSummaryBar(l, filtered.length, totalRevenue),
-                      Expanded(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          itemCount: filtered.length,
-                          itemBuilder: (context, index) {
-                            return _SaleListTile(sale: filtered[index]);
+                  return const SizedBox.shrink();
+                },
+              ),
+              if (hasFilter)
+                IconButton(
+                  icon: const Icon(Icons.filter_alt_off_outlined),
+                  tooltip: 'Clear filters',
+                  onPressed: _clearFilters,
+                ),
+              IconButton(
+                icon: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    const Icon(Icons.calendar_month_outlined),
+                    if (hasFilter)
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: Colors.orange,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                onPressed: _showDateRangePicker,
+              ),
+              const SizedBox(width: 4),
+            ],
+          ),
+          body: Column(
+            children: [
+              // Filter chips row
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    // Date range chip
+                    if (_fromDate != null || _toDate != null)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: Chip(
+                          avatar: const Icon(Icons.calendar_today,
+                              size: 14, color: Colors.white),
+                          label: Text(
+                            _fromDate != null && _toDate != null
+                                ? '${dateFormat.format(_fromDate!)} – ${dateFormat.format(_toDate!)}'
+                                : _fromDate != null
+                                    ? '${l.dateLabel}: ${dateFormat.format(_fromDate!)}'
+                                    : '',
+                            style: const TextStyle(
+                                color: Colors.white, fontSize: 12),
+                          ),
+                          backgroundColor: AppTheme.primaryColor,
+                          deleteIcon: const Icon(Icons.close,
+                              size: 14, color: Colors.white),
+                          onDeleted: () {
+                            _fromDate = null;
+                            _toDate = null;
+                            _uiTick.value++;
                           },
                         ),
                       ),
-                    ],
-                  );
-                }
-                return const SizedBox();
-              },
-            ),
+                    // Payment filter chips
+                    _paymentChip(-1, l.all),
+                    const SizedBox(width: 8),
+                    _paymentChip(0, l.cash),
+                    const SizedBox(width: 8),
+                    _paymentChip(1, l.card),
+                    const SizedBox(width: 8),
+                    _paymentChip(2, l.terminal),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
+              // Sales list
+              Expanded(
+                child: BlocBuilder<SalesBloc, SalesState>(
+                  builder: (context, state) {
+                    if (state is SalesLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (state is SalesError) {
+                      return Center(child: Text(state.message));
+                    }
+                    if (state is SalesLoaded) {
+                      final filtered = _filterSales(state.sales);
+                      if (filtered.isEmpty) {
+                        return _buildEmpty(l);
+                      }
+                      // Summary header
+                      final totalRevenue = filtered
+                          .where((s) => !s.isReturned)
+                          .fold<double>(0, (sum, s) => sum + s.totalAmount);
+                      return Column(
+                        children: [
+                          _buildSummaryBar(l, filtered.length, totalRevenue),
+                          Expanded(
+                            child: ListView.builder(
+                              padding: const EdgeInsets.symmetric(vertical: 8),
+                              itemCount: filtered.length,
+                              itemBuilder: (context, index) {
+                                return _SaleListTile(sale: filtered[index]);
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    return const SizedBox();
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -273,7 +286,10 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
-      onSelected: (v) => setState(() => _filterPayment = type),
+      onSelected: (v) {
+        _filterPayment = type;
+        _uiTick.value++;
+      },
       selectedColor: AppTheme.primaryColor.withValues(alpha: 0.15),
       checkmarkColor: AppTheme.primaryColor,
       labelStyle: TextStyle(
