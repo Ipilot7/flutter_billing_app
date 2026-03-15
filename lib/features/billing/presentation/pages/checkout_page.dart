@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:billing_app/core/network/backend_session.dart';
+import 'package:billing_app/core/network/backend_v1_client.dart';
 import 'package:billing_app/core/service_locator.dart';
 
 import '../../../shop/presentation/bloc/shop_bloc.dart';
@@ -528,6 +529,12 @@ class _CheckoutPageState extends State<CheckoutPage> {
         terminalId != null;
 
     if (isBackendMode && backendShiftId == null) {
+      final restoredShiftId =
+          await sl<BackendV1Client>().restoreOpenShiftIdForCurrentTerminal();
+      if (restoredShiftId != null) {
+        return (restoredShiftId.toString(), 'backend-cashier');
+      }
+
       messenger.showSnackBar(
         const SnackBar(
           content: Text(

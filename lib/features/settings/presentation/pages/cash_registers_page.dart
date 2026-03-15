@@ -26,7 +26,12 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
   }
 
   Future<List<Map<String, dynamic>>> _loadTerminals() async {
-    final terminals = await _client.fetchTerminals();
+    List<Map<String, dynamic>> terminals;
+    try {
+      terminals = await _client.fetchTerminalsFromSyncPull();
+    } catch (_) {
+      terminals = await _client.fetchTerminals();
+    }
     final storeId = await _session.getStoreId();
 
     if (storeId == null) {

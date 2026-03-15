@@ -35,12 +35,33 @@ class SalesRepositoryImpl implements SalesRepository {
           backendShiftId != null;
 
       if (shouldUseBackend) {
+        final backendProducts = await _backendClient.fetchProducts();
+        final backendIdByBarcode = <String, int>{};
+        for (final product in backendProducts) {
+          final barcode = product['barcode']?.toString();
+          final id = _asInt(product['id']);
+          if (barcode == null || barcode.isEmpty || id == null) continue;
+          backendIdByBarcode[barcode] = id;
+        }
+
         final backendItems = <Map<String, dynamic>>[];
         for (final item in sale.items) {
-          final productId = int.tryParse(item.productId);
+          var productId = int.tryParse(item.productId);
+
+          if (productId == null) {
+            final localProduct = await (_db.select(_db.products)
+                  ..where((t) => t.id.equals(item.productId)))
+                .getSingleOrNull();
+
+            final barcode = localProduct?.barcode;
+            if (barcode != null && barcode.isNotEmpty) {
+              productId = backendIdByBarcode[barcode];
+            }
+          }
+
           if (productId == null) {
             return Left(CacheFailure(
-                'Backend sale requires numeric product ids. Product `${item.productName}` is local-only.'));
+                'Product `${item.productName}` is not synced with backend yet. Sync products first.'));
           }
           backendItems.add({
             'product_id': productId,
@@ -116,6 +137,13 @@ class SalesRepositoryImpl implements SalesRepository {
       default:
         return 'cash';
     }
+  }
+
+  int? _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is String) return int.tryParse(value);
+    if (value is double) return value.toInt();
+    return null;
   }
 
   @override

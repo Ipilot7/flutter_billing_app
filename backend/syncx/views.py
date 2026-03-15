@@ -10,6 +10,7 @@ from catalog.serializers import CategorySerializer, ProductSerializer
 from sales.models import Sale, Shift
 from sales.serializers import SaleSerializer, ShiftSerializer
 from tenancy.models import Terminal
+from tenancy.serializers import TerminalSerializer
 from .handlers import apply_operation
 from .models import SyncOperation
 from .serializers import (
@@ -150,23 +151,27 @@ class SyncPullView(APIView):
 
 		product_qs = Product.objects.all()
 		category_qs = Category.objects.all()
+		terminal_qs = Terminal.objects.select_related('store', 'store__organization').all()
 		shift_qs = Shift.objects.all()
 		sale_qs = Sale.objects.all()
 
 		if org_id:
 			product_qs = product_qs.filter(organization_id=org_id)
 			category_qs = category_qs.filter(organization_id=org_id)
+			terminal_qs = terminal_qs.filter(store__organization_id=org_id)
 			shift_qs = shift_qs.filter(organization_id=org_id)
 			sale_qs = sale_qs.filter(organization_id=org_id)
 
 		if since:
 			product_qs = product_qs.filter(updated_at__gt=since)
 			category_qs = category_qs.filter(created_at__gt=since)
+			terminal_qs = terminal_qs.filter(created_at__gt=since)
 			shift_qs = shift_qs.filter(opened_at__gt=since)
 			sale_qs = sale_qs.filter(created_at__gt=since)
 
 		products = ProductSerializer(product_qs.order_by('id'), many=True).data
 		categories = CategorySerializer(category_qs.order_by('id'), many=True).data
+		terminals = TerminalSerializer(terminal_qs.order_by('id'), many=True).data
 		shifts = ShiftSerializer(shift_qs.order_by('id'), many=True).data
 		sales = SaleSerializer(sale_qs.order_by('id'), many=True).data
 
@@ -177,6 +182,7 @@ class SyncPullView(APIView):
 				'data': {
 					'products': products,
 					'categories': categories,
+					'terminals': terminals,
 					'shifts': shifts,
 					'sales': sales,
 				},

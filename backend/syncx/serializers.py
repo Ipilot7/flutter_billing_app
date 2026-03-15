@@ -36,6 +36,7 @@ class SyncPushResponseSerializer(serializers.Serializer):
 class SyncPullDataSerializer(serializers.Serializer):
     products = serializers.ListField(child=serializers.DictField())
     categories = serializers.ListField(child=serializers.DictField())
+    terminals = serializers.ListField(child=serializers.DictField())
     shifts = serializers.ListField(child=serializers.DictField())
     sales = serializers.ListField(child=serializers.DictField())
 

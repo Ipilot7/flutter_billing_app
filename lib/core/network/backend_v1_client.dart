@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 
 import 'backend_session.dart';
 
@@ -26,6 +27,7 @@ class BackendV1Client {
   final Future<void> Function(int terminalId, int storeId, int organizationId)?
       _saveTerminalContext;
   final Future<void> Function(int shiftId)? _saveShiftId;
+  Future<bool>? _tokenRefreshInFlight;
 
   BackendV1Client(this._session, {Dio? dio})
       : _dio = dio ?? Dio(),
@@ -64,36 +66,16 @@ class BackendV1Client {
 
   void _setupDioLogging() {
     _dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) {
-          if (kDebugMode) {
-            final headers = Map<String, dynamic>.from(options.headers);
-            if (headers.containsKey('Authorization')) {
-              headers['Authorization'] = 'Bearer ***';
-            }
-            debugPrint('[DIO][REQ] ${options.method} ${options.uri}');
-            debugPrint('[DIO][REQ][HEADERS] $headers');
-            debugPrint('[DIO][REQ][BODY] ${options.data}');
-          }
-          handler.next(options);
-        },
-        onResponse: (response, handler) {
-          if (kDebugMode) {
-            debugPrint(
-                '[DIO][RES] ${response.statusCode} ${response.requestOptions.method} ${response.requestOptions.uri}');
-            debugPrint('[DIO][RES][BODY] ${response.data}');
-          }
-          handler.next(response);
-        },
-        onError: (error, handler) {
-          if (kDebugMode) {
-            debugPrint(
-                '[DIO][ERR] ${error.response?.statusCode} ${error.requestOptions.method} ${error.requestOptions.uri}');
-            debugPrint('[DIO][ERR][BODY] ${error.response?.data}');
-            debugPrint('[DIO][ERR][MESSAGE] ${error.message}');
-          }
-          handler.next(error);
-        },
+      PrettyDioLogger(
+        enabled: kDebugMode,
+        request: true,
+        requestHeader: false,
+        requestBody: true,
+        responseHeader: false,
+        responseBody: true,
+        error: true,
+        compact: false,
+        maxWidth: 120,
       ),
     );
   }
@@ -287,21 +269,73 @@ class BackendV1Client {
     required String paymentType,
     required List<Map<String, dynamic>> items,
   }) async {
-    final shiftId = await _readShiftId();
+    var shiftId = await _readShiftId();
+    shiftId ??= await restoreOpenShiftIdForCurrentTerminal();
     if (shiftId == null) {
       throw BackendApiException('No open shift in session. Open shift first.');
     }
 
-    return _post(
-      '/sales/',
-      body: {
-        'shift': shiftId,
-        'receipt_number': receiptNumber,
-        'payment_type': paymentType,
-        'items': items,
-      },
+    try {
+      return await _post(
+        '/sales/',
+        body: {
+          'shift': shiftId,
+          'receipt_number': receiptNumber,
+          'payment_type': paymentType,
+          'items': items,
+        },
+        withAuth: true,
+      );
+    } on BackendApiException catch (e) {
+      final lower = e.message.toLowerCase();
+      final isShiftError = lower.contains('closed shift') ||
+          lower.contains('shift') && lower.contains('open');
+      if (!isShiftError) rethrow;
+
+      final restoredShiftId = await restoreOpenShiftIdForCurrentTerminal();
+      if (restoredShiftId == null || restoredShiftId == shiftId) {
+        rethrow;
+      }
+
+      return _post(
+        '/sales/',
+        body: {
+          'shift': restoredShiftId,
+          'receipt_number': receiptNumber,
+          'payment_type': paymentType,
+          'items': items,
+        },
+        withAuth: true,
+      );
+    }
+  }
+
+  Future<int?> restoreOpenShiftIdForCurrentTerminal() async {
+    final terminalId = await _readTerminalId();
+    if (terminalId == null) return null;
+
+    final response = await _get(
+      '/shifts/',
       withAuth: true,
     );
+
+    if (response is! List) return null;
+
+    for (final item in response.whereType<Map<String, dynamic>>()) {
+      final status = item['status']?.toString().toLowerCase();
+      if (status != 'open') continue;
+
+      final itemTerminalId = _toInt(item['terminal']);
+      if (itemTerminalId != terminalId) continue;
+
+      final foundShiftId = _toInt(item['id']);
+      if (foundShiftId == null) continue;
+
+      await _persistShiftId(foundShiftId);
+      return foundShiftId;
+    }
+
+    return null;
   }
 
   Future<List<Map<String, dynamic>>> fetchProducts() async {
@@ -341,6 +375,29 @@ class BackendV1Client {
     }
 
     throw BackendApiException('Unexpected terminals response format.');
+  }
+
+  Future<List<Map<String, dynamic>>> fetchTerminalsFromSyncPull() async {
+    final response = await _get(
+      '/sync/pull/',
+      withAuth: true,
+    );
+
+    if (response is! Map<String, dynamic>) {
+      throw BackendApiException('Unexpected sync pull response format.');
+    }
+
+    final data = response['data'];
+    if (data is! Map<String, dynamic>) {
+      throw BackendApiException('Sync pull payload is missing data section.');
+    }
+
+    final terminals = data['terminals'];
+    if (terminals is List) {
+      return terminals.whereType<Map<String, dynamic>>().toList();
+    }
+
+    throw BackendApiException('Sync pull payload has invalid terminals list.');
   }
 
   Future<Map<String, dynamic>> updateTerminal({
@@ -512,6 +569,7 @@ class BackendV1Client {
     };
 
     if (withAuth) {
+      await _ensureValidAccessToken();
       final token = await _readAccessToken();
       if (token == null || token.isEmpty) {
         throw BackendApiException('Not authenticated. Perform login first.');
@@ -520,6 +578,75 @@ class BackendV1Client {
     }
 
     return headers;
+  }
+
+  Future<void> _ensureValidAccessToken() async {
+    final accessToken = await _readAccessToken();
+    if (accessToken == null || accessToken.isEmpty) return;
+
+    if (!_isTokenExpiringSoon(accessToken)) return;
+    await _refreshAccessToken();
+  }
+
+  bool _isTokenExpiringSoon(String token, {int skewSeconds = 30}) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return false;
+
+      final payloadBytes = base64Url.decode(base64Url.normalize(parts[1]));
+      final payload = jsonDecode(utf8.decode(payloadBytes));
+      if (payload is! Map<String, dynamic>) return false;
+
+      final expRaw = payload['exp'];
+      final exp = expRaw is int
+          ? expRaw
+          : expRaw is String
+              ? int.tryParse(expRaw)
+              : null;
+      if (exp == null) return false;
+
+      final nowEpoch = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+      return exp <= (nowEpoch + skewSeconds);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> _refreshAccessToken() {
+    final inFlight = _tokenRefreshInFlight;
+    if (inFlight != null) return inFlight;
+
+    final future = _refreshAccessTokenInternal();
+    _tokenRefreshInFlight = future;
+    future.whenComplete(() {
+      if (identical(_tokenRefreshInFlight, future)) {
+        _tokenRefreshInFlight = null;
+      }
+    });
+    return future;
+  }
+
+  Future<bool> _refreshAccessTokenInternal() async {
+    if (_session == null) return false;
+
+    final refreshToken = await _session!.getRefreshToken();
+    if (refreshToken == null || refreshToken.isEmpty) return false;
+
+    try {
+      final response = await _post(
+        '/token/refresh/',
+        body: {'refresh': refreshToken},
+        withAuth: false,
+      );
+
+      final newAccess = response['access']?.toString();
+      if (newAccess == null || newAccess.isEmpty) return false;
+
+      await _session!.saveTokens(access: newAccess, refresh: refreshToken);
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   Map<String, dynamic> _decodeResponse(Response<dynamic> response) {
@@ -584,6 +711,9 @@ class BackendV1Client {
   String _mapErrorMessage(String raw, int statusCode) {
     if (statusCode == 429) {
       return 'Too many failed attempts. Please wait and try again.';
+    }
+    if (raw.contains('token_not_valid') || raw.contains('Token is expired')) {
+      return 'Session expired. Login again.';
     }
     if (raw.contains('Insufficient stock')) {
       return 'Not enough stock for one of the items.';
