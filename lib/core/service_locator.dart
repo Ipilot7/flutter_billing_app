@@ -35,7 +35,7 @@ import 'package:billing_app/core/network/backend_v1_client.dart';
 import 'package:billing_app/core/network/manual_sync_service.dart';
 
 final sl = GetIt.instance;
-const _defaultBackendBaseUrl = 'http://192.168.0.68:8000/api/v1/';
+const _defaultBackendBaseUrl = 'http://192.168.1.39:8000/api/v1/';
 
 Future<void> init() async {
   // Database
