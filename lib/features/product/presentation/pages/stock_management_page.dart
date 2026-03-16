@@ -108,6 +108,7 @@ class _StockManagementPageState extends State<StockManagementPage> {
 
   Widget _buildProductList() {
     return BlocBuilder<ProductBloc, ProductState>(
+      buildWhen: (previous, current) => previous.products != current.products,
       builder: (context, state) {
         final filteredProducts = state.products.where((p) {
           final matchesSearch = p.name.toLowerCase().contains(_searchQuery) ||
@@ -122,14 +123,19 @@ class _StockManagementPageState extends State<StockManagementPage> {
               child: Text(AppLocalizations.of(context)!.noProductsMatch));
         }
 
-        return ListView.separated(
-          padding: const EdgeInsets.all(16),
-          itemCount: filteredProducts.length,
-          separatorBuilder: (context, index) => const Divider(),
-          itemBuilder: (context, index) {
-            final product = filteredProducts[index];
-            return _buildProductItem(product);
+        return RefreshIndicator(
+          onRefresh: () async {
+            context.read<ProductBloc>().add(LoadProducts());
           },
+          child: ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: filteredProducts.length,
+            separatorBuilder: (context, index) => const Divider(),
+            itemBuilder: (context, index) {
+              final product = filteredProducts[index];
+              return _buildProductItem(product);
+            },
+          ),
         );
       },
     );

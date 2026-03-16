@@ -3,6 +3,7 @@ import '../../../../core/data/app_database.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
+import '../mappers/category_mapper.dart';
 
 class CategoryRepositoryImpl implements CategoryRepository {
   final AppDatabase _db;
@@ -13,7 +14,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
   Future<Either<Failure, List<Category>>> getCategories() async {
     try {
       final rows = await _db.getAllCategories();
-      return Right(rows.map((row) => _mapToEntity(row)).toList());
+      return Right(rows.map((row) => row.toDomain()).toList());
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -22,7 +23,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<Either<Failure, void>> addCategory(Category category) async {
     try {
-      await _db.addCategory(_mapToTable(category));
+      await _db.addCategory(category.toTable());
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -32,7 +33,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
   @override
   Future<Either<Failure, void>> updateCategory(Category category) async {
     try {
-      await _db.update(_db.categories).replace(_mapToTable(category));
+      await _db.update(_db.categories).replace(category.toTable());
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -47,23 +48,5 @@ class CategoryRepositoryImpl implements CategoryRepository {
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
-  }
-
-  Category _mapToEntity(CategoryTable table) {
-    return Category(
-      id: table.id,
-      name: table.name,
-      icon: table.icon,
-      colorCode: table.colorCode,
-    );
-  }
-
-  CategoryTable _mapToTable(Category category) {
-    return CategoryTable(
-      id: category.id,
-      name: category.name,
-      icon: category.icon,
-      colorCode: category.colorCode,
-    );
   }
 }

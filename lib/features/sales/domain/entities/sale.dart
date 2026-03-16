@@ -69,6 +69,8 @@ class Sale extends Equatable {
 class SaleItem extends Equatable {
   final String productId;
   final String productName;
+  final String? categoryId;
+  final String? categoryName;
   final double price;
   final double costPrice;
   final double quantity;
@@ -77,6 +79,8 @@ class SaleItem extends Equatable {
   const SaleItem({
     required this.productId,
     required this.productName,
+    this.categoryId,
+    this.categoryName,
     required this.price,
     this.costPrice = 0.0,
     required this.quantity,
@@ -87,6 +91,14 @@ class SaleItem extends Equatable {
   double get profit => total - (costPrice * quantity);
 
   @override
-  List<Object?> get props =>
-      [productId, productName, price, costPrice, quantity, discount];
+  List<Object?> get props => [
+        productId,
+        productName,
+        categoryId,
+        categoryName,
+        price,
+        costPrice,
+        quantity,
+        discount
+      ];
 }

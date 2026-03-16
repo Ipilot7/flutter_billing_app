@@ -10,9 +10,8 @@ import '../../../../core/theme/app_theme.dart';
 import 'package:billing_app/l10n/app_localizations.dart';
 import '../../../measurement_unit/presentation/bloc/unit_bloc.dart';
 import '../../../measurement_unit/presentation/bloc/unit_event.dart';
-import '../../../measurement_unit/presentation/bloc/unit_state.dart';
-import '../bloc/category_bloc.dart';
-import '../bloc/category_state.dart';
+import '../widgets/unit_selector.dart';
+import '../widgets/category_selector.dart';
 
 class EditProductPage extends StatefulWidget {
   final Product product;
@@ -72,6 +71,8 @@ class _EditProductPageState extends State<EditProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
     return ValueListenableBuilder<int>(
       valueListenable: _uiTick,
       builder: (_, __, ___) => Scaffold(
@@ -82,7 +83,7 @@ class _EditProductPageState extends State<EditProductPage> {
                   size: 32, color: Theme.of(context).primaryColor),
               onPressed: () => context.pop(),
             ),
-            title: Text(AppLocalizations.of(context)!.editProduct,
+            title: Text(l.editProduct,
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             centerTitle: true,
@@ -114,10 +115,7 @@ class _EditProductPageState extends State<EditProductPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                  AppLocalizations.of(context)!
-                                      .barcode
-                                      .toUpperCase(),
+                              Text(l.barcode.toUpperCase(),
                                   style: TextStyle(
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,
@@ -135,49 +133,44 @@ class _EditProductPageState extends State<EditProductPage> {
                       ),
                     ),
 
-                    InputLabel(text: AppLocalizations.of(context)!.productName),
-
+                    InputLabel(text: l.productName),
                     TextFormField(
                       initialValue: _name,
                       textCapitalization: TextCapitalization.words,
                       validator: (value) => value == null || value.isEmpty
-                          ? AppLocalizations.of(context)!.pleaseEnterName
+                          ? l.pleaseEnterName
                           : null,
                       onSaved: (value) => _name = value!,
                     ),
                     const SizedBox(height: 24),
 
-                    InputLabel(text: AppLocalizations.of(context)!.price),
-
+                    InputLabel(text: l.price),
                     TextFormField(
                       initialValue: _price.toStringAsFixed(2),
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
-                        prefixText:
-                            '${AppLocalizations.of(context)!.currency} ',
+                        prefixText: '${l.currency} ',
                         prefixStyle: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                             color: Colors.black),
                       ),
                       validator: (value) => value == null || value.isEmpty
-                          ? AppLocalizations.of(context)!.pleaseEnterPrice
+                          ? l.pleaseEnterPrice
                           : null,
                       onSaved: (value) =>
                           _price = double.tryParse(value ?? '0') ?? 0.0,
                     ),
                     const SizedBox(height: 24),
 
-                    InputLabel(text: AppLocalizations.of(context)!.costPrice),
-
+                    InputLabel(text: l.costPrice),
                     TextFormField(
                       initialValue: _costPrice.toStringAsFixed(2),
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
-                        prefixText:
-                            '${AppLocalizations.of(context)!.currency} ',
+                        prefixText: '${l.currency} ',
                         prefixStyle: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -188,8 +181,7 @@ class _EditProductPageState extends State<EditProductPage> {
                     ),
                     const SizedBox(height: 24),
 
-                    InputLabel(text: AppLocalizations.of(context)!.stock),
-
+                    InputLabel(text: l.stock),
                     TextFormField(
                       initialValue: _stock % 1 == 0
                           ? _stock.toInt().toString()
@@ -200,91 +192,23 @@ class _EditProductPageState extends State<EditProductPage> {
                           _stock = double.tryParse(value ?? '0') ?? 0.0,
                     ),
                     const SizedBox(height: 24),
-                    InputLabel(
-                        text: AppLocalizations.of(context)!.measurementUnit),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: BlocBuilder<UnitBloc, UnitState>(
-                            builder: (context, state) {
-                              List<String> units = [
-                                AppLocalizations.of(context)!.unitDefault
-                              ];
-                              if (state is UnitLoaded) {
-                                units = state.units
-                                    .map((u) => u.shortName)
-                                    .toList();
-                                if (!units.contains(
-                                    AppLocalizations.of(context)!
-                                        .unitDefault)) {
-                                  units.insert(
-                                      0,
-                                      AppLocalizations.of(context)!
-                                          .unitDefault);
-                                }
-                              }
 
-                              if (!units.contains(_unit)) {
-                                _unit = units.first;
-                              }
-
-                              return DropdownButtonFormField<String>(
-                                initialValue: _unit,
-                                decoration: const InputDecoration(
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                ),
-                                items: units
-                                    .map((u) => DropdownMenuItem(
-                                        value: u, child: Text(u)))
-                                    .toList(),
-                                onChanged: (val) {
-                                  _unit = val!;
-                                  _uiTick.value++;
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.add,
-                                color: AppTheme.primaryColor),
-                            onPressed: () => _showAddUnitDialog(context),
-                            padding: const EdgeInsets.all(14),
-                          ),
-                        ),
-                      ],
+                    InputLabel(text: l.measurementUnit),
+                    UnitSelector(
+                      selectedUnit: _unit,
+                      onChanged: (val) {
+                        _unit = val;
+                        _uiTick.value++;
+                      },
                     ),
                     const SizedBox(height: 24),
-                    InputLabel(
-                        text: AppLocalizations.of(context)!.selectCategory),
-                    BlocBuilder<CategoryBloc, CategoryState>(
-                      builder: (context, state) {
-                        return DropdownButtonFormField<String>(
-                          initialValue: _categoryId,
-                          decoration: const InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                          ),
-                          hint: Text(
-                              AppLocalizations.of(context)!.selectCategory),
-                          items: state.categories
-                              .map((c) => DropdownMenuItem(
-                                    value: c.id,
-                                    child: Text(c.name),
-                                  ))
-                              .toList(),
-                          onChanged: (val) {
-                            _categoryId = val;
-                            _uiTick.value++;
-                          },
-                        );
+
+                    InputLabel(text: l.selectCategory),
+                    CategorySelector(
+                      selectedCategoryId: _categoryId,
+                      onChanged: (val) {
+                        _categoryId = val;
+                        _uiTick.value++;
                       },
                     ),
                   ],
@@ -295,54 +219,8 @@ class _EditProductPageState extends State<EditProductPage> {
           bottomNavigationBar: PrimaryButton(
             onPressed: _submit,
             icon: Icons.save,
-            label: AppLocalizations.of(context)!.saveChanges,
+            label: l.saveChanges,
           )),
-    );
-  }
-
-  void _showAddUnitDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final shortNameController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.addUnit),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.unitNameLabel),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: shortNameController,
-              decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.unitShortNameLabel),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(AppLocalizations.of(context)!.cancel)),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty &&
-                  shortNameController.text.isNotEmpty) {
-                context.read<UnitBloc>().add(AddUnitEvent(
-                      name: nameController.text,
-                      shortName: shortNameController.text,
-                    ));
-                Navigator.pop(ctx);
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.add),
-          ),
-        ],
-      ),
     );
   }
 }

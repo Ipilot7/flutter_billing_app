@@ -3,6 +3,7 @@ import '../../../../core/data/app_database.dart';
 import '../../../../core/error/failure.dart';
 import '../../domain/entities/product.dart';
 import '../../domain/repositories/product_repository.dart';
+import '../mappers/product_mapper.dart';
 
 class ProductRepositoryImpl implements ProductRepository {
   final AppDatabase _db;
@@ -13,7 +14,7 @@ class ProductRepositoryImpl implements ProductRepository {
   Future<Either<Failure, List<Product>>> getProducts() async {
     try {
       final rows = await _db.getAllProducts();
-      return Right(rows.map((row) => _mapToEntity(row)).toList());
+      return Right(rows.map((row) => row.toDomain()).toList());
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -28,7 +29,7 @@ class ProductRepositoryImpl implements ProductRepository {
       if (rows.isEmpty) {
         return const Left(CacheFailure('Product not found'));
       }
-      return Right(_mapToEntity(rows.first));
+      return Right(rows.first.toDomain());
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
@@ -37,7 +38,7 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, void>> addProduct(Product product) async {
     try {
-      await _db.addProduct(_mapToTable(product));
+      await _db.addProduct(product.toTable());
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -47,7 +48,7 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<Either<Failure, void>> updateProduct(Product product) async {
     try {
-      await _db.updateProduct(_mapToTable(product));
+      await _db.updateProduct(product.toTable());
       return const Right(null);
     } catch (e) {
       return Left(CacheFailure(e.toString()));
@@ -62,31 +63,5 @@ class ProductRepositoryImpl implements ProductRepository {
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }
-  }
-
-  Product _mapToEntity(ProductTable table) {
-    return Product(
-      id: table.id,
-      name: table.name,
-      barcode: table.barcode,
-      price: table.price,
-      costPrice: table.costPrice,
-      stock: table.stock,
-      unit: table.unit,
-      categoryId: table.categoryId,
-    );
-  }
-
-  ProductTable _mapToTable(Product product) {
-    return ProductTable(
-      id: product.id,
-      name: product.name,
-      barcode: product.barcode,
-      price: product.price,
-      costPrice: product.costPrice,
-      stock: product.stock,
-      unit: product.unit,
-      categoryId: product.categoryId,
-    );
   }
 }

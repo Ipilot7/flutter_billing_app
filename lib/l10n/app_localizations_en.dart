@@ -636,4 +636,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get restoreConfirm =>
       'Are you sure you want to restore the database? Current data will be overwritten.';
+
+  @override
+  String get salesByCategory => 'Sales by Category';
+
+  @override
+  String get changeBtn => 'Change';
 }

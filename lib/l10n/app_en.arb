@@ -205,5 +205,6 @@
   "backupSuccess": "Backup created successfully!",
   "restoreSuccess": "Database restored successfully! Please restart the app.",
   "restoreConfirm": "Are you sure you want to restore the database? Current data will be overwritten.",
-  "change": "Change"
+  "salesByCategory": "Sales by Category",
+  "changeBtn": "Change"
 }

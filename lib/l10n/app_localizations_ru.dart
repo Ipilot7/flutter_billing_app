@@ -637,4 +637,10 @@ class AppLocalizationsRu extends AppLocalizations {
   @override
   String get restoreConfirm =>
       'Вы уверены, что хотите восстановить базу данных? Текущие данные будут перезаписаны.';
+
+  @override
+  String get salesByCategory => 'Продажи по категориям';
+
+  @override
+  String get changeBtn => 'Изменить';
 }

@@ -5,6 +5,7 @@ import '../bloc/product_bloc.dart';
 import '../../domain/entities/product.dart';
 import '../../../../core/theme/app_theme.dart';
 import 'package:billing_app/l10n/app_localizations.dart';
+import '../widgets/product_card.dart';
 
 class ProductListPage extends StatefulWidget {
   const ProductListPage({super.key});
@@ -53,8 +54,6 @@ class _ProductListPageState extends State<ProductListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = Colors.grey[100]!;
-
     return ValueListenableBuilder<int>(
       valueListenable: _uiTick,
       builder: (_, __, ___) => Scaffold(
@@ -134,6 +133,9 @@ class _ProductListPageState extends State<ProductListPage> {
 
             Expanded(
               child: BlocConsumer<ProductBloc, ProductState>(
+                buildWhen: (previous, current) =>
+                    previous.products != current.products ||
+                    previous.status != current.status,
                 listener: (context, state) {
                   if (state.status == ProductStatus.success &&
                       state.message != null) {
@@ -179,127 +181,28 @@ class _ProductListPageState extends State<ProductListPage> {
                             AppLocalizations.of(context)!.noProductsMatch));
                   }
 
-                  return ListView.separated(
-                    padding: const EdgeInsets.only(
-                        left: 16, right: 16, top: 8, bottom: 100),
-                    itemCount: filteredProducts.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final product = filteredProducts[index];
-                      return Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: borderColor),
-                          boxShadow: const [
-                            BoxShadow(
-                                color: Colors.black12,
-                                blurRadius: 4,
-                                offset: Offset(0, 2))
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(16),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    product.name,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        '${AppLocalizations.of(context)!.currency} ${product.price.toStringAsFixed(2)}',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.w500,
-                                            color: Colors.grey[600]),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '/ ${product.unit}',
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[500]),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        '${AppLocalizations.of(context)!.stock}: ',
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey[500]),
-                                      ),
-                                      Text(
-                                        product.stock % 1 == 0
-                                            ? product.stock.toInt().toString()
-                                            : product.stock.toStringAsFixed(2),
-                                        style: TextStyle(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                            color: product.stock < 5
-                                                ? Colors.red
-                                                : Colors.green),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.primaryColor
-                                        .withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: IconButton(
-                                    icon: const Icon(Icons.edit_rounded,
-                                        color: AppTheme.primaryColor, size: 20),
-                                    constraints: const BoxConstraints(),
-                                    padding: const EdgeInsets.all(8),
-                                    onPressed: () {
-                                      context.push(
-                                          '/products/edit/${product.id}',
-                                          extra: product);
-                                    },
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Container(
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: IconButton(
-                                    icon: const Icon(
-                                        Icons.delete_outline_rounded,
-                                        color: Colors.red,
-                                        size: 20),
-                                    constraints: const BoxConstraints(),
-                                    padding: const EdgeInsets.all(8),
-                                    onPressed: () =>
-                                        _confirmDelete(context, product),
-                                  ),
-                                ),
-                              ],
-                            )
-                          ],
-                        ),
-                      );
+                  return RefreshIndicator(
+                    onRefresh: () async {
+                      context.read<ProductBloc>().add(LoadProducts());
                     },
+                    child: ListView.separated(
+                      padding: const EdgeInsets.only(
+                          left: 16, right: 16, top: 8, bottom: 100),
+                      itemCount: filteredProducts.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final product = filteredProducts[index];
+                        return ProductCard(
+                          product: product,
+                          onEdit: () {
+                            context.push('/products/edit/${product.id}',
+                                extra: product);
+                          },
+                          onDelete: () => _confirmDelete(context, product),
+                        );
+                      },
+                    ),
                   );
                 },
               ),

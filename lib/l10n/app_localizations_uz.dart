@@ -638,4 +638,10 @@ class AppLocalizationsUz extends AppLocalizations {
   @override
   String get restoreConfirm =>
       'Ma\'lumotlarni tiklashni xohlaysizmi? Joriy ma\'lumotlar o\'chib ketadi.';
+
+  @override
+  String get salesByCategory => 'Kategoriyalar bo\'yicha sotuvlar';
+
+  @override
+  String get changeBtn => 'O\'zgartirish';
 }

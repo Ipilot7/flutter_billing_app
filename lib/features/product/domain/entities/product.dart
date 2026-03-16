@@ -9,6 +9,7 @@ class Product extends Equatable {
   final String unit;
   final double stock;
   final String? categoryId;
+  final String? categoryName;
 
   const Product({
     required this.id,
@@ -19,6 +20,7 @@ class Product extends Equatable {
     this.unit = 'шт',
     this.stock = 0.0,
     this.categoryId,
+    this.categoryName,
   });
 
   Product copyWith({

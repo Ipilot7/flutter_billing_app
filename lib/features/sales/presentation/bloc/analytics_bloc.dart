@@ -31,18 +31,16 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
         double totalProfit = 0;
         final Map<String, double> topProducts = {};
         final Map<int, double> salesByPayment = {0: 0, 1: 0, 2: 0};
+        final Map<String, double> salesByCategory = {};
 
         for (final sale in sales) {
           if (sale.isReturned) {
-            // Subtract return amount, profit is slightly trickier but usually returns reduce profit too.
-            // Simplified: treat return as negative sale.
             totalRevenue += sale.totalAmount;
-            // Profit for returned items
             for (final item in sale.items) {
-              totalProfit -=
-                  item.profit; // item.profit is (price*qty)-disc-(cost*qty)
-              // For returns, price and qty should be consistent with Sale?
-              // SaleRepositoryImpl returnSale just negates totalAmount.
+              totalProfit -= item.profit;
+              final catName = item.categoryName ?? 'Uncategorized';
+              salesByCategory[catName] =
+                  (salesByCategory[catName] ?? 0) + item.total;
             }
             continue;
           }
@@ -53,6 +51,10 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
             totalProfit += item.profit;
             topProducts[item.productName] =
                 (topProducts[item.productName] ?? 0) + item.total;
+
+            final catName = item.categoryName ?? 'Uncategorized';
+            salesByCategory[catName] =
+                (salesByCategory[catName] ?? 0) + item.total;
           }
 
           salesByPayment[sale.paymentType] =
@@ -69,6 +71,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
           totalProfit: totalProfit,
           topProducts: sortedProducts,
           salesByPayment: salesByPayment,
+          salesByCategory: salesByCategory,
         ));
       },
     );

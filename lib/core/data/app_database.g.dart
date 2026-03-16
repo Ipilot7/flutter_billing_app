@@ -327,9 +327,24 @@ class $ProductsTable extends Products
       requiredDuringInsert: false,
       defaultConstraints:
           GeneratedColumn.constraintIsAlways('REFERENCES categories (id)'));
+  static const VerificationMeta _categoryNameMeta =
+      const VerificationMeta('categoryName');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, barcode, price, costPrice, stock, unit, categoryId];
+  late final GeneratedColumn<String> categoryName = GeneratedColumn<String>(
+      'category_name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        name,
+        barcode,
+        price,
+        costPrice,
+        stock,
+        unit,
+        categoryId,
+        categoryName
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -381,6 +396,12 @@ class $ProductsTable extends Products
           categoryId.isAcceptableOrUnknown(
               data['category_id']!, _categoryIdMeta));
     }
+    if (data.containsKey('category_name')) {
+      context.handle(
+          _categoryNameMeta,
+          categoryName.isAcceptableOrUnknown(
+              data['category_name']!, _categoryNameMeta));
+    }
     return context;
   }
 
@@ -406,6 +427,8 @@ class $ProductsTable extends Products
           .read(DriftSqlType.string, data['${effectivePrefix}unit'])!,
       categoryId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}category_id']),
+      categoryName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category_name']),
     );
   }
 
@@ -424,6 +447,7 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
   final double stock;
   final String unit;
   final String? categoryId;
+  final String? categoryName;
   const ProductTable(
       {required this.id,
       required this.name,
@@ -432,7 +456,8 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
       required this.costPrice,
       required this.stock,
       required this.unit,
-      this.categoryId});
+      this.categoryId,
+      this.categoryName});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -445,6 +470,9 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
     map['unit'] = Variable<String>(unit);
     if (!nullToAbsent || categoryId != null) {
       map['category_id'] = Variable<String>(categoryId);
+    }
+    if (!nullToAbsent || categoryName != null) {
+      map['category_name'] = Variable<String>(categoryName);
     }
     return map;
   }
@@ -461,6 +489,9 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
       categoryId: categoryId == null && nullToAbsent
           ? const Value.absent()
           : Value(categoryId),
+      categoryName: categoryName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryName),
     );
   }
 
@@ -476,6 +507,7 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
       stock: serializer.fromJson<double>(json['stock']),
       unit: serializer.fromJson<String>(json['unit']),
       categoryId: serializer.fromJson<String?>(json['categoryId']),
+      categoryName: serializer.fromJson<String?>(json['categoryName']),
     );
   }
   @override
@@ -490,6 +522,7 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
       'stock': serializer.toJson<double>(stock),
       'unit': serializer.toJson<String>(unit),
       'categoryId': serializer.toJson<String?>(categoryId),
+      'categoryName': serializer.toJson<String?>(categoryName),
     };
   }
 
@@ -501,7 +534,8 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
           double? costPrice,
           double? stock,
           String? unit,
-          Value<String?> categoryId = const Value.absent()}) =>
+          Value<String?> categoryId = const Value.absent(),
+          Value<String?> categoryName = const Value.absent()}) =>
       ProductTable(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -511,6 +545,8 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
         stock: stock ?? this.stock,
         unit: unit ?? this.unit,
         categoryId: categoryId.present ? categoryId.value : this.categoryId,
+        categoryName:
+            categoryName.present ? categoryName.value : this.categoryName,
       );
   ProductTable copyWithCompanion(ProductsCompanion data) {
     return ProductTable(
@@ -523,6 +559,9 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
       unit: data.unit.present ? data.unit.value : this.unit,
       categoryId:
           data.categoryId.present ? data.categoryId.value : this.categoryId,
+      categoryName: data.categoryName.present
+          ? data.categoryName.value
+          : this.categoryName,
     );
   }
 
@@ -536,14 +575,15 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
           ..write('costPrice: $costPrice, ')
           ..write('stock: $stock, ')
           ..write('unit: $unit, ')
-          ..write('categoryId: $categoryId')
+          ..write('categoryId: $categoryId, ')
+          ..write('categoryName: $categoryName')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, barcode, price, costPrice, stock, unit, categoryId);
+  int get hashCode => Object.hash(id, name, barcode, price, costPrice, stock,
+      unit, categoryId, categoryName);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -555,7 +595,8 @@ class ProductTable extends DataClass implements Insertable<ProductTable> {
           other.costPrice == this.costPrice &&
           other.stock == this.stock &&
           other.unit == this.unit &&
-          other.categoryId == this.categoryId);
+          other.categoryId == this.categoryId &&
+          other.categoryName == this.categoryName);
 }
 
 class ProductsCompanion extends UpdateCompanion<ProductTable> {
@@ -567,6 +608,7 @@ class ProductsCompanion extends UpdateCompanion<ProductTable> {
   final Value<double> stock;
   final Value<String> unit;
   final Value<String?> categoryId;
+  final Value<String?> categoryName;
   final Value<int> rowid;
   const ProductsCompanion({
     this.id = const Value.absent(),
@@ -577,6 +619,7 @@ class ProductsCompanion extends UpdateCompanion<ProductTable> {
     this.stock = const Value.absent(),
     this.unit = const Value.absent(),
     this.categoryId = const Value.absent(),
+    this.categoryName = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProductsCompanion.insert({
@@ -588,6 +631,7 @@ class ProductsCompanion extends UpdateCompanion<ProductTable> {
     this.stock = const Value.absent(),
     this.unit = const Value.absent(),
     this.categoryId = const Value.absent(),
+    this.categoryName = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         name = Value(name),
@@ -602,6 +646,7 @@ class ProductsCompanion extends UpdateCompanion<ProductTable> {
     Expression<double>? stock,
     Expression<String>? unit,
     Expression<String>? categoryId,
+    Expression<String>? categoryName,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -613,6 +658,7 @@ class ProductsCompanion extends UpdateCompanion<ProductTable> {
       if (stock != null) 'stock': stock,
       if (unit != null) 'unit': unit,
       if (categoryId != null) 'category_id': categoryId,
+      if (categoryName != null) 'category_name': categoryName,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -626,6 +672,7 @@ class ProductsCompanion extends UpdateCompanion<ProductTable> {
       Value<double>? stock,
       Value<String>? unit,
       Value<String?>? categoryId,
+      Value<String?>? categoryName,
       Value<int>? rowid}) {
     return ProductsCompanion(
       id: id ?? this.id,
@@ -636,6 +683,7 @@ class ProductsCompanion extends UpdateCompanion<ProductTable> {
       stock: stock ?? this.stock,
       unit: unit ?? this.unit,
       categoryId: categoryId ?? this.categoryId,
+      categoryName: categoryName ?? this.categoryName,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -667,6 +715,9 @@ class ProductsCompanion extends UpdateCompanion<ProductTable> {
     if (categoryId.present) {
       map['category_id'] = Variable<String>(categoryId.value);
     }
+    if (categoryName.present) {
+      map['category_name'] = Variable<String>(categoryName.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -684,6 +735,7 @@ class ProductsCompanion extends UpdateCompanion<ProductTable> {
           ..write('stock: $stock, ')
           ..write('unit: $unit, ')
           ..write('categoryId: $categoryId, ')
+          ..write('categoryName: $categoryName, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2192,6 +2244,18 @@ class $SaleItemsTable extends SaleItems
   late final GeneratedColumn<String> productName = GeneratedColumn<String>(
       'product_name', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _categoryIdMeta =
+      const VerificationMeta('categoryId');
+  @override
+  late final GeneratedColumn<String> categoryId = GeneratedColumn<String>(
+      'category_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _categoryNameMeta =
+      const VerificationMeta('categoryName');
+  @override
+  late final GeneratedColumn<String> categoryName = GeneratedColumn<String>(
+      'category_name', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   static const VerificationMeta _priceMeta = const VerificationMeta('price');
   @override
   late final GeneratedColumn<double> price = GeneratedColumn<double>(
@@ -2225,6 +2289,8 @@ class $SaleItemsTable extends SaleItems
         saleId,
         productId,
         productName,
+        categoryId,
+        categoryName,
         price,
         quantity,
         discount,
@@ -2263,6 +2329,18 @@ class $SaleItemsTable extends SaleItems
     } else if (isInserting) {
       context.missing(_productNameMeta);
     }
+    if (data.containsKey('category_id')) {
+      context.handle(
+          _categoryIdMeta,
+          categoryId.isAcceptableOrUnknown(
+              data['category_id']!, _categoryIdMeta));
+    }
+    if (data.containsKey('category_name')) {
+      context.handle(
+          _categoryNameMeta,
+          categoryName.isAcceptableOrUnknown(
+              data['category_name']!, _categoryNameMeta));
+    }
     if (data.containsKey('price')) {
       context.handle(
           _priceMeta, price.isAcceptableOrUnknown(data['price']!, _priceMeta));
@@ -2300,6 +2378,10 @@ class $SaleItemsTable extends SaleItems
           .read(DriftSqlType.string, data['${effectivePrefix}product_id'])!,
       productName: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}product_name'])!,
+      categoryId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category_id']),
+      categoryName: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}category_name']),
       price: attachedDatabase.typeMapping
           .read(DriftSqlType.double, data['${effectivePrefix}price'])!,
       quantity: attachedDatabase.typeMapping
@@ -2322,6 +2404,8 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
   final String saleId;
   final String productId;
   final String productName;
+  final String? categoryId;
+  final String? categoryName;
   final double price;
   final double quantity;
   final double discount;
@@ -2331,6 +2415,8 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
       required this.saleId,
       required this.productId,
       required this.productName,
+      this.categoryId,
+      this.categoryName,
       required this.price,
       required this.quantity,
       required this.discount,
@@ -2342,6 +2428,12 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
     map['sale_id'] = Variable<String>(saleId);
     map['product_id'] = Variable<String>(productId);
     map['product_name'] = Variable<String>(productName);
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<String>(categoryId);
+    }
+    if (!nullToAbsent || categoryName != null) {
+      map['category_name'] = Variable<String>(categoryName);
+    }
     map['price'] = Variable<double>(price);
     map['quantity'] = Variable<double>(quantity);
     map['discount'] = Variable<double>(discount);
@@ -2355,6 +2447,12 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
       saleId: Value(saleId),
       productId: Value(productId),
       productName: Value(productName),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
+      categoryName: categoryName == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryName),
       price: Value(price),
       quantity: Value(quantity),
       discount: Value(discount),
@@ -2370,6 +2468,8 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
       saleId: serializer.fromJson<String>(json['saleId']),
       productId: serializer.fromJson<String>(json['productId']),
       productName: serializer.fromJson<String>(json['productName']),
+      categoryId: serializer.fromJson<String?>(json['categoryId']),
+      categoryName: serializer.fromJson<String?>(json['categoryName']),
       price: serializer.fromJson<double>(json['price']),
       quantity: serializer.fromJson<double>(json['quantity']),
       discount: serializer.fromJson<double>(json['discount']),
@@ -2384,6 +2484,8 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
       'saleId': serializer.toJson<String>(saleId),
       'productId': serializer.toJson<String>(productId),
       'productName': serializer.toJson<String>(productName),
+      'categoryId': serializer.toJson<String?>(categoryId),
+      'categoryName': serializer.toJson<String?>(categoryName),
       'price': serializer.toJson<double>(price),
       'quantity': serializer.toJson<double>(quantity),
       'discount': serializer.toJson<double>(discount),
@@ -2396,6 +2498,8 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
           String? saleId,
           String? productId,
           String? productName,
+          Value<String?> categoryId = const Value.absent(),
+          Value<String?> categoryName = const Value.absent(),
           double? price,
           double? quantity,
           double? discount,
@@ -2405,6 +2509,9 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
         saleId: saleId ?? this.saleId,
         productId: productId ?? this.productId,
         productName: productName ?? this.productName,
+        categoryId: categoryId.present ? categoryId.value : this.categoryId,
+        categoryName:
+            categoryName.present ? categoryName.value : this.categoryName,
         price: price ?? this.price,
         quantity: quantity ?? this.quantity,
         discount: discount ?? this.discount,
@@ -2417,6 +2524,11 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
       productId: data.productId.present ? data.productId.value : this.productId,
       productName:
           data.productName.present ? data.productName.value : this.productName,
+      categoryId:
+          data.categoryId.present ? data.categoryId.value : this.categoryId,
+      categoryName: data.categoryName.present
+          ? data.categoryName.value
+          : this.categoryName,
       price: data.price.present ? data.price.value : this.price,
       quantity: data.quantity.present ? data.quantity.value : this.quantity,
       discount: data.discount.present ? data.discount.value : this.discount,
@@ -2431,6 +2543,8 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
           ..write('saleId: $saleId, ')
           ..write('productId: $productId, ')
           ..write('productName: $productName, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('categoryName: $categoryName, ')
           ..write('price: $price, ')
           ..write('quantity: $quantity, ')
           ..write('discount: $discount, ')
@@ -2440,8 +2554,8 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id, saleId, productId, productName, price, quantity, discount, costPrice);
+  int get hashCode => Object.hash(id, saleId, productId, productName,
+      categoryId, categoryName, price, quantity, discount, costPrice);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -2450,6 +2564,8 @@ class SaleItemTable extends DataClass implements Insertable<SaleItemTable> {
           other.saleId == this.saleId &&
           other.productId == this.productId &&
           other.productName == this.productName &&
+          other.categoryId == this.categoryId &&
+          other.categoryName == this.categoryName &&
           other.price == this.price &&
           other.quantity == this.quantity &&
           other.discount == this.discount &&
@@ -2461,6 +2577,8 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItemTable> {
   final Value<String> saleId;
   final Value<String> productId;
   final Value<String> productName;
+  final Value<String?> categoryId;
+  final Value<String?> categoryName;
   final Value<double> price;
   final Value<double> quantity;
   final Value<double> discount;
@@ -2470,6 +2588,8 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItemTable> {
     this.saleId = const Value.absent(),
     this.productId = const Value.absent(),
     this.productName = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.categoryName = const Value.absent(),
     this.price = const Value.absent(),
     this.quantity = const Value.absent(),
     this.discount = const Value.absent(),
@@ -2480,6 +2600,8 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItemTable> {
     required String saleId,
     required String productId,
     required String productName,
+    this.categoryId = const Value.absent(),
+    this.categoryName = const Value.absent(),
     required double price,
     required double quantity,
     this.discount = const Value.absent(),
@@ -2494,6 +2616,8 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItemTable> {
     Expression<String>? saleId,
     Expression<String>? productId,
     Expression<String>? productName,
+    Expression<String>? categoryId,
+    Expression<String>? categoryName,
     Expression<double>? price,
     Expression<double>? quantity,
     Expression<double>? discount,
@@ -2504,6 +2628,8 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItemTable> {
       if (saleId != null) 'sale_id': saleId,
       if (productId != null) 'product_id': productId,
       if (productName != null) 'product_name': productName,
+      if (categoryId != null) 'category_id': categoryId,
+      if (categoryName != null) 'category_name': categoryName,
       if (price != null) 'price': price,
       if (quantity != null) 'quantity': quantity,
       if (discount != null) 'discount': discount,
@@ -2516,6 +2642,8 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItemTable> {
       Value<String>? saleId,
       Value<String>? productId,
       Value<String>? productName,
+      Value<String?>? categoryId,
+      Value<String?>? categoryName,
       Value<double>? price,
       Value<double>? quantity,
       Value<double>? discount,
@@ -2525,6 +2653,8 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItemTable> {
       saleId: saleId ?? this.saleId,
       productId: productId ?? this.productId,
       productName: productName ?? this.productName,
+      categoryId: categoryId ?? this.categoryId,
+      categoryName: categoryName ?? this.categoryName,
       price: price ?? this.price,
       quantity: quantity ?? this.quantity,
       discount: discount ?? this.discount,
@@ -2546,6 +2676,12 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItemTable> {
     }
     if (productName.present) {
       map['product_name'] = Variable<String>(productName.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<String>(categoryId.value);
+    }
+    if (categoryName.present) {
+      map['category_name'] = Variable<String>(categoryName.value);
     }
     if (price.present) {
       map['price'] = Variable<double>(price.value);
@@ -2569,6 +2705,8 @@ class SaleItemsCompanion extends UpdateCompanion<SaleItemTable> {
           ..write('saleId: $saleId, ')
           ..write('productId: $productId, ')
           ..write('productName: $productName, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('categoryName: $categoryName, ')
           ..write('price: $price, ')
           ..write('quantity: $quantity, ')
           ..write('discount: $discount, ')
@@ -3042,6 +3180,7 @@ typedef $$ProductsTableCreateCompanionBuilder = ProductsCompanion Function({
   Value<double> stock,
   Value<String> unit,
   Value<String?> categoryId,
+  Value<String?> categoryName,
   Value<int> rowid,
 });
 typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
@@ -3053,6 +3192,7 @@ typedef $$ProductsTableUpdateCompanionBuilder = ProductsCompanion Function({
   Value<double> stock,
   Value<String> unit,
   Value<String?> categoryId,
+  Value<String?> categoryName,
   Value<int> rowid,
 });
 
@@ -3106,6 +3246,9 @@ class $$ProductsTableFilterComposer
   ColumnFilters<String> get unit => $composableBuilder(
       column: $table.unit, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get categoryName => $composableBuilder(
+      column: $table.categoryName, builder: (column) => ColumnFilters(column));
+
   $$CategoriesTableFilterComposer get categoryId {
     final $$CategoriesTableFilterComposer composer = $composerBuilder(
         composer: this,
@@ -3157,6 +3300,10 @@ class $$ProductsTableOrderingComposer
   ColumnOrderings<String> get unit => $composableBuilder(
       column: $table.unit, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get categoryName => $composableBuilder(
+      column: $table.categoryName,
+      builder: (column) => ColumnOrderings(column));
+
   $$CategoriesTableOrderingComposer get categoryId {
     final $$CategoriesTableOrderingComposer composer = $composerBuilder(
         composer: this,
@@ -3207,6 +3354,9 @@ class $$ProductsTableAnnotationComposer
 
   GeneratedColumn<String> get unit =>
       $composableBuilder(column: $table.unit, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryName => $composableBuilder(
+      column: $table.categoryName, builder: (column) => column);
 
   $$CategoriesTableAnnotationComposer get categoryId {
     final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
@@ -3260,6 +3410,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             Value<double> stock = const Value.absent(),
             Value<String> unit = const Value.absent(),
             Value<String?> categoryId = const Value.absent(),
+            Value<String?> categoryName = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ProductsCompanion(
@@ -3271,6 +3422,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             stock: stock,
             unit: unit,
             categoryId: categoryId,
+            categoryName: categoryName,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -3282,6 +3434,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             Value<double> stock = const Value.absent(),
             Value<String> unit = const Value.absent(),
             Value<String?> categoryId = const Value.absent(),
+            Value<String?> categoryName = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ProductsCompanion.insert(
@@ -3293,6 +3446,7 @@ class $$ProductsTableTableManager extends RootTableManager<
             stock: stock,
             unit: unit,
             categoryId: categoryId,
+            categoryName: categoryName,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -4353,6 +4507,8 @@ typedef $$SaleItemsTableCreateCompanionBuilder = SaleItemsCompanion Function({
   required String saleId,
   required String productId,
   required String productName,
+  Value<String?> categoryId,
+  Value<String?> categoryName,
   required double price,
   required double quantity,
   Value<double> discount,
@@ -4363,6 +4519,8 @@ typedef $$SaleItemsTableUpdateCompanionBuilder = SaleItemsCompanion Function({
   Value<String> saleId,
   Value<String> productId,
   Value<String> productName,
+  Value<String?> categoryId,
+  Value<String?> categoryName,
   Value<double> price,
   Value<double> quantity,
   Value<double> discount,
@@ -4405,6 +4563,12 @@ class $$SaleItemsTableFilterComposer
 
   ColumnFilters<String> get productName => $composableBuilder(
       column: $table.productName, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get categoryId => $composableBuilder(
+      column: $table.categoryId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get categoryName => $composableBuilder(
+      column: $table.categoryName, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<double> get price => $composableBuilder(
       column: $table.price, builder: (column) => ColumnFilters(column));
@@ -4457,6 +4621,13 @@ class $$SaleItemsTableOrderingComposer
   ColumnOrderings<String> get productName => $composableBuilder(
       column: $table.productName, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get categoryId => $composableBuilder(
+      column: $table.categoryId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get categoryName => $composableBuilder(
+      column: $table.categoryName,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<double> get price => $composableBuilder(
       column: $table.price, builder: (column) => ColumnOrderings(column));
 
@@ -4507,6 +4678,12 @@ class $$SaleItemsTableAnnotationComposer
 
   GeneratedColumn<String> get productName => $composableBuilder(
       column: $table.productName, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryId => $composableBuilder(
+      column: $table.categoryId, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryName => $composableBuilder(
+      column: $table.categoryName, builder: (column) => column);
 
   GeneratedColumn<double> get price =>
       $composableBuilder(column: $table.price, builder: (column) => column);
@@ -4568,6 +4745,8 @@ class $$SaleItemsTableTableManager extends RootTableManager<
             Value<String> saleId = const Value.absent(),
             Value<String> productId = const Value.absent(),
             Value<String> productName = const Value.absent(),
+            Value<String?> categoryId = const Value.absent(),
+            Value<String?> categoryName = const Value.absent(),
             Value<double> price = const Value.absent(),
             Value<double> quantity = const Value.absent(),
             Value<double> discount = const Value.absent(),
@@ -4578,6 +4757,8 @@ class $$SaleItemsTableTableManager extends RootTableManager<
             saleId: saleId,
             productId: productId,
             productName: productName,
+            categoryId: categoryId,
+            categoryName: categoryName,
             price: price,
             quantity: quantity,
             discount: discount,
@@ -4588,6 +4769,8 @@ class $$SaleItemsTableTableManager extends RootTableManager<
             required String saleId,
             required String productId,
             required String productName,
+            Value<String?> categoryId = const Value.absent(),
+            Value<String?> categoryName = const Value.absent(),
             required double price,
             required double quantity,
             Value<double> discount = const Value.absent(),
@@ -4598,6 +4781,8 @@ class $$SaleItemsTableTableManager extends RootTableManager<
             saleId: saleId,
             productId: productId,
             productName: productName,
+            categoryId: categoryId,
+            categoryName: categoryName,
             price: price,
             quantity: quantity,
             discount: discount,

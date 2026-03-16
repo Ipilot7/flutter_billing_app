@@ -11,9 +11,8 @@ import '../../../../core/theme/app_theme.dart';
 import 'package:billing_app/l10n/app_localizations.dart';
 import '../../../measurement_unit/presentation/bloc/unit_bloc.dart';
 import '../../../measurement_unit/presentation/bloc/unit_event.dart';
-import '../../../measurement_unit/presentation/bloc/unit_state.dart';
-import '../bloc/category_bloc.dart';
-import '../bloc/category_state.dart';
+import '../widgets/unit_selector.dart';
+import '../widgets/category_selector.dart';
 
 class AddProductPage extends StatefulWidget {
   const AddProductPage({super.key});
@@ -98,6 +97,8 @@ class _AddProductPageState extends State<AddProductPage> {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context)!;
+
     return ValueListenableBuilder<int>(
       valueListenable: _uiTick,
       builder: (_, __, ___) => Scaffold(
@@ -109,7 +110,7 @@ class _AddProductPageState extends State<AddProductPage> {
                   size: 28, color: Theme.of(context).primaryColor),
               onPressed: () => context.pop(),
             ),
-            title: Text(AppLocalizations.of(context)!.addProduct,
+            title: Text(l.addProduct,
                 style:
                     const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
             centerTitle: true,
@@ -122,7 +123,7 @@ class _AddProductPageState extends State<AddProductPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    InputLabel(text: AppLocalizations.of(context)!.barcode),
+                    InputLabel(text: l.barcode),
                     Row(
                       children: [
                         Expanded(
@@ -130,11 +131,10 @@ class _AddProductPageState extends State<AddProductPage> {
                             key: ValueKey(_barcode),
                             initialValue: _barcode,
                             decoration: InputDecoration(
-                              hintText: AppLocalizations.of(context)!
-                                  .scanOrEnterBarcode,
+                              hintText: l.scanOrEnterBarcode,
                             ),
                             validator: (value) => value == null || value.isEmpty
-                                ? AppLocalizations.of(context)!.enterBarcode
+                                ? l.enterBarcode
                                 : null,
                             onSaved: (value) => _barcode = value!,
                           ),
@@ -155,54 +155,48 @@ class _AddProductPageState extends State<AddProductPage> {
                       ],
                     ),
                     const SizedBox(height: 6),
-                    Text(AppLocalizations.of(context)!.scanIconHint,
+                    Text(l.scanIconHint,
                         style: const TextStyle(
                             fontSize: 12, color: Color(0xFF4C669A))),
                     const SizedBox(height: 24),
                     const SizedBox(height: 24),
-                    InputLabel(text: AppLocalizations.of(context)!.productName),
+                    InputLabel(text: l.productName),
                     TextFormField(
-                      decoration: InputDecoration(
-                        hintText: AppLocalizations.of(context)!.namePlaceholder,
-                      ),
+                      decoration: InputDecoration(hintText: l.namePlaceholder),
                       textCapitalization: TextCapitalization.words,
                       validator: (value) => value == null || value.isEmpty
-                          ? AppLocalizations.of(context)!.pleaseEnterName
+                          ? l.pleaseEnterName
                           : null,
                       onSaved: (value) => _name = value!,
                     ),
                     const SizedBox(height: 24),
                     const SizedBox(height: 24),
-                    InputLabel(text: AppLocalizations.of(context)!.price),
+                    InputLabel(text: l.price),
                     TextFormField(
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
-                        hintText:
-                            AppLocalizations.of(context)!.pricePlaceholder,
-                        prefixText:
-                            '${AppLocalizations.of(context)!.currency} ',
+                        hintText: l.pricePlaceholder,
+                        prefixText: '${l.currency} ',
                         prefixStyle: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
                             color: Colors.black),
                       ),
                       validator: (value) => value == null || value.isEmpty
-                          ? AppLocalizations.of(context)!.pleaseEnterPrice
+                          ? l.pleaseEnterPrice
                           : null,
                       onSaved: (value) =>
                           _price = double.tryParse(value ?? '0') ?? 0.0,
                     ),
                     const SizedBox(height: 24),
-                    InputLabel(text: AppLocalizations.of(context)!.costPrice),
+                    InputLabel(text: l.costPrice),
                     TextFormField(
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
-                        hintText:
-                            AppLocalizations.of(context)!.pricePlaceholder,
-                        prefixText:
-                            '${AppLocalizations.of(context)!.currency} ',
+                        hintText: l.pricePlaceholder,
+                        prefixText: '${l.currency} ',
                         prefixStyle: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w500,
@@ -212,103 +206,31 @@ class _AddProductPageState extends State<AddProductPage> {
                           _costPrice = double.tryParse(value ?? '0') ?? 0.0,
                     ),
                     const SizedBox(height: 24),
-                    InputLabel(text: AppLocalizations.of(context)!.stock),
+                    InputLabel(text: l.stock),
                     TextFormField(
                       keyboardType:
                           const TextInputType.numberWithOptions(decimal: true),
-                      decoration: const InputDecoration(
-                        hintText: '0',
-                      ),
+                      decoration: const InputDecoration(hintText: '0'),
                       onSaved: (value) =>
                           _stock = double.tryParse(value ?? '0') ?? 0.0,
                     ),
                     const SizedBox(height: 24),
                     const SizedBox(height: 24),
-                    InputLabel(
-                        text: AppLocalizations.of(context)!.measurementUnit),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: BlocBuilder<UnitBloc, UnitState>(
-                            builder: (context, state) {
-                              List<String> units = [
-                                AppLocalizations.of(context)!.unitDefault
-                              ];
-                              if (state is UnitLoaded) {
-                                units = state.units
-                                    .map((u) => u.shortName)
-                                    .toList();
-                                if (!units.contains(
-                                    AppLocalizations.of(context)!
-                                        .unitDefault)) {
-                                  units.insert(
-                                      0,
-                                      AppLocalizations.of(context)!
-                                          .unitDefault);
-                                }
-                              }
-
-                              if (!units.contains(_unit)) {
-                                _unit = units.first;
-                              }
-
-                              return DropdownButtonFormField<String>(
-                                initialValue: _unit,
-                                decoration: const InputDecoration(
-                                  contentPadding: EdgeInsets.symmetric(
-                                      horizontal: 12, vertical: 8),
-                                ),
-                                items: units
-                                    .map((u) => DropdownMenuItem(
-                                        value: u, child: Text(u)))
-                                    .toList(),
-                                onChanged: (val) {
-                                  _unit = val!;
-                                  _uiTick.value++;
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: AppTheme.primaryColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: IconButton(
-                            icon: const Icon(Icons.add,
-                                color: AppTheme.primaryColor),
-                            onPressed: () => _showAddUnitDialog(context),
-                            padding: const EdgeInsets.all(14),
-                          ),
-                        ),
-                      ],
+                    InputLabel(text: l.measurementUnit),
+                    UnitSelector(
+                      selectedUnit: _unit,
+                      onChanged: (val) {
+                        _unit = val;
+                        _uiTick.value++;
+                      },
                     ),
                     const SizedBox(height: 24),
-                    InputLabel(
-                        text: AppLocalizations.of(context)!.selectCategory),
-                    BlocBuilder<CategoryBloc, CategoryState>(
-                      builder: (context, state) {
-                        return DropdownButtonFormField<String>(
-                          initialValue: _categoryId,
-                          decoration: const InputDecoration(
-                            contentPadding: EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                          ),
-                          hint: Text(
-                              AppLocalizations.of(context)!.selectCategory),
-                          items: state.categories
-                              .map((c) => DropdownMenuItem(
-                                    value: c.id,
-                                    child: Text(c.name),
-                                  ))
-                              .toList(),
-                          onChanged: (val) {
-                            _categoryId = val;
-                            _uiTick.value++;
-                          },
-                        );
+                    InputLabel(text: l.selectCategory),
+                    CategorySelector(
+                      selectedCategoryId: _categoryId,
+                      onChanged: (val) {
+                        _categoryId = val;
+                        _uiTick.value++;
                       },
                     ),
                   ],
@@ -319,54 +241,8 @@ class _AddProductPageState extends State<AddProductPage> {
           bottomNavigationBar: PrimaryButton(
             onPressed: _submit,
             icon: Icons.add_circle,
-            label: AppLocalizations.of(context)!.addProduct,
+            label: l.addProduct,
           )),
-    );
-  }
-
-  void _showAddUnitDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    final shortNameController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.addUnit),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: nameController,
-              decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.unitNameLabel),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: shortNameController,
-              decoration: InputDecoration(
-                  labelText: AppLocalizations.of(context)!.unitShortNameLabel),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(AppLocalizations.of(context)!.cancel)),
-          ElevatedButton(
-            onPressed: () {
-              if (nameController.text.isNotEmpty &&
-                  shortNameController.text.isNotEmpty) {
-                context.read<UnitBloc>().add(AddUnitEvent(
-                      name: nameController.text,
-                      shortName: shortNameController.text,
-                    ));
-                Navigator.pop(ctx);
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.add),
-          ),
-        ],
-      ),
     );
   }
 }

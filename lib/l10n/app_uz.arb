@@ -205,5 +205,7 @@
   "restoreDatabaseSubtitle": "Zaxira faylidan import qilish",
   "backupSuccess": "Zaxira nusxasi muvaffaqiyatli yaratildi!",
   "restoreSuccess": "Ma'lumotlar muvaffaqiyatli tiklandi! Iltimos, ilovani qayta ishga tushiring.",
-  "restoreConfirm": "Ma'lumotlarni tiklashni xohlaysizmi? Joriy ma'lumotlar o'chib ketadi."
+  "restoreConfirm": "Ma'lumotlarni tiklashni xohlaysizmi? Joriy ma'lumotlar o'chib ketadi.",
+  "salesByCategory": "Kategoriyalar bo'yicha sotuvlar",
+  "changeBtn": "O'zgartirish"
 }

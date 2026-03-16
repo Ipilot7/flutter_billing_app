@@ -1,8 +1,9 @@
-import 'package:fpdart/fpdart.dart';
 import 'package:drift/drift.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:billing_app/core/error/failure.dart';
 import 'package:billing_app/features/sales/domain/entities/sale.dart';
 import 'package:billing_app/core/data/app_database.dart';
+import '../mappers/sale_mapper.dart';
 
 abstract class SalesRepository {
   Future<Either<Failure, Sale>> createSale(Sale sale);
@@ -39,11 +40,11 @@ class SalesRepositoryImpl implements SalesRepository {
               .replace(product.copyWith(stock: newStock));
         }
 
-        await _db.into(_db.sales).insert(_mapToTable(sale));
+        await _db.into(_db.sales).insert(sale.toTable());
         for (var item in sale.items) {
           await _db
               .into(_db.saleItems)
-              .insert(_mapItemToCompanion(sale.id, item));
+              .insert(item.toCompanion(sale.id));
         }
       });
       return Right(sale);
@@ -69,7 +70,8 @@ class SalesRepositoryImpl implements SalesRepository {
         final itemRows = await (_db.select(_db.saleItems)
               ..where((t) => t.saleId.equals(row.id)))
             .get();
-        sales.add(_mapToEntity(row, itemRows));
+        final items = itemRows.map((i) => i.toDomain()).toList();
+        sales.add(row.toDomain(items));
       }
 
       if (from != null) {
@@ -97,7 +99,8 @@ class SalesRepositoryImpl implements SalesRepository {
       final itemRows = await (_db.select(_db.saleItems)
             ..where((t) => t.saleId.equals(id)))
           .get();
-      return Right(_mapToEntity(row, itemRows));
+      final items = itemRows.map((i) => i.toDomain()).toList();
+      return Right(row.toDomain(items));
     } catch (e) {
       return Left(CacheFailure('Failed to get sale: $e'));
     }
@@ -137,12 +140,12 @@ class SalesRepositoryImpl implements SalesRepository {
       );
 
       await _db.transaction(() async {
-        await _db.into(_db.sales).insert(_mapToTable(returnedSale));
+        await _db.into(_db.sales).insert(returnedSale.toTable());
 
         for (final item in existingSale.items) {
           await _db
               .into(_db.saleItems)
-              .insert(_mapItemToCompanion(returnedSale.id, item));
+              .insert(item.toCompanion(returnedSale.id));
 
           final productRow = await (_db.select(_db.products)
                 ..where((t) => t.id.equals(item.productId)))
@@ -158,57 +161,5 @@ class SalesRepositoryImpl implements SalesRepository {
     } catch (e) {
       return Left(CacheFailure('Failed to return sale: $e'));
     }
-  }
-
-  Sale _mapToEntity(SaleTable table, List<SaleItemTable> items) {
-    return Sale(
-      id: table.id,
-      createdAt: table.createdAt,
-      shiftId: table.shiftId,
-      openedBy: table.openedBy,
-      items: items.map((i) => _mapItemToEntity(i)).toList(),
-      totalAmount: table.totalAmount,
-      paymentType: table.paymentType,
-      isReturned: table.isReturned,
-      returnedSaleId: table.returnedSaleId,
-      globalDiscount: table.globalDiscount,
-    );
-  }
-
-  SaleTable _mapToTable(Sale sale) {
-    return SaleTable(
-      id: sale.id,
-      createdAt: sale.createdAt,
-      shiftId: sale.shiftId,
-      openedBy: sale.openedBy,
-      totalAmount: sale.totalAmount,
-      paymentType: sale.paymentType,
-      isReturned: sale.isReturned,
-      returnedSaleId: sale.returnedSaleId,
-      globalDiscount: sale.globalDiscount,
-    );
-  }
-
-  SaleItem _mapItemToEntity(SaleItemTable table) {
-    return SaleItem(
-      productId: table.productId,
-      productName: table.productName,
-      price: table.price,
-      quantity: table.quantity,
-      discount: table.discount,
-      costPrice: table.costPrice,
-    );
-  }
-
-  SaleItemsCompanion _mapItemToCompanion(String saleId, SaleItem item) {
-    return SaleItemsCompanion.insert(
-      saleId: saleId,
-      productId: item.productId,
-      productName: item.productName,
-      price: item.price,
-      quantity: item.quantity,
-      discount: Value(item.discount),
-      costPrice: Value(item.costPrice),
-    );
   }
 }

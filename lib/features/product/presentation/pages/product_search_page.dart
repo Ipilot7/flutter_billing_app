@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/product_bloc.dart';
 import '../bloc/category_bloc.dart';
 import '../bloc/category_state.dart';
-import '../../domain/entities/product.dart';
 import '../../../billing/presentation/bloc/billing_bloc.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../widgets/search_product_card.dart';
 import 'package:billing_app/l10n/app_localizations.dart';
 
 class ProductSearchPage extends StatefulWidget {
@@ -116,7 +116,9 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   }
 
   Widget _buildProductGrid() {
+    final l = AppLocalizations.of(context)!;
     return BlocBuilder<ProductBloc, ProductState>(
+      buildWhen: (previous, current) => previous.products != current.products,
       builder: (context, state) {
         final filteredProducts = state.products.where((p) {
           final matchesSearch = p.name.toLowerCase().contains(_searchQuery) ||
@@ -127,8 +129,7 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
         }).toList();
 
         if (filteredProducts.isEmpty) {
-          return Center(
-              child: Text(AppLocalizations.of(context)!.noProductsMatch));
+          return Center(child: Text(l.noProductsMatch));
         }
 
         return GridView.builder(
@@ -142,108 +143,22 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
           itemCount: filteredProducts.length,
           itemBuilder: (context, index) {
             final product = filteredProducts[index];
-            return _buildProductCard(product);
+            return SearchProductCard(
+              product: product,
+              onTap: () {
+                context.read<BillingBloc>().add(ScanBarcodeEvent(product.barcode));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(l.productAddedToCart(product.name)),
+                    duration: const Duration(seconds: 1),
+                    behavior: SnackBarBehavior.floating,
+                  ),
+                );
+              },
+            );
           },
         );
       },
-    );
-  }
-
-  Widget _buildProductCard(Product product) {
-    return InkWell(
-      onTap: () {
-        context.read<BillingBloc>().add(ScanBarcodeEvent(product.barcode));
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-                AppLocalizations.of(context)!.productAddedToCart(product.name)),
-            duration: const Duration(seconds: 1),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-          border: Border.all(color: Colors.grey[100]!),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryColor.withValues(alpha: 0.05),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(16)),
-                ),
-                child: Center(
-                  child: Icon(Icons.inventory_2_outlined,
-                      size: 48,
-                      color: AppTheme.primaryColor.withValues(alpha: 0.5)),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    product.name,
-                    style: const TextStyle(
-                        fontWeight: FontWeight.bold, fontSize: 14),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${product.price.toStringAsFixed(2)} ${AppLocalizations.of(context)!.currency}',
-                        style: const TextStyle(
-                          color: AppTheme.primaryColor,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 15,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: product.stock <= 5
-                              ? Colors.red[50]
-                              : Colors.green[50],
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          '${product.stock.toInt()} ${product.unit}',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: product.stock <= 5
-                                ? Colors.red
-                                : Colors.green[700],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

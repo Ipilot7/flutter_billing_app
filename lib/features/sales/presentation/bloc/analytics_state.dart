@@ -16,6 +16,7 @@ class AnalyticsLoaded extends AnalyticsState {
   final double totalProfit;
   final Map<String, double> topProducts; // name -> revenue
   final Map<int, double> salesByPayment; // type -> revenue
+  final Map<String, double> salesByCategory; // name -> revenue
 
   const AnalyticsLoaded({
     required this.sales,
@@ -23,11 +24,18 @@ class AnalyticsLoaded extends AnalyticsState {
     required this.totalProfit,
     required this.topProducts,
     required this.salesByPayment,
+    required this.salesByCategory,
   });
 
   @override
-  List<Object?> get props =>
-      [sales, totalRevenue, totalProfit, topProducts, salesByPayment];
+  List<Object?> get props => [
+        sales,
+        totalRevenue,
+        totalProfit,
+        topProducts,
+        salesByPayment,
+        salesByCategory
+      ];
 }
 
 class AnalyticsError extends AnalyticsState {

@@ -29,6 +29,7 @@ class Products extends Table {
   RealColumn get stock => real().withDefault(const Constant(0.0))();
   TextColumn get unit => text().withDefault(const Constant('шт'))();
   TextColumn get categoryId => text().nullable().references(Categories, #id)();
+  TextColumn get categoryName => text().nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -90,6 +91,8 @@ class SaleItems extends Table {
   TextColumn get saleId => text().references(Sales, #id)();
   TextColumn get productId => text()();
   TextColumn get productName => text()();
+  TextColumn get categoryId => text().nullable()();
+  TextColumn get categoryName => text().nullable()();
   RealColumn get price => real()();
   RealColumn get quantity => real()();
   RealColumn get discount => real().withDefault(const Constant(0.0))();

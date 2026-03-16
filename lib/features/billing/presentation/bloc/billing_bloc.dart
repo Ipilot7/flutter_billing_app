@@ -182,6 +182,8 @@ class BillingBloc extends Bloc<BillingEvent, BillingState> {
         .map((item) => SaleItem(
               productId: item.product.id,
               productName: item.product.name,
+              categoryId: item.product.categoryId,
+              categoryName: item.product.categoryName,
               price: item.price,
               costPrice: item.product.costPrice,
               quantity: item.quantity,

@@ -1317,6 +1317,18 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Вы уверены, что хотите восстановить базу данных? Текущие данные будут перезаписаны.'**
   String get restoreConfirm;
+
+  /// No description provided for @salesByCategory.
+  ///
+  /// In ru, this message translates to:
+  /// **'Продажи по категориям'**
+  String get salesByCategory;
+
+  /// No description provided for @changeBtn.
+  ///
+  /// In ru, this message translates to:
+  /// **'Изменить'**
+  String get changeBtn;
 }
 
 class _AppLocalizationsDelegate
