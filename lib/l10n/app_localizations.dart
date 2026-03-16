@@ -316,6 +316,18 @@ abstract class AppLocalizations {
   /// **'Цена'**
   String get price;
 
+  /// No description provided for @username.
+  ///
+  /// In ru, this message translates to:
+  /// **'Имя пользователя'**
+  String get username;
+
+  /// No description provided for @password.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пароль'**
+  String get password;
+
   /// No description provided for @measurementUnits.
   ///
   /// In ru, this message translates to:
@@ -519,6 +531,90 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'Кассир'**
   String get cashier;
+
+  /// No description provided for @owner.
+  ///
+  /// In ru, this message translates to:
+  /// **'Владелец'**
+  String get owner;
+
+  /// No description provided for @login.
+  ///
+  /// In ru, this message translates to:
+  /// **'Войти'**
+  String get login;
+
+  /// No description provided for @loginTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход'**
+  String get loginTitle;
+
+  /// No description provided for @showDeviceQr.
+  ///
+  /// In ru, this message translates to:
+  /// **'Показать QR устройства'**
+  String get showDeviceQr;
+
+  /// No description provided for @cashierPin.
+  ///
+  /// In ru, this message translates to:
+  /// **'PIN кассира'**
+  String get cashierPin;
+
+  /// No description provided for @ownerLogin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход владельца'**
+  String get ownerLogin;
+
+  /// No description provided for @cashierLogin.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вход кассира'**
+  String get cashierLogin;
+
+  /// No description provided for @logout.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выйти'**
+  String get logout;
+
+  /// No description provided for @logoutConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы уверены, что хотите выйти?'**
+  String get logoutConfirm;
+
+  /// No description provided for @syncData.
+  ///
+  /// In ru, this message translates to:
+  /// **'Синхронизировать данные'**
+  String get syncData;
+
+  /// No description provided for @syncDataSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Отправить и получить актуальные данные'**
+  String get syncDataSubtitle;
+
+  /// No description provided for @loggingOut.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выход из аккаунта...'**
+  String get loggingOut;
+
+  /// No description provided for @clearSession.
+  ///
+  /// In ru, this message translates to:
+  /// **'Очистить сессию'**
+  String get clearSession;
+
+  /// No description provided for @account.
+  ///
+  /// In ru, this message translates to:
+  /// **'Аккаунт'**
+  String get account;
 
   /// No description provided for @history.
   ///
@@ -819,6 +915,108 @@ abstract class AppLocalizations {
   /// In ru, this message translates to:
   /// **'ОБЩИЙ ИТОГ'**
   String get grandTotal;
+
+  /// No description provided for @terminals.
+  ///
+  /// In ru, this message translates to:
+  /// **'Кассы'**
+  String get terminals;
+
+  /// No description provided for @renameTerminal.
+  ///
+  /// In ru, this message translates to:
+  /// **'Переименовать кассу'**
+  String get renameTerminal;
+
+  /// No description provided for @terminalName.
+  ///
+  /// In ru, this message translates to:
+  /// **'Название кассы'**
+  String get terminalName;
+
+  /// No description provided for @terminalNameUpdated.
+  ///
+  /// In ru, this message translates to:
+  /// **'Название кассы обновлено'**
+  String get terminalNameUpdated;
+
+  /// No description provided for @terminalActivated.
+  ///
+  /// In ru, this message translates to:
+  /// **'Касса активирована'**
+  String get terminalActivated;
+
+  /// No description provided for @terminalDeactivated.
+  ///
+  /// In ru, this message translates to:
+  /// **'Касса деактивирована'**
+  String get terminalDeactivated;
+
+  /// No description provided for @deleteTerminalTitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Удалить кассу'**
+  String get deleteTerminalTitle;
+
+  /// No description provided for @deleteTerminalConfirm.
+  ///
+  /// In ru, this message translates to:
+  /// **'Вы уверены, что хотите удалить эту кассу?'**
+  String get deleteTerminalConfirm;
+
+  /// No description provided for @terminalDeleted.
+  ///
+  /// In ru, this message translates to:
+  /// **'Касса удалена'**
+  String get terminalDeleted;
+
+  /// No description provided for @errorLoadingTerminals.
+  ///
+  /// In ru, this message translates to:
+  /// **'Не удалось загрузить список касс'**
+  String get errorLoadingTerminals;
+
+  /// No description provided for @noTerminalsFound.
+  ///
+  /// In ru, this message translates to:
+  /// **'Пока нет добавленных касс'**
+  String get noTerminalsFound;
+
+  /// No description provided for @active.
+  ///
+  /// In ru, this message translates to:
+  /// **'Активна'**
+  String get active;
+
+  /// No description provided for @inactive.
+  ///
+  /// In ru, this message translates to:
+  /// **'Неактивна'**
+  String get inactive;
+
+  /// No description provided for @rename.
+  ///
+  /// In ru, this message translates to:
+  /// **'Переименовать'**
+  String get rename;
+
+  /// No description provided for @deactivate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Деактивировать'**
+  String get deactivate;
+
+  /// No description provided for @activate.
+  ///
+  /// In ru, this message translates to:
+  /// **'Активировать'**
+  String get activate;
+
+  /// No description provided for @logoutSubtitle.
+  ///
+  /// In ru, this message translates to:
+  /// **'Выйти через интернет и очистить сессию'**
+  String get logoutSubtitle;
 
   /// No description provided for @shopDetailsNotLoaded.
   ///

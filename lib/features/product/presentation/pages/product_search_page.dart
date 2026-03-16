@@ -23,6 +23,13 @@ class _ProductSearchPageState extends State<ProductSearchPage> {
   void _refreshUi() => _uiTick.value++;
 
   @override
+  void initState() {
+    super.initState();
+    // Load products when page opens
+    context.read<ProductBloc>().add(LoadProducts());
+  }
+
+  @override
   void dispose() {
     _uiTick.dispose();
     super.dispose();

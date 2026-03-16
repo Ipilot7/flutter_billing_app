@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 
 import 'package:billing_app/features/settings/presentation/bloc/auth_flow_cubits.dart';
 import 'package:billing_app/core/service_locator.dart';
@@ -55,13 +56,13 @@ class _OwnerLoginPageState extends State<OwnerLoginPage> {
             children: [
               TextField(
                 controller: _usernameController,
-                decoration: const InputDecoration(labelText: 'Username'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.username),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Password'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.password),
               ),
               const SizedBox(height: 16),
               FilledButton(
@@ -77,13 +78,13 @@ class _OwnerLoginPageState extends State<OwnerLoginPage> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Войти как владелец'),
+                    : Text(AppLocalizations.of(context)!.ownerLogin),
               ),
               if (!widget.embedded) ...[
                 const SizedBox(height: 10),
                 TextButton(
                   onPressed: () => context.go('/cashier-login'),
-                  child: const Text('Перейти ко входу кассира'),
+                  child: Text(AppLocalizations.of(context)!.cashierLogin),
                 ),
               ],
             ],
@@ -94,7 +95,7 @@ class _OwnerLoginPageState extends State<OwnerLoginPage> {
           }
 
           return Scaffold(
-            appBar: AppBar(title: const Text('Вход владельца')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.ownerLogin)),
             body: content,
           );
         },

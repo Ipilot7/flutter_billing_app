@@ -92,10 +92,6 @@ class SaleCreateSerializer(serializers.ModelSerializer):
                     raise serializers.ValidationError('Line total cannot be negative.')
 
                 new_stock = product.stock - quantity
-                if new_stock < 0:
-                    raise serializers.ValidationError(
-                        f'Insufficient stock for product id={product.id}.'
-                    )
 
                 subtotal += unit_price * quantity
                 discount_total += discount

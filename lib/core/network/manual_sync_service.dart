@@ -24,6 +24,7 @@ class ManualSyncResult {
   final int updatedProducts;
   final bool terminalMissing;
   final bool backendShiftMissing;
+  final List<String> failureReasons;
 
   const ManualSyncResult({
     required this.preparedCategoryOperations,
@@ -41,6 +42,7 @@ class ManualSyncResult {
     required this.updatedProducts,
     required this.terminalMissing,
     required this.backendShiftMissing,
+    required this.failureReasons,
   });
 
   String get summary {
@@ -59,6 +61,16 @@ class ManualSyncResult {
     }
     if (backendShiftMissing) {
       lines.add('Чеки не отправлены: на сервере нет открытой смены');
+    }
+
+    if (failureReasons.isNotEmpty) {
+      lines.add('Ошибки при отправке:');
+      for (final reason in failureReasons.take(5)) {
+        lines.add('  - $reason');
+      }
+      if (failureReasons.length > 5) {
+        lines.add('  ... и еще ${failureReasons.length - 5} ошибок');
+      }
     }
 
     return lines.join('\n');
@@ -94,6 +106,7 @@ class ManualSyncService {
     var failedOperations = 0;
     var terminalMissing = false;
     var backendShiftMissing = false;
+    final failureReasons = <String>[];
 
     final organizationId = await _session.getOrganizationId();
     var terminalId = await _session.getTerminalId();
@@ -290,7 +303,15 @@ class ManualSyncService {
 
       final failed = response['failed'];
       if (failed is List) {
-        failedOperations = failed.length;
+        for (final failedItem in failed) {
+          failedOperations++;
+          if (failedItem is Map<String, dynamic>) {
+            final error = failedItem['error']?.toString();
+            if (error != null && error.isNotEmpty) {
+              failureReasons.add(error);
+            }
+          }
+        }
       }
     }
 
@@ -427,6 +448,7 @@ class ManualSyncService {
       updatedProducts: updatedLocal,
       terminalMissing: terminalMissing,
       backendShiftMissing: backendShiftMissing,
+      failureReasons: failureReasons,
     );
   }
 
@@ -438,14 +460,36 @@ class ManualSyncService {
   }
 
   Future<String?> _resolveBackendShiftId() async {
-    final currentShiftId = await _session.getCurrentShiftId();
-    if (currentShiftId != null) {
-      return currentShiftId.toString();
-    }
-
+    // First, try to find an existing open shift on the backend
     final restoredShiftId =
         await _client.restoreOpenShiftIdForCurrentTerminal();
-    return restoredShiftId?.toString();
+    if (restoredShiftId != null) {
+      return restoredShiftId.toString();
+    }
+
+    // If no open shift on backend, check if there's a local open shift
+    // and try to create it on the backend
+    try {
+      final localShiftQuery = _db.select(_db.shifts)
+        ..where((t) => t.status.equals(0));
+      final localShift = await localShiftQuery.getSingleOrNull();
+
+      if (localShift != null) {
+        // Try to create the shift on the backend
+        final response = await _client.openShift(
+          startBalance: localShift.startBalance.toDouble(),
+        );
+        final backendShiftId = response['id'];
+        if (backendShiftId != null) {
+          return backendShiftId.toString();
+        }
+      }
+    } catch (e) {
+      // If shift creation fails, continue without it
+      // (might fail due to permissions or shift already exists)
+    }
+
+    return null;
   }
 
   Future<int?> _resolveTerminalIdForSync() async {

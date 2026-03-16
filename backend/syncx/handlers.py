@@ -3,7 +3,7 @@ from decimal import Decimal
 from django.db import transaction
 
 from catalog.models import Category, Product
-from sales.models import Sale, SaleItem
+from sales.models import Sale, SaleItem, Shift
 
 
 def _to_decimal(value, default='0'):
@@ -90,6 +90,20 @@ def apply_sale_create(*, terminal, payload, user):
     if not shift_id:
         raise ValueError('sale.create requires shift_id')
 
+    # Validate shift exists and is open
+    shift = Shift.objects.filter(
+        id=shift_id,
+        organization=terminal.store.organization,
+        store=terminal.store,
+        terminal=terminal,
+    ).first()
+    
+    if shift is None:
+        raise ValueError('Shift not found or does not belong to this terminal')
+    
+    if shift.status != 'open':
+        raise ValueError('Shift is not open. Cannot create sale.')
+
     with transaction.atomic():
         sale = Sale.objects.create(
             organization=terminal.store.organization,
@@ -128,8 +142,6 @@ def apply_sale_create(*, terminal, payload, user):
                 raise ValueError('Item quantity must be > 0')
 
             new_stock = product.stock - quantity
-            if new_stock < 0:
-                raise ValueError(f'Insufficient stock for product {product.id}')
 
             product.stock = new_stock
             product.save(update_fields=['stock', 'updated_at'])
@@ -173,6 +185,20 @@ def apply_sale_return(*, terminal, payload, user):
         shift_id = payload.get('shift_id')
         if not shift_id:
             raise ValueError('sale.return requires shift_id')
+
+        # Validate shift exists and is open
+        shift = Shift.objects.filter(
+            id=shift_id,
+            organization=terminal.store.organization,
+            store=terminal.store,
+            terminal=terminal,
+        ).first()
+        
+        if shift is None:
+            raise ValueError('Shift not found or does not belong to this terminal')
+        
+        if shift.status != 'open':
+            raise ValueError('Shift is not open. Cannot create return.')
 
         ret = Sale.objects.create(
             organization=terminal.store.organization,

@@ -33,10 +33,7 @@ class SalesRepositoryImpl implements SalesRepository {
           }
 
           final newStock = product.stock - item.quantity;
-          if (newStock < 0) {
-            throw Exception('Insufficient stock for ${item.productName}');
-          }
-
+          
           await _db
               .update(_db.products)
               .replace(product.copyWith(stock: newStock));

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 
 import 'package:billing_app/features/settings/presentation/bloc/auth_flow_cubits.dart';
 import 'package:billing_app/core/service_locator.dart';
@@ -73,13 +74,13 @@ class _CashierLoginPageState extends State<CashierLoginPage> {
               OutlinedButton.icon(
                 onPressed: () => _showDeviceQr(state.deviceId),
                 icon: const Icon(Icons.qr_code_2),
-                label: const Text('Показать QR устройства'),
+                label: Text(AppLocalizations.of(context)!.showDeviceQr),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: _pinController,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'PIN кассира'),
+                decoration: InputDecoration(labelText: AppLocalizations.of(context)!.cashierPin),
               ),
               const SizedBox(height: 16),
               FilledButton(
@@ -95,13 +96,13 @@ class _CashierLoginPageState extends State<CashierLoginPage> {
                         height: 18,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : const Text('Войти'),
+                    : Text(AppLocalizations.of(context)!.login),
               ),
               if (!widget.embedded) ...[
                 const SizedBox(height: 10),
                 TextButton(
                   onPressed: () => context.go('/owner-login'),
-                  child: const Text('Вход владельца'),
+                  child: Text(AppLocalizations.of(context)!.ownerLogin),
                 ),
               ],
             ],
@@ -112,7 +113,7 @@ class _CashierLoginPageState extends State<CashierLoginPage> {
           }
 
           return Scaffold(
-            appBar: AppBar(title: const Text('Вход кассира')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.cashierLogin)),
             body: content,
           );
         },

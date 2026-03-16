@@ -308,13 +308,13 @@ class _SettingsPageState extends State<SettingsPage> {
 
             const SizedBox(height: 24),
 
-            _buildSectionHeader('Аккаунт'),
+            _buildSectionHeader(AppLocalizations.of(context)!.account),
             _buildListGroup(
               children: [
                 _buildListItem(
                   icon: Icons.sync,
-                  title: 'Синхронизировать данные',
-                  subtitle: 'Отправить и получить актуальные данные',
+                  title: AppLocalizations.of(context)!.syncData,
+                  subtitle: AppLocalizations.of(context)!.syncDataSubtitle,
                   trailingWidget: _syncInProgress
                       ? const SizedBox(
                           width: 22,
@@ -328,8 +328,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 _buildDivider(),
                 _buildListItem(
                   icon: Icons.logout,
-                  title: 'Выйти',
-                  subtitle: 'Выйти через интернет и очистить сессию',
+                  title: AppLocalizations.of(context)!.logout,
+                  subtitle: AppLocalizations.of(context)!.logoutSubtitle,
                   trailingIcon: null,
                   onTap: () => _handleLogout(context),
                 ),
@@ -569,9 +569,9 @@ class _SettingsPageState extends State<SettingsPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Выход из аккаунта'),
+        title: Text(AppLocalizations.of(context)!.logout),
         content:
-            const Text('Выполнить выход через интернет и очистить сессию?'),
+            Text(AppLocalizations.of(context)!.logoutConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -579,7 +579,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Выйти'),
+            child: Text(AppLocalizations.of(context)!.logout),
           ),
         ],
       ),

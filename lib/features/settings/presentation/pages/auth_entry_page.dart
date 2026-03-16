@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 
 import 'package:billing_app/features/settings/presentation/bloc/auth_flow_cubits.dart';
 import 'package:billing_app/core/service_locator.dart';
@@ -55,11 +56,11 @@ class _AuthEntryPageState extends State<AuthEntryPage> {
               length: 2,
               child: Scaffold(
                 appBar: AppBar(
-                  title: const Text('DeepPOS Вход'),
-                  bottom: const TabBar(
+                  title: Text('${AppLocalizations.of(context)!.appTitle} ${AppLocalizations.of(context)!.loginTitle}'),
+                  bottom: TabBar(
                     tabs: [
-                      Tab(text: 'Кассир'),
-                      Tab(text: 'Владелец'),
+                      Tab(text: AppLocalizations.of(context)!.cashier),
+                      Tab(text: AppLocalizations.of(context)!.owner),
                     ],
                   ),
                 ),

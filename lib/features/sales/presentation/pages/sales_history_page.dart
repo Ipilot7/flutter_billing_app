@@ -8,7 +8,6 @@ import 'package:billing_app/features/sales/presentation/bloc/sales_event.dart';
 import 'package:billing_app/features/sales/presentation/bloc/sales_state.dart';
 import 'package:billing_app/core/theme/app_theme.dart';
 import 'dart:io';
-import 'package:csv/csv.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -113,7 +112,13 @@ class _SalesHistoryPageState extends State<SalesHistoryPage> {
       ]);
     }
 
-    String csv = excel.encoder.convert(rows);
+    // Manual CSV generation since ListToCsvConverter seems unavailable
+    String csv = rows.map((row) => row.map((e) {
+          final s = e.toString();
+          return s.contains(',') || s.contains('\n') || s.contains('"')
+              ? '"${s.replaceAll('"', '""')}"'
+              : s;
+        }).join(',')).join('\r\n');
 
     final directory = await getTemporaryDirectory();
     final path =

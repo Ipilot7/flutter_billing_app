@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:billing_app/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:billing_app/core/network/backend_v1_client.dart';
@@ -69,25 +70,25 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
     if (terminalId == null) return;
 
     final controller = TextEditingController(
-      text: terminal['name']?.toString() ?? 'Касса',
+      text: terminal['name']?.toString() ?? AppLocalizations.of(context)!.cashier,
     );
 
     final newName = await showDialog<String>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Переименовать кассу'),
+        title: Text(AppLocalizations.of(context)!.renameTerminal),
         content: TextField(
           controller: controller,
-          decoration: const InputDecoration(labelText: 'Название кассы'),
+          decoration: InputDecoration(labelText: AppLocalizations.of(context)!.terminalName),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Отмена'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, controller.text.trim()),
-            child: const Text('Сохранить'),
+            child: Text(AppLocalizations.of(context)!.save),
           ),
         ],
       ),
@@ -100,13 +101,13 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
       await _client.updateTerminal(terminalId: terminalId, name: newName);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Название кассы обновлено')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.terminalNameUpdated)),
       );
       _refresh();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка обновления кассы: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.errorOccurred}: $e')),
       );
     }
   }
@@ -127,14 +128,14 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content:
-              Text(nextValue ? 'Касса активирована' : 'Касса деактивирована'),
+              Text(nextValue ? AppLocalizations.of(context)!.terminalActivated : AppLocalizations.of(context)!.terminalDeactivated),
         ),
       );
       _refresh();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка обновления статуса: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.errorOccurred}: $e')),
       );
     }
   }
@@ -146,16 +147,16 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Удалить кассу'),
-        content: const Text('Вы уверены, что хотите удалить эту кассу?'),
+        title: Text(AppLocalizations.of(context)!.deleteTerminalTitle),
+        content: Text(AppLocalizations.of(context)!.deleteTerminalConfirm),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Отмена'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Удалить'),
+            child: Text(AppLocalizations.of(context)!.delete),
           ),
         ],
       ),
@@ -167,13 +168,13 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
       await _client.deleteTerminal(terminalId: terminalId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Касса удалена')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.terminalDeleted)),
       );
       _refresh();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Ошибка удаления кассы: $e')),
+        SnackBar(content: Text('${AppLocalizations.of(context)!.errorOccurred}: $e')),
       );
     }
   }
@@ -190,7 +191,7 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
       valueListenable: _uiTick,
       builder: (_, __, ___) => Scaffold(
         appBar: AppBar(
-          title: const Text('Кассы'),
+          title: Text(AppLocalizations.of(context)!.terminals),
           actions: [
             IconButton(
               icon: const Icon(Icons.refresh),
@@ -210,15 +211,15 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                      'Не удалось загрузить список касс: ${snapshot.error}'),
+                      '${AppLocalizations.of(context)!.errorLoadingTerminals}: ${snapshot.error}'),
                 ),
               );
             }
 
             final terminals = snapshot.data ?? const <Map<String, dynamic>>[];
             if (terminals.isEmpty) {
-              return const Center(
-                child: Text('Пока нет добавленных касс'),
+              return Center(
+                child: Text(AppLocalizations.of(context)!.noTerminalsFound),
               );
             }
 
@@ -228,7 +229,7 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
               separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (context, index) {
                 final terminal = terminals[index];
-                final name = terminal['name']?.toString() ?? 'Касса';
+                final name = terminal['name']?.toString() ?? AppLocalizations.of(context)!.cashier;
                 final active = terminal['is_active'] == true;
 
                 return ListTile(
@@ -237,7 +238,7 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
                     side: BorderSide(color: Colors.grey.shade200),
                   ),
                   title: Text(name),
-                  subtitle: Text(active ? 'Активна' : 'Неактивна'),
+                  subtitle: Text(active ? AppLocalizations.of(context)!.active : AppLocalizations.of(context)!.inactive),
                   trailing: PopupMenuButton<String>(
                     onSelected: (action) {
                       if (action == 'rename') {
@@ -249,17 +250,17 @@ class _CashRegistersPageState extends State<CashRegistersPage> {
                       }
                     },
                     itemBuilder: (context) => [
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'rename',
-                        child: Text('Переименовать'),
+                        child: Text(AppLocalizations.of(context)!.rename),
                       ),
                       PopupMenuItem(
                         value: 'toggle',
-                        child: Text(active ? 'Деактивировать' : 'Активировать'),
+                        child: Text(active ? AppLocalizations.of(context)!.deactivate : AppLocalizations.of(context)!.activate),
                       ),
-                      const PopupMenuItem(
+                      PopupMenuItem(
                         value: 'delete',
-                        child: Text('Удалить'),
+                        child: Text(AppLocalizations.of(context)!.delete),
                       ),
                     ],
                   ),

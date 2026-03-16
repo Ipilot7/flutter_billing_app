@@ -119,6 +119,12 @@ class AppLocalizationsRu extends AppLocalizations {
   String get price => 'Цена';
 
   @override
+  String get username => 'Имя пользователя';
+
+  @override
+  String get password => 'Пароль';
+
+  @override
   String get measurementUnits => 'Единицы измерения';
 
   @override
@@ -224,6 +230,48 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get cashier => 'Кассир';
+
+  @override
+  String get owner => 'Владелец';
+
+  @override
+  String get login => 'Войти';
+
+  @override
+  String get loginTitle => 'Вход';
+
+  @override
+  String get showDeviceQr => 'Показать QR устройства';
+
+  @override
+  String get cashierPin => 'PIN кассира';
+
+  @override
+  String get ownerLogin => 'Вход владельца';
+
+  @override
+  String get cashierLogin => 'Вход кассира';
+
+  @override
+  String get logout => 'Выйти';
+
+  @override
+  String get logoutConfirm => 'Вы уверены, что хотите выйти?';
+
+  @override
+  String get syncData => 'Синхронизировать данные';
+
+  @override
+  String get syncDataSubtitle => 'Отправить и получить актуальные данные';
+
+  @override
+  String get loggingOut => 'Выход из аккаунта...';
+
+  @override
+  String get clearSession => 'Очистить сессию';
+
+  @override
+  String get account => 'Аккаунт';
 
   @override
   String get history => 'История';
@@ -379,6 +427,58 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get grandTotal => 'ОБЩИЙ ИТОГ';
+
+  @override
+  String get terminals => 'Кассы';
+
+  @override
+  String get renameTerminal => 'Переименовать кассу';
+
+  @override
+  String get terminalName => 'Название кассы';
+
+  @override
+  String get terminalNameUpdated => 'Название кассы обновлено';
+
+  @override
+  String get terminalActivated => 'Касса активирована';
+
+  @override
+  String get terminalDeactivated => 'Касса деактивирована';
+
+  @override
+  String get deleteTerminalTitle => 'Удалить кассу';
+
+  @override
+  String get deleteTerminalConfirm =>
+      'Вы уверены, что хотите удалить эту кассу?';
+
+  @override
+  String get terminalDeleted => 'Касса удалена';
+
+  @override
+  String get errorLoadingTerminals => 'Не удалось загрузить список касс';
+
+  @override
+  String get noTerminalsFound => 'Пока нет добавленных касс';
+
+  @override
+  String get active => 'Активна';
+
+  @override
+  String get inactive => 'Неактивна';
+
+  @override
+  String get rename => 'Переименовать';
+
+  @override
+  String get deactivate => 'Деактивировать';
+
+  @override
+  String get activate => 'Активировать';
+
+  @override
+  String get logoutSubtitle => 'Выйти через интернет и очистить сессию';
 
   @override
   String get shopDetailsNotLoaded => 'Данные магазина не загружены';
