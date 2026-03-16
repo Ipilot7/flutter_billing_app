@@ -1,6 +1,7 @@
 from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
+from datetime import timedelta
 from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.exceptions import ValidationError
@@ -18,6 +19,17 @@ from .serializers import (
 	PlatformRegistrationResponseSerializer,
 	UserSerializer,
 )
+
+
+class LogoutView(APIView):
+	permission_classes = [permissions.AllowAny]
+
+	def post(self, request):
+		"""
+		Stateless logout — clients must discard tokens locally.
+		Without token_blacklist enabled, JWTs expire naturally.
+		"""
+		return Response({'detail': 'Logged out successfully.'}, status=status.HTTP_200_OK)
 
 
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
@@ -105,9 +117,9 @@ class CashRegisterRegistrationView(APIView):
 class CashierTerminalLoginView(APIView):
 	permission_classes = [permissions.AllowAny]
 	serializer_class = CashierTerminalLoginSerializer
-	MAX_FAILED_ATTEMPTS = 5
+	MAX_FAILED_ATTEMPTS = 10
 	FAILED_WINDOW_SECONDS = 300
-	LOCK_SECONDS = 900
+	LOCK_SECONDS = 300
 
 	@extend_schema(
 		request=CashierTerminalLoginSerializer,
@@ -117,10 +129,23 @@ class CashierTerminalLoginView(APIView):
 		device_id = str(request.data.get('device_id', '')).strip()
 		failed_key = f'cashier_login:failed:{device_id}'
 		lock_key = f'cashier_login:lock:{device_id}'
+		lock_until_key = f'cashier_login:lock_until:{device_id}'
 
 		if device_id and cache.get(lock_key):
+			lock_until_epoch = cache.get(lock_until_key)
+			now_epoch = int(timezone.now().timestamp())
+			retry_after = self.LOCK_SECONDS
+			if lock_until_epoch is not None:
+				try:
+					retry_after = max(1, int(lock_until_epoch) - now_epoch)
+				except (TypeError, ValueError):
+					retry_after = self.LOCK_SECONDS
+
 			return Response(
-				{'detail': 'Too many failed attempts. Try again later.'},
+				{
+					'detail': 'Too many failed attempts. Try again later.',
+					'retry_after_seconds': retry_after,
+				},
 				status=status.HTTP_429_TOO_MANY_REQUESTS,
 			)
 
@@ -132,7 +157,17 @@ class CashierTerminalLoginView(APIView):
 				failed_attempts = int(cache.get(failed_key, 0)) + 1
 				cache.set(failed_key, failed_attempts, self.FAILED_WINDOW_SECONDS)
 				if failed_attempts >= self.MAX_FAILED_ATTEMPTS:
+					lock_until = timezone.now() + timedelta(seconds=self.LOCK_SECONDS)
+					lock_until_epoch = int(lock_until.timestamp())
 					cache.set(lock_key, 1, self.LOCK_SECONDS)
+					cache.set(lock_until_key, lock_until_epoch, self.LOCK_SECONDS)
+					return Response(
+						{
+							'detail': 'Too many failed attempts. Try again later.',
+							'retry_after_seconds': self.LOCK_SECONDS,
+						},
+						status=status.HTTP_429_TOO_MANY_REQUESTS,
+					)
 			raise
 
 		terminal = serializer.validated_data['terminal']
@@ -141,6 +176,7 @@ class CashierTerminalLoginView(APIView):
 		if device_id:
 			cache.delete(failed_key)
 			cache.delete(lock_key)
+			cache.delete(lock_until_key)
 
 		terminal.last_seen_at = timezone.now()
 		terminal.save(update_fields=['last_seen_at'])

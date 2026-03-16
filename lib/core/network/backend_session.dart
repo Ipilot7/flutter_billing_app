@@ -4,7 +4,6 @@ class BackendSession {
   static const roleOwner = 'owner';
   static const roleCashier = 'cashier';
 
-  static const _baseUrlKey = 'backend.base_url';
   static const defaultApiBasePath = '/api/v1/';
   static const _accessTokenKey = 'backend.access_token';
   static const _refreshTokenKey = 'backend.refresh_token';
@@ -16,10 +15,12 @@ class BackendSession {
   static const _roleKey = 'backend.role';
 
   final AppDatabase _db;
+  String _baseUrl;
 
-  BackendSession(this._db);
+  BackendSession(this._db, {required String defaultBaseUrl})
+      : _baseUrl = normalizeBaseUrl(defaultBaseUrl);
 
-  Future<String?> getBaseUrl() => _db.getSetting(_baseUrlKey);
+  Future<String?> getBaseUrl() async => _baseUrl;
   Future<String?> getAccessToken() => _db.getSetting(_accessTokenKey);
   Future<String?> getRefreshToken() => _db.getSetting(_refreshTokenKey);
 
@@ -47,14 +48,15 @@ class BackendSession {
 
   Future<String?> getSessionRole() => _db.getSetting(_roleKey);
 
-  Future<void> saveBaseUrl(String baseUrl) =>
-      _db.saveSetting(_baseUrlKey, normalizeBaseUrl(baseUrl));
+  Future<void> saveBaseUrl(String baseUrl) async {
+    _baseUrl = normalizeBaseUrl(baseUrl);
+  }
 
   Future<void> ensureBaseUrlInitialized({
     required String defaultBaseUrl,
   }) async {
-    final currentBaseUrl = await getBaseUrl();
-    final normalizedCurrent = normalizeBaseUrl(currentBaseUrl ?? '');
+    final normalizedCurrent = normalizeBaseUrl(_baseUrl);
+    final normalizedDefault = normalizeBaseUrl(defaultBaseUrl);
     final normalizedLower = normalizedCurrent.toLowerCase();
 
     final isLegacyLocalhost = normalizedLower.startsWith('http://127.0.0.1') ||
@@ -63,9 +65,9 @@ class BackendSession {
         normalizedLower.startsWith('https://localhost');
 
     if (normalizedCurrent.isEmpty || isLegacyLocalhost) {
-      await saveBaseUrl(defaultBaseUrl);
-    } else if ((currentBaseUrl ?? '').trim() != normalizedCurrent) {
-      await saveBaseUrl(normalizedCurrent);
+      _baseUrl = normalizedDefault;
+    } else {
+      _baseUrl = normalizedCurrent;
     }
   }
 

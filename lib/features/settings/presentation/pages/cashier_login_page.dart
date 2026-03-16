@@ -6,7 +6,11 @@ import 'package:billing_app/features/settings/presentation/bloc/auth_flow_cubits
 import 'package:billing_app/core/service_locator.dart';
 
 class CashierLoginPage extends StatefulWidget {
-  const CashierLoginPage({super.key});
+  final bool embedded;
+
+  const CashierLoginPage({super.key}) : embedded = false;
+
+  const CashierLoginPage.embedded({super.key}) : embedded = true;
 
   @override
   State<CashierLoginPage> createState() => _CashierLoginPageState();
@@ -63,45 +67,53 @@ class _CashierLoginPageState extends State<CashierLoginPage> {
           }
         },
         builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Вход кассира')),
-            body: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                OutlinedButton.icon(
-                  onPressed: () => _showDeviceQr(state.deviceId),
-                  icon: const Icon(Icons.qr_code_2),
-                  label: const Text('Показать QR устройства'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _pinController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'PIN кассира'),
-                ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: state.loading
-                      ? null
-                      : () => context.read<CashierLoginCubit>().login(
-                            deviceId: state.deviceId,
-                            pin: _pinController.text,
-                          ),
-                  child: state.loading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Войти'),
-                ),
+          final content = ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              OutlinedButton.icon(
+                onPressed: () => _showDeviceQr(state.deviceId),
+                icon: const Icon(Icons.qr_code_2),
+                label: const Text('Показать QR устройства'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _pinController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'PIN кассира'),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: state.loading
+                    ? null
+                    : () => context.read<CashierLoginCubit>().login(
+                          deviceId: state.deviceId,
+                          pin: _pinController.text,
+                        ),
+                child: state.loading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Войти'),
+              ),
+              if (!widget.embedded) ...[
                 const SizedBox(height: 10),
                 TextButton(
                   onPressed: () => context.go('/owner-login'),
                   child: const Text('Вход владельца'),
                 ),
               ],
-            ),
+            ],
+          );
+
+          if (widget.embedded) {
+            return content;
+          }
+
+          return Scaffold(
+            appBar: AppBar(title: const Text('Вход кассира')),
+            body: content,
           );
         },
       ),

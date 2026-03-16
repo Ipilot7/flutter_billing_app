@@ -3,9 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
 import 'package:billing_app/core/data/app_database.dart';
+import 'package:billing_app/core/usecase/usecase.dart';
 import 'package:billing_app/core/network/backend_session.dart';
 import 'package:billing_app/core/network/backend_v1_client.dart';
 import 'package:billing_app/core/network/cashier_qr_payload.dart';
+import 'package:billing_app/features/shift/domain/usecases/shift_usecases.dart';
 
 class AuthEntryState extends Equatable {
   final bool checking;
@@ -254,9 +256,8 @@ class PlatformRegistrationState extends Equatable {
 
 class PlatformRegistrationCubit extends Cubit<PlatformRegistrationState> {
   final BackendV1Client _client;
-  final BackendSession _session;
 
-  PlatformRegistrationCubit(this._client, this._session)
+  PlatformRegistrationCubit(this._client)
       : super(const PlatformRegistrationState());
 
   Future<void> register({
@@ -278,11 +279,6 @@ class PlatformRegistrationCubit extends Cubit<PlatformRegistrationState> {
 
     emit(state.copyWith(loading: true, message: null, error: null));
     try {
-      final currentBaseUrl = await _session.getBaseUrl();
-      if (currentBaseUrl == null || currentBaseUrl.trim().isEmpty) {
-        await _session.saveBaseUrl('http://192.168.0.54:8000/api/v1/');
-      }
-
       final response = await _client.registerPlatform(
         organizationName: organizationName.trim(),
         storeName: storeName.trim(),
@@ -446,7 +442,7 @@ class CashRegisterSetupCubit extends Cubit<CashRegisterSetupState> {
 
 class OpenShiftState extends Equatable {
   final bool loading;
-  final int? currentShiftId;
+  final String? currentShiftId;
   final String? message;
   final String? error;
 
@@ -459,7 +455,7 @@ class OpenShiftState extends Equatable {
 
   OpenShiftState copyWith({
     bool? loading,
-    int? currentShiftId,
+    String? currentShiftId,
     String? message,
     String? error,
   }) {
@@ -476,14 +472,18 @@ class OpenShiftState extends Equatable {
 }
 
 class OpenShiftCubit extends Cubit<OpenShiftState> {
-  final BackendV1Client _client;
-  final BackendSession _session;
+  final OpenShiftUseCase _openShiftUseCase;
+  final GetCurrentShiftUseCase _getCurrentShiftUseCase;
 
-  OpenShiftCubit(this._client, this._session) : super(const OpenShiftState());
+  OpenShiftCubit(this._openShiftUseCase, this._getCurrentShiftUseCase)
+      : super(const OpenShiftState());
 
   Future<void> loadCurrentShift() async {
-    final shiftId = await _session.getCurrentShiftId();
-    emit(state.copyWith(currentShiftId: shiftId));
+    final result = await _getCurrentShiftUseCase(NoParams());
+    result.fold(
+      (failure) => emit(state.copyWith(error: failure.message)),
+      (shift) => emit(state.copyWith(currentShiftId: shift?.id)),
+    );
   }
 
   Future<void> openShift({required String startBalance}) async {
@@ -495,15 +495,24 @@ class OpenShiftCubit extends Cubit<OpenShiftState> {
 
     emit(state.copyWith(loading: true, message: null, error: null));
     try {
-      final response =
-          await _client.openShift(startBalance: parsedStartBalance);
-      final shiftId = response['id'] as int?;
+      final result = await _openShiftUseCase(
+        OpenShiftParams(startBalance: parsedStartBalance, openedBy: 'cashier'),
+      );
+
+      final shift = result.fold((_) => null, (value) => value);
+      if (shift == null) {
+        final failure = result.fold((value) => value.message, (_) => '');
+        emit(state.copyWith(
+          loading: false,
+          error: failure.isEmpty ? 'Ошибка открытия смены.' : failure,
+        ));
+        return;
+      }
+
       await loadCurrentShift();
       emit(state.copyWith(
         loading: false,
-        message: shiftId != null
-            ? 'Смена открыта. Shift ID: $shiftId'
-            : 'Смена открыта.',
+        message: 'Смена открыта. Shift ID: ${shift.id}',
       ));
     } catch (e) {
       emit(state.copyWith(loading: false, error: 'Ошибка открытия смены: $e'));

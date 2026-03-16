@@ -5,6 +5,7 @@ from accounts.views import (
     CurrentUserView,
     CashierTerminalLoginView,
     CashRegisterRegistrationView,
+    LogoutView,
     PlatformRegistrationView,
 )
 from syncx.views import SyncPullView, SyncPushView
@@ -15,6 +16,7 @@ urlpatterns = [
     path('auth/register/platform/', PlatformRegistrationView.as_view(), name='v1_platform_register'),
     path('auth/register/cash-register/', CashRegisterRegistrationView.as_view(), name='v1_cash_register_register'),
     path('auth/login/cashier-terminal/', CashierTerminalLoginView.as_view(), name='v1_cashier_terminal_login'),
+    path('auth/logout/', LogoutView.as_view(), name='v1_auth_logout'),
     path('auth/me/', CurrentUserView.as_view(), name='v1_auth_me'),
     path('token/', TokenObtainPairView.as_view(), name='v1_token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='v1_token_refresh'),

@@ -6,7 +6,11 @@ import 'package:billing_app/features/settings/presentation/bloc/auth_flow_cubits
 import 'package:billing_app/core/service_locator.dart';
 
 class OwnerLoginPage extends StatefulWidget {
-  const OwnerLoginPage({super.key});
+  final bool embedded;
+
+  const OwnerLoginPage({super.key}) : embedded = false;
+
+  const OwnerLoginPage.embedded({super.key}) : embedded = true;
 
   @override
   State<OwnerLoginPage> createState() => _OwnerLoginPageState();
@@ -46,44 +50,52 @@ class _OwnerLoginPageState extends State<OwnerLoginPage> {
           }
         },
         builder: (context, state) {
-          return Scaffold(
-            appBar: AppBar(title: const Text('Вход владельца')),
-            body: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                TextField(
-                  controller: _usernameController,
-                  decoration: const InputDecoration(labelText: 'Username'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Password'),
-                ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: state.loading
-                      ? null
-                      : () => context.read<OwnerLoginCubit>().login(
-                            username: _usernameController.text,
-                            password: _passwordController.text,
-                          ),
-                  child: state.loading
-                      ? const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Войти как владелец'),
-                ),
+          final content = ListView(
+            padding: const EdgeInsets.all(16),
+            children: [
+              TextField(
+                controller: _usernameController,
+                decoration: const InputDecoration(labelText: 'Username'),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: _passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
+              ),
+              const SizedBox(height: 16),
+              FilledButton(
+                onPressed: state.loading
+                    ? null
+                    : () => context.read<OwnerLoginCubit>().login(
+                          username: _usernameController.text,
+                          password: _passwordController.text,
+                        ),
+                child: state.loading
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Войти как владелец'),
+              ),
+              if (!widget.embedded) ...[
                 const SizedBox(height: 10),
                 TextButton(
                   onPressed: () => context.go('/cashier-login'),
                   child: const Text('Перейти ко входу кассира'),
                 ),
               ],
-            ),
+            ],
+          );
+
+          if (widget.embedded) {
+            return content;
+          }
+
+          return Scaffold(
+            appBar: AppBar(title: const Text('Вход владельца')),
+            body: content,
           );
         },
       ),

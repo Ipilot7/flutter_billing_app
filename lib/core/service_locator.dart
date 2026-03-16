@@ -32,19 +32,22 @@ import 'package:billing_app/features/billing/presentation/bloc/billing_bloc.dart
 import 'package:billing_app/core/util/backup_service.dart';
 import 'package:billing_app/core/network/backend_session.dart';
 import 'package:billing_app/core/network/backend_v1_client.dart';
+import 'package:billing_app/core/network/manual_sync_service.dart';
 
 final sl = GetIt.instance;
-const _defaultBackendBaseUrl = 'http://192.168.0.54:8000/api/v1/';
+const _defaultBackendBaseUrl = 'http://192.168.0.68:8000/api/v1/';
 
 Future<void> init() async {
   // Database
   sl.registerLazySingleton<AppDatabase>(() => AppDatabase());
   sl.registerLazySingleton<BackupService>(() => BackupService(sl()));
-  sl.registerLazySingleton<BackendSession>(() => BackendSession(sl()));
-  await sl<BackendSession>().ensureBaseUrlInitialized(
-    defaultBaseUrl: _defaultBackendBaseUrl,
+  sl.registerLazySingleton<BackendSession>(
+    () => BackendSession(sl(), defaultBaseUrl: _defaultBackendBaseUrl),
   );
   sl.registerLazySingleton<BackendV1Client>(() => BackendV1Client(sl()));
+  sl.registerLazySingleton<ManualSyncService>(
+    () => ManualSyncService(sl(), sl(), sl()),
+  );
 
   // Features - Product
   // Bloc
@@ -124,7 +127,7 @@ Future<void> init() async {
   sl.registerFactory(() => AuthEntryCubit(sl()));
   sl.registerFactory(() => OwnerLoginCubit(sl()));
   sl.registerFactory(() => CashierLoginCubit(sl(), sl(), sl()));
-  sl.registerFactory(() => PlatformRegistrationCubit(sl(), sl()));
+  sl.registerFactory(() => PlatformRegistrationCubit(sl()));
   sl.registerFactory(() => CashRegisterSetupCubit(sl(), sl()));
   sl.registerFactory(() => OpenShiftCubit(sl(), sl()));
 
@@ -137,11 +140,7 @@ Future<void> init() async {
 
   // Repository
   sl.registerLazySingleton<ProductRepository>(
-    () => ProductRepositoryImpl(
-      sl(),
-      backendClient: sl(),
-      backendSession: sl(),
-    ),
+    () => ProductRepositoryImpl(sl()),
   );
 
   sl.registerLazySingleton<CategoryRepository>(
@@ -170,7 +169,7 @@ Future<void> init() async {
 
   // Features - Shift
   sl.registerLazySingleton<ShiftRepository>(
-    () => ShiftRepositoryImpl(sl(), sl(), sl()),
+    () => ShiftRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => OpenShiftUseCase(sl()));
   sl.registerLazySingleton(() => CloseShiftUseCase(sl()));
@@ -178,7 +177,7 @@ Future<void> init() async {
 
   // Features - Sales
   sl.registerLazySingleton<SalesRepository>(
-    () => SalesRepositoryImpl(sl(), sl(), sl()),
+    () => SalesRepositoryImpl(sl()),
   );
   sl.registerLazySingleton(() => CreateSaleUseCase(sl()));
   sl.registerLazySingleton(() => GetSalesHistoryUseCase(sl()));

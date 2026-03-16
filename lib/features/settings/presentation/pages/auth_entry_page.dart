@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 
 import 'package:billing_app/features/settings/presentation/bloc/auth_flow_cubits.dart';
 import 'package:billing_app/core/service_locator.dart';
+import 'package:billing_app/features/settings/presentation/pages/cashier_login_page.dart';
+import 'package:billing_app/features/settings/presentation/pages/owner_login_page.dart';
 
 class AuthEntryPage extends StatefulWidget {
   const AuthEntryPage({super.key});
@@ -63,19 +65,8 @@ class _AuthEntryPageState extends State<AuthEntryPage> {
                 ),
                 body: TabBarView(
                   children: [
-                    _RoleEntryCard(
-                      title: 'Рабочая касса',
-                      subtitle: 'Вход по device_id и PIN для продаж.',
-                      primaryLabel: 'Вход кассира',
-                      onPrimaryTap: () => context.go('/cashier-login'),
-                    ),
-                    _RoleEntryCard(
-                      title: 'Администрирование',
-                      subtitle:
-                          'Owner вход по username/password и управление кассами в Settings.',
-                      primaryLabel: 'Вход владельца',
-                      onPrimaryTap: () => context.go('/owner-login'),
-                    ),
+                    const CashierLoginPage.embedded(),
+                    const OwnerLoginPage.embedded(),
                   ],
                 ),
               ),
@@ -83,56 +74,6 @@ class _AuthEntryPageState extends State<AuthEntryPage> {
           },
         ),
       ),
-    );
-  }
-}
-
-class _RoleEntryCard extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  final String primaryLabel;
-  final VoidCallback onPrimaryTap;
-
-  const _RoleEntryCard({
-    required this.title,
-    required this.subtitle,
-    required this.primaryLabel,
-    required this.onPrimaryTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  subtitle,
-                  style: TextStyle(color: Colors.grey[700]),
-                ),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: onPrimaryTap,
-                  child: Text(primaryLabel),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

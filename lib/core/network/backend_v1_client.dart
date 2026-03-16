@@ -195,6 +195,25 @@ class BackendV1Client {
     return response;
   }
 
+  Future<void> logout() async {
+    if (_session == null) {
+      throw BackendApiException('Session is not available.');
+    }
+
+    final refreshToken = await _session!.getRefreshToken();
+    if (refreshToken == null || refreshToken.isEmpty) {
+      throw BackendApiException('Refresh token is missing. Login again.');
+    }
+
+    await _post(
+      '/auth/logout/',
+      body: {
+        'refresh': refreshToken,
+      },
+      withAuth: false,
+    );
+  }
+
   Future<bool> ensureOwnerContext() async {
     if (_session == null) return false;
 
@@ -400,6 +419,45 @@ class BackendV1Client {
     throw BackendApiException('Sync pull payload has invalid terminals list.');
   }
 
+  Future<Map<String, dynamic>> pullSyncData({
+    String? since,
+    int? organizationId,
+  }) async {
+    final queryParameters = <String, dynamic>{};
+    if (since != null && since.trim().isNotEmpty) {
+      queryParameters['since'] = since.trim();
+    }
+    if (organizationId != null) {
+      queryParameters['organization_id'] = organizationId.toString();
+    }
+
+    final response = await _get(
+      '/sync/pull/',
+      withAuth: true,
+      queryParameters: queryParameters.isEmpty ? null : queryParameters,
+    );
+
+    if (response is! Map<String, dynamic>) {
+      throw BackendApiException('Unexpected sync pull response format.');
+    }
+
+    return response;
+  }
+
+  Future<Map<String, dynamic>> pushSyncOperations({
+    required int terminalId,
+    required List<Map<String, dynamic>> operations,
+  }) async {
+    return _post(
+      '/sync/push/',
+      body: {
+        'terminal_id': terminalId,
+        'operations': operations,
+      },
+      withAuth: true,
+    );
+  }
+
   Future<Map<String, dynamic>> updateTerminal({
     required int terminalId,
     String? name,
@@ -461,8 +519,9 @@ class BackendV1Client {
     String path, {
     required Map<String, dynamic> body,
     required bool withAuth,
+    Map<String, dynamic>? queryParameters,
   }) async {
-    final uri = await _buildUri(path);
+    final uri = await _buildUri(path, queryParameters: queryParameters);
     final headers = await _buildHeaders(withAuth: withAuth);
 
     final response = await _dio.postUri(
@@ -481,8 +540,9 @@ class BackendV1Client {
   Future<dynamic> _get(
     String path, {
     required bool withAuth,
+    Map<String, dynamic>? queryParameters,
   }) async {
-    final uri = await _buildUri(path);
+    final uri = await _buildUri(path, queryParameters: queryParameters);
     final headers = await _buildHeaders(withAuth: withAuth);
 
     final response = await _dio.getUri(
@@ -501,8 +561,9 @@ class BackendV1Client {
     String path, {
     required Map<String, dynamic> body,
     required bool withAuth,
+    Map<String, dynamic>? queryParameters,
   }) async {
-    final uri = await _buildUri(path);
+    final uri = await _buildUri(path, queryParameters: queryParameters);
     final headers = await _buildHeaders(withAuth: withAuth);
 
     final response = await _dio.patchUri(
@@ -521,8 +582,9 @@ class BackendV1Client {
   Future<void> _delete(
     String path, {
     required bool withAuth,
+    Map<String, dynamic>? queryParameters,
   }) async {
-    final uri = await _buildUri(path);
+    final uri = await _buildUri(path, queryParameters: queryParameters);
     final headers = await _buildHeaders(withAuth: withAuth);
 
     final response = await _dio.deleteUri(
@@ -545,12 +607,15 @@ class BackendV1Client {
         : <String, dynamic>{'detail': decoded.toString()};
 
     throw BackendApiException(
-      _mapErrorMessage(_extractErrorMessage(body), statusCode),
+      _mapErrorMessage(body, statusCode),
       statusCode: statusCode,
     );
   }
 
-  Future<Uri> _buildUri(String path) async {
+  Future<Uri> _buildUri(
+    String path, {
+    Map<String, dynamic>? queryParameters,
+  }) async {
     final baseUrl = await _readBaseUrl();
     if (baseUrl == null || baseUrl.trim().isEmpty) {
       throw BackendApiException('Backend URL is not configured.');
@@ -559,7 +624,19 @@ class BackendV1Client {
     final normalizedBase = baseUrl.endsWith('/')
         ? baseUrl.substring(0, baseUrl.length - 1)
         : baseUrl;
-    return Uri.parse('$normalizedBase$path');
+
+    final baseUri = Uri.parse('$normalizedBase$path');
+    if (queryParameters == null || queryParameters.isEmpty) {
+      return baseUri;
+    }
+
+    return baseUri.replace(
+      queryParameters: {
+        ...baseUri.queryParameters,
+        for (final entry in queryParameters.entries)
+          entry.key: entry.value.toString(),
+      },
+    );
   }
 
   Future<Map<String, String>> _buildHeaders({required bool withAuth}) async {
@@ -661,7 +738,7 @@ class BackendV1Client {
     }
 
     throw BackendApiException(
-      _mapErrorMessage(_extractErrorMessage(body), statusCode),
+      _mapErrorMessage(body, statusCode),
       statusCode: statusCode,
     );
   }
@@ -679,7 +756,7 @@ class BackendV1Client {
         : <String, dynamic>{'detail': decoded.toString()};
 
     throw BackendApiException(
-      _mapErrorMessage(_extractErrorMessage(body), statusCode),
+      _mapErrorMessage(body, statusCode),
       statusCode: statusCode,
     );
   }
@@ -708,8 +785,14 @@ class BackendV1Client {
     return body.toString();
   }
 
-  String _mapErrorMessage(String raw, int statusCode) {
+  String _mapErrorMessage(Map<String, dynamic> body, int statusCode) {
+    final raw = _extractErrorMessage(body);
+
     if (statusCode == 429) {
+      final retryAfter = _formatRetryAfter(body['retry_after_seconds']);
+      if (retryAfter != null) {
+        return 'Too many failed attempts. Try again in $retryAfter.';
+      }
       return 'Too many failed attempts. Please wait and try again.';
     }
     if (raw.contains('token_not_valid') || raw.contains('Token is expired')) {
@@ -725,6 +808,20 @@ class BackendV1Client {
       return 'Session expired. Login again.';
     }
     return raw;
+  }
+
+  String? _formatRetryAfter(dynamic rawSeconds) {
+    final seconds = rawSeconds is int
+        ? rawSeconds
+        : int.tryParse(rawSeconds?.toString() ?? '');
+    if (seconds == null || seconds <= 0) return null;
+
+    final minutes = seconds ~/ 60;
+    final remainingSeconds = seconds % 60;
+    if (minutes > 0) {
+      return '$minutes min ${remainingSeconds.toString().padLeft(2, '0')} sec';
+    }
+    return '$seconds sec';
   }
 
   Future<String?> _readBaseUrl() async {

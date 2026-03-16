@@ -13,6 +13,7 @@ import '../../../../core/util/backup_service.dart';
 import '../../../../core/service_locator.dart';
 import '../../../../core/network/backend_session.dart';
 import '../../../../core/network/backend_v1_client.dart';
+import '../../../../core/network/manual_sync_service.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -25,6 +26,7 @@ class _SettingsPageState extends State<SettingsPage> {
   String? _sessionRole;
   String _profileName = 'USER';
   String _profileInitials = 'U';
+  bool _syncInProgress = false;
 
   @override
   void initState() {
@@ -310,9 +312,24 @@ class _SettingsPageState extends State<SettingsPage> {
             _buildListGroup(
               children: [
                 _buildListItem(
+                  icon: Icons.sync,
+                  title: 'Синхронизировать данные',
+                  subtitle: 'Отправить и получить актуальные данные',
+                  trailingWidget: _syncInProgress
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : null,
+                  onTap:
+                      _syncInProgress ? null : () => _handleManualSync(context),
+                ),
+                _buildDivider(),
+                _buildListItem(
                   icon: Icons.logout,
                   title: 'Выйти',
-                  subtitle: 'Очистить локальную сессию и вернуться ко входу',
+                  subtitle: 'Выйти через интернет и очистить сессию',
                   trailingIcon: null,
                   onTap: () => _handleLogout(context),
                 ),
@@ -553,7 +570,8 @@ class _SettingsPageState extends State<SettingsPage> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Выход из аккаунта'),
-        content: const Text('Очистить локальные токены и выйти?'),
+        content:
+            const Text('Выполнить выход через интернет и очистить сессию?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -569,8 +587,48 @@ class _SettingsPageState extends State<SettingsPage> {
 
     if (confirmed != true || !context.mounted) return;
 
+    // Best-effort network logout — never block local session clearing on failure.
+    try {
+      await sl<BackendV1Client>().logout();
+    } catch (_) {
+      // Token will expire naturally; proceed with local session clearing.
+    }
+
     await sl<BackendSession>().clearAuth();
     if (!context.mounted) return;
     context.go('/auth');
+  }
+
+  Future<void> _handleManualSync(BuildContext context) async {
+    setState(() {
+      _syncInProgress = true;
+    });
+
+    try {
+      final result = await sl<ManualSyncService>().syncProducts();
+      if (!context.mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(result.summary),
+          duration: const Duration(seconds: 6),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Ошибка синхронизации: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _syncInProgress = false;
+        });
+      }
+    }
   }
 }
