@@ -124,6 +124,7 @@ Response includes `applied`, `duplicates`, and `failed` lists.
 
 Supported `entity_type` values:
 
+- `category.upsert`
 - `product.upsert`
 - `sale.create`
 - `sale.return`

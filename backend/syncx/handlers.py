@@ -2,7 +2,7 @@ from decimal import Decimal
 
 from django.db import transaction
 
-from catalog.models import Product
+from catalog.models import Category, Product
 from sales.models import Sale, SaleItem
 
 
@@ -17,9 +17,27 @@ def apply_product_upsert(*, terminal, payload):
     if not barcode:
         raise ValueError('product.upsert requires barcode')
 
+    category = None
+    category_backend_id = payload.get('category_backend_id')
+    category_name = payload.get('category_name')
+
+    if category_backend_id is not None:
+        category = Category.objects.filter(
+            id=category_backend_id,
+            organization=terminal.store.organization,
+        ).first()
+    elif category_name:
+        cleaned_name = str(category_name).strip()
+        if cleaned_name:
+            category, _ = Category.objects.get_or_create(
+                organization=terminal.store.organization,
+                name=cleaned_name,
+            )
+
     defaults = {
         'name': payload.get('name', 'Unnamed Product'),
         'sku': payload.get('sku', ''),
+        'category': category,
         'price': _to_decimal(payload.get('price', '0')),
         'cost': _to_decimal(payload.get('cost', '0')),
         'stock': _to_decimal(payload.get('stock', '0')),
@@ -34,6 +52,33 @@ def apply_product_upsert(*, terminal, payload):
         defaults=defaults,
     )
     return {'product_id': product.id, 'barcode': product.barcode}
+
+
+def apply_category_upsert(*, terminal, payload):
+    name = str(payload.get('name', '')).strip()
+    if not name:
+        raise ValueError('category.upsert requires name')
+
+    organization = terminal.store.organization
+    backend_id = payload.get('backend_id')
+
+    category = None
+    if backend_id is not None:
+        category = Category.objects.filter(
+            id=backend_id,
+            organization=organization,
+        ).first()
+
+    if category is None:
+        category, _ = Category.objects.get_or_create(
+            organization=organization,
+            name=name,
+        )
+    elif category.name != name:
+        category.name = name
+        category.save(update_fields=['name'])
+
+    return {'category_id': category.id, 'name': category.name}
 
 
 def apply_sale_create(*, terminal, payload, user):
@@ -163,6 +208,7 @@ def apply_sale_return(*, terminal, payload, user):
 
 
 HANDLERS = {
+    'category.upsert': apply_category_upsert,
     'product.upsert': apply_product_upsert,
     'sale.create': apply_sale_create,
     'sale.return': apply_sale_return,

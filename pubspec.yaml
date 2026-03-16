@@ -53,6 +53,7 @@ dependencies:
   dio: ^5.9.0
   pretty_dio_logger: ^1.4.0
   retrofit: ^4.7.2
+  device_info_plus: ^12.3.0
 
 dev_dependencies:
   flutter_test:

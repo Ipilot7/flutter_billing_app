@@ -1,3 +1,4 @@
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
@@ -162,6 +163,7 @@ class CashierLoginCubit extends Cubit<CashierLoginState> {
   final BackendSession _session;
   final AppDatabase _db;
   static const _uuid = Uuid();
+  static final _deviceInfo = DeviceInfoPlugin();
 
   CashierLoginCubit(this._client, this._session, this._db)
       : super(const CashierLoginState());
@@ -170,7 +172,7 @@ class CashierLoginCubit extends Cubit<CashierLoginState> {
     final terminalId = await _session.getTerminalId();
     var deviceId = (await _session.getDeviceId())?.trim() ?? '';
     if (deviceId.isEmpty) {
-      deviceId = _uuid.v4();
+      deviceId = await _resolveDeviceId();
       await _session.saveDeviceId(deviceId);
     }
 
@@ -181,6 +183,33 @@ class CashierLoginCubit extends Cubit<CashierLoginState> {
   }
 
   Future<void> refreshDeviceId() => loadStartupState();
+
+  Future<String> _resolveDeviceId() async {
+    try {
+      final androidInfo = await _deviceInfo.androidInfo;
+      final seedParts = <String>[
+        androidInfo.brand,
+        androidInfo.device,
+        androidInfo.fingerprint,
+        androidInfo.hardware,
+        androidInfo.id,
+        androidInfo.manufacturer,
+        androidInfo.model,
+        androidInfo.product,
+      ]..removeWhere((value) => value.trim().isEmpty);
+
+      if (seedParts.isNotEmpty) {
+        return _uuid.v5(
+          Namespace.url.value,
+          'android-device:${seedParts.join('|')}',
+        );
+      }
+    } catch (_) {
+      // Fall back below when device info is unavailable.
+    }
+
+    return _uuid.v4();
+  }
 
   Future<void> login({required String deviceId, required String pin}) async {
     if (deviceId.trim().isEmpty || pin.trim().isEmpty) {
