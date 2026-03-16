@@ -24,8 +24,11 @@ class ProductRepositoryImpl implements ProductRepository {
     try {
       final query = _db.select(_db.products)
         ..where((t) => t.barcode.equals(barcode));
-      final row = await query.getSingle();
-      return Right(_mapToEntity(row));
+      final rows = await query.get();
+      if (rows.isEmpty) {
+        return const Left(CacheFailure('Product not found'));
+      }
+      return Right(_mapToEntity(rows.first));
     } catch (e) {
       return Left(CacheFailure(e.toString()));
     }

@@ -394,9 +394,10 @@ class ManualSyncService {
       final stock = double.tryParse(remote['stock'].toString()) ?? 0.0;
       final remoteCategoryId = remote['category']?.toString();
 
-      final existingByBarcode = await (_db.select(_db.products)
+      final productsWithBarcode = await (_db.select(_db.products)
             ..where((t) => t.barcode.equals(barcode)))
-          .getSingleOrNull();
+          .get();
+      final existingByBarcode = productsWithBarcode.isEmpty ? null : productsWithBarcode.first;
 
       if (existingByBarcode != null) {
         await _db.update(_db.products).replace(
